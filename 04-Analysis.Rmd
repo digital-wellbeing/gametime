@@ -1,4 +1,4 @@
-# EDA
+# Analyses
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -13,6 +13,18 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{r}
+library(pacman)
+p_load(
+  here,
+  knitr,
+  patchwork,
+  scales,
+  tidyverse,
+  parameters
+)
+```
+
 
 ```{r}
 game_time <- read_rds(here("data/ea/game_time.rds"))
@@ -21,11 +33,84 @@ xp <- read_rds(here("data/ea/xp.rds"))
 gestures <- read_rds(here("data/ea/gestures.rds"))
 prestige <- read_rds(here("data/ea/prestige.rds"))
 friends <- read_rds(here("data/ea/friends.rds"))
-pvz_bfn <- read_rds(here("data/ea/pvz_bfn.rds"))
+pvz <- read_rds(here("data/ea/pvz_bfn.rds"))
 ```
 
 ## Preface
 
-## Question 1
+## RQ1: Time and well-being
 
-## Question 2
+### Objective vs subjective game time
+
+```{r}
+pvz <- mutate(pvz, Hours_est = active_play_hours + active_play_minutes/60)
+p0 <- pvz %>% 
+  ggplot(aes(Hours, Hours_est)) +
+  geom_point(shape = 1, alpha = .5, size = .5) +
+  scale_y_continuous(breaks = pretty_breaks()) +
+  scale_x_continuous(breaks = pretty_breaks()) +
+  geom_smooth(method = "lm", col = "black", size = .5) +
+  theme(aspect.ratio = 1)
+p0 + geom_abline(lty = 2, size = .25)
+# z score of that one player's time
+max(scale(pvz$Hours), na.rm = TRUE)
+```
+
+We take out that player from analyses related to objective game time because the game time is suspect and game time measures are noisy
+
+```{r}
+excessive_gamer <- pvz %>% 
+  filter(Hours > 140) %>% 
+  pull(player_id)
+p0 <- p0 %+% 
+  (p0$data %>% filter(player_id != excessive_gamer))
+```
+
+```{r}
+p1 <- p0 +
+  geom_abline(lty = 2, size = .25, col = "black")
+p1
+```
+
+```{r}
+x1 <- lm(Hours_est ~ Hours, data = p0$data)
+parameters(x1) %>% kable(digits = 3)
+parameters(x1, standardize = 'refit') %>% kable(digits = 3)
+```
+
+### Objective time and SWB
+
+```{r}
+p2 <- p0 + aes(y = spane_balance)
+p2
+```
+
+```{r}
+x2 <- lm(spane_balance ~ Hours, data = p0$data)
+parameters(x2) %>% kable(digits = 3)
+parameters(x2, standardize = 'refit') %>% kable(digits = 3)
+```
+
+### Subjective time and SWB
+
+```{r}
+p3 <- p0 + aes(x = Hours_est, y = spane_balance)
+p3
+```
+
+```{r}
+x3 <- lm(spane_balance ~ Hours_est, data = p0$data)
+parameters(x3) %>% 
+  kable(digits = 3)
+parameters(x3, standardize = 'refit') %>% 
+  kable(digits = 3)
+```
+
+### Figure
+
+```{r rq1-figure, fig.height = 2.8}
+(p1 + labs(x = "Hours played", y = "Estimated hours") | 
+  p2 + labs(x = "Hours played", y = "Affective well-being") | 
+  p3 + labs(x = "Estimated hours", y = "Affective well-being")) +
+  plot_annotation(tag_levels = "A")
+```
