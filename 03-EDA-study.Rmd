@@ -1,0 +1,407 @@
+# EDA
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  cache = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  # Save png and pdf figures
+  dev = c("png", "pdf"),
+  fig.ext = c("png", "pdf")
+)
+```
+
+In this section, we describe and plot the data.
+
+First, let's load the data again (not necessary, but in case you only run this chapter and not the preprocessing chapter).
+```{r}
+game_time <- read_rds(here("data/ea/game_time.rds"))
+leveling <- read_rds(here("data/ea/leveling.rds"))
+xp <- read_rds(here("data/ea/xp.rds"))
+gestures <- read_rds(here("data/ea/gestures.rds"))
+prestige <- read_rds(here("data/ea/prestige.rds"))
+friends <- read_rds(here("data/ea/friends.rds"))
+pvz_bfn <- read_rds(here("data/ea/pvz_bfn.rds"))
+```
+
+Set option for `ggthemr`.
+```{r}
+ggthemr("fresh", line_weight = .3)
+```
+
+
+The `pvz_bfn` table contains survey responses, along with each survey respondent's summarized engagement metrics (from the preceding 2 weeks).
+Note that the (cleaned, not aggregated) raw survey responses and engagement metrics are in their own tables for e.g. session level analyses.
+
+For example, we can plot the correlations among the aggregated engagement metrics:
+```{r}
+psych::cor.plot(
+  pvz_bfn[,c(70:83)], 
+  numbers = FALSE, cex.axis = .75, xlas = 2, upper = FALSE, diag = FALSE,
+  main = "PvZ: BfN engagement metrics correlation matrix",
+)
+```
+
+Or from which date the surveys were.
+```{r}
+pvz_bfn %>% 
+  mutate(Respondent = reorder(player_id, date)) %>% 
+  ggplot(aes(date, Respondent)) +
+  geom_point() +
+  theme(axis.text.y = element_blank())
+```
+
+## Missingness
+
+```{r}
+data(pvz_bfn)
+vis_dat(pvz_bfn[,1:20], sort_type = FALSE)
+vis_dat(pvz_bfn[,21:40], sort_type = FALSE)
+vis_dat(pvz_bfn[,41:60], sort_type = FALSE)
+vis_dat(pvz_bfn[,61:ncol(pvz_bfn)], sort_type = FALSE)
+```
+
+## Example correlations
+
+```{r}
+psych::cor.plot(
+  pvz_bfn %>% select(autonomy_2:relatedness_1, Hours, xp, score), 
+  numbers = FALSE, cex.axis = .75, xlas = 2,
+  main = "Example correlation matrix",
+)
+```
+
+
+
+## Dates
+
+When did gameplay and surveys take place?
+This is also to do some preliminary checking of our preprocessing.
+
+```{r}
+hist(pvz_bfn$date, breaks = 31, main = "Survey date")
+hist(xp$date_time, breaks = 100, main = "XP events")
+```
+
+## Outliers
+
+Two observations are > 10 SD away from mean on XP and Hours, we take those out for now.
+
+```{r outliers}
+plot(pvz_bfn$Hours, pvz_bfn$xp)
+pvz_bfn <- filter(pvz_bfn, xp < 2000000, Hours < 100)
+plot(scale(pvz_bfn$Hours), scale(pvz_bfn$xp))
+```
+
+## Correlation matrix
+
+```{r correlation-matrix}
+par(pty = "s")
+pvz_bfn %>% 
+  select(
+    affect = spane_balance, 
+    autonomy, competence, relatedness, enjoyment, extrinsic,
+    Hours, friends, kills = total_kill_count, deaths = total_death_count, 
+    `kill ratio` = total_kill_count/total_death_count,
+    `Hit %` = shots_fired/shots_hit,
+    gestures, levelings, prestige, xp
+    ) %>% 
+  rename_all(str_to_title) %>% 
+  psych::cor.plot(
+    scale = FALSE, stars = TRUE, 
+    xlas = 2, show.legend = FALSE, 
+    cex = .35, cex.axis = .5
+    )
+```
+
+## Preliminary figures for presentation
+
+### Play time and well-being
+
+Correlation between objective time spent playing and SPANE
+
+```{r time-SPANE}
+edafig(Hours, spane_positive) +
+  labs(x = "Hours playing PvZ: BfN", y = "Positive affect score")
+edafig(Hours, spane_negative) +
+  labs(x = "Hours playing PvZ: BfN", y = "Negative affect score")
+edafig(Hours, spane_balance) +
+  labs(x = "Hours playing PvZ: BfN", y = "Affect")
+```
+
+### Competence and well-being
+
+What is the relation between a perceived sense of competence during play and well-being? 
+
+```{r competence-perceived-SPANE}
+edafig(competence, spane_balance) +
+  labs(x = "Perceived competence during play", y = "Affect")
+```
+
+What is the relation between objective indicators of competence of play and well-being? 
+
+```{r competence-objective-SPANE}
+edafig(xp, spane_balance) +
+  scale_x_continuous(labels = function(x) str_glue("{x/1000}k")) +
+  labs(x = "XP Earned", y = "Affect")
+edafig(total_kill_count-total_death_count, spane_balance) +
+  scale_x_continuous(labels = function(x) str_glue("{x/1000}k")) +
+  labs(x = "Kills - Deaths", y = "Affect")
+edafig(shots_hit/shots_fired, spane_balance) +
+  scale_x_continuous(labels = percent) +
+  labs(x = "Shot accuracy (% hits)", y = "Affect")
+```
+
+### Competence and achievement
+
+```{r competence-achievement}
+edafig(Hours, competence) +
+  labs(y = "Perceived competence")
+edafig(xp, competence) +
+  labs(x = "XP", y = "Perceived competence")
+edafig(total_kill_count-total_death_count, competence) +
+  scale_x_continuous(labels = function(x) str_glue("{x/1000}k")) +
+  labs(x = "Kills - Deaths", y = "Perceived competence")
+edafig(shots_hit/shots_fired, competence) +
+  scale_x_continuous(labels = percent) +
+  labs(x = "Shot accuracy (% hits)", y = "Perceived competence")
+```
+
+### Autonomy and well-being
+
+What is the relation between a perceived sense of autonomy during play and well-being? 
+
+```{r autonomy-SPANE}
+edafig(autonomy, spane_balance) +
+  labs(x = "Perceived autonomy during play", y = "Affect")
+```
+
+### Relatedness
+
+What is the relation between a perceived sense of relatedness during play and well-being? 
+
+```{r relatedness-SPANE}
+edafig(relatedness, spane_balance) +
+  labs(x = "Perceived relatedness during play", y = "Affect")
+```
+
+
+## A typical evening
+
+This figure serves as an overview of the telemetry data, how it is structured and what kinds of things it contains.
+
+```{r}
+events <- bind_rows(
+  # select(xp, player_id, game_session, date_time) %>%
+  #   mutate(event = "XP earned"),
+  select(gestures, player_id, game_session, date_time) %>% 
+    mutate(event = "Gesture"),
+  select(friends, player_id, date_time = event_date_time) %>% 
+    mutate(event = "Friend"),
+  select(leveling, player_id, date_time) %>% 
+    mutate(event = "Level up"),
+  select(prestige, player_id, date_time) %>% 
+    mutate(event = "Prestige")
+)
+# An illustrative time period
+tt <- c("2020-08-03 20:00:00", "2020-08-03 23:00:00")
+tmp_game_time <- game_time %>% 
+    filter(game_start_time > tt[1] & game_start_time < tt[2])
+tmp_events <- events %>% 
+  filter(date_time > tt[1] & date_time < tt[2])
+tmp_sub <- tmp_events %>% 
+  count(player_id, sort = TRUE) %>% 
+  slice(c(1, 7, 12))
+```
+
+```{r typical-evening}
+ggplot(
+  tmp_game_time,
+  aes(
+    y = player_id
+  )
+) +
+  geom_segment(
+    aes(
+      x = game_start_time,
+      xend = game_end_time,
+      yend = player_id
+    ),
+    size = 3,
+    color = "gray80"
+  ) +
+  geom_point(
+    data = tmp_events,
+    aes(
+      y = player_id,
+      x = date_time,
+      color = event
+    ),
+    shape = "I", size = 5
+  ) +
+  labs(
+    x = "A regular evening",
+    y = "Player",
+    color = "Event"
+  ) +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    legend.position = "bottom"
+  )
+ggplot(
+  left_join(tmp_sub, tmp_game_time),
+  aes(
+    y = player_id
+  )
+) +
+  geom_segment(
+    aes(
+      x = game_start_time,
+      xend = game_end_time,
+      yend = player_id
+    ),
+    size = 3,
+    color = "gray80"
+  ) +
+  geom_point(
+    data = left_join(tmp_sub, tmp_events),
+    aes(
+      y = player_id,
+      x = date_time,
+      color = event
+    ),
+    shape = "I", size = 5
+  ) +
+  labs(
+    x = "A regular evening",
+    y = "Player",
+    color = "Event"
+  ) +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    legend.position = "bottom"
+  )
+```
+
+## Example item-level correlations
+
+NSat2: Think back to when you were playing Plants vs. Zombies: Battle for Neighborville in the past two weeks. Please read each of the following items carefully, thinking about how it relates to your experience of playing Plants vs. Zombies: Battle for Neighborville in the past two weeks, and then indicate how true the item is for you When playing Plants vs. Zombies: Battle for Neighborville (PvZ) in the past two weeks…
+
+GT4: Last, we’re interested again in how you felt in the past two weeks. You’ve already told us how you felt in general. This time, think about playing Plants vs. Zombies: Battle for Neighborville in the past two weeks. Think about how playing the game made you feel in the past two weeks.How much did you experience each of the following feelings in the past two weeks because of playing Plants vs. Zombies: Battle for Neighborville?
+
+```{r fig-example-correlations}
+# I think we may have an outlier, which I'll cut for this figure
+pvz_bfn <- filter(pvz_bfn, total_kill_count < 20000)
+# Friends should be zero if NA
+pvz_bfn$friends <- coalesce(pvz_bfn$friends, 0)
+
+labels <- c(
+  "Strongly\ndisagree", 
+  rep("", 5),
+  "Strongly\nagree"
+)
+labels2 <- c(
+  "Very often\nor always",
+  rep("", 5),
+  "Very rarely\nor never"
+)
+
+p1 <- foo(levelings, enjoyment_1) + 
+  labs(x="Level ups", y = "I think PvZ\nwas fun to play")
+p2 <- foo(total_kill_count, competence_1) + 
+  labs(x = "Kill count", y = "I felt very capable and\neffective when playing")
+p3 <- foo(friends, spane_pvz_7) +
+  scale_y_reverse(breaks = 1:7, labels = labels2) +
+  labs(x="Friends made", y = "Playing PvZ made\nme feel happy")
+p4 <- foo(Hours, active_play) + 
+  scale_y_continuous() +
+  coord_cartesian(ylim = c(0, 40), xlim = c(0, 40)) +
+  labs(x = "Hours played", y = "Estimated hours played")
+(p1 | p2) / (p3 | p4)
+```
+
+```{r}
+ggthemr_reset()
+```
+
+## Well-being & motivations correlations
+
+Let's have a look at the correlations between the concepts of well-being and motivations (aggregated).
+```{r, message=FALSE, warning=FALSE}
+# call the function
+pair_plot(pvz_bfn%>% 
+        select(
+          spane_balance:extrinsic,
+          spane_pvz_balance
+        ))
+```
+
+## Competence and well-being correlations
+
+Next, the correlations between indicators of competence and well-being.
+```{r warning=FALSE, message=FALSE}
+pair_plot(
+  pvz_bfn %>% 
+    select(
+      competence,
+      levelings,
+      xp,
+      prestige,
+      total_kill_count,
+      spane_balance,
+      spane_pvz_balance
+    )
+)
+```
+
+## Relatedness and well-being correlations
+
+Next, the correlations between indicators of relatedness and well-being.
+```{r warning=FALSE, message=FALSE}
+pair_plot(
+  pvz_bfn %>% 
+    select(
+      relatedness,
+      gestures,
+      friends,
+      spane_balance,
+      spane_pvz_balance
+    )
+)
+```
+
+## More well-being correlations
+
+Then correlations between well-being, autonomy motivation, enjoyment, and extrinsic motivation.
+```{r, warning=FALSE, message=FALSE}
+pair_plot(
+  pvz_bfn %>% 
+    select(
+      autonomy,
+      extrinsic,
+      enjoyment,
+      spane_balance,
+      spane_pvz_balance
+    )
+)
+```
+
+Next relations between self-estimated play (effects) and well-being.
+```{r, warning=FALSE, message=FALSE}
+pair_plot(
+  pvz_bfn %>% 
+    select(
+      Hours,
+      active_play,
+      within_estimate,
+      between_estimate,
+      spane_balance,
+      spane_pvz_balance
+    )
+  )
+```
+
