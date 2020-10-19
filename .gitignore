@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+# Can't share data yet
+data/
+data-raw/ea/
+# Bookdown whatnots
+_bookdown_files/

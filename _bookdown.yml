@@ -1,0 +1,9 @@
+book_filename: "oii-gaming"
+output_dir: "docs"
+delete_merged_file: true
+new_session: no
+view: https://github.com/digital-wellbeing/oii-gaming/blob/master/%s
+edit: https://github.com/digital-wellbeing/oii-gaming/edit/master/%s
+language:
+  ui:
+    chapter_name: ""

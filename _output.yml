@@ -1,0 +1,9 @@
+bookdown::gitbook:
+  highlight: kate
+  css: style.css
+  config:
+    toc:
+      collapse: section
+      before: |
+        <li><a href="./">OII Gaming Study</a></li>
+      after: null

@@ -1,0 +1,25 @@
+--- 
+title: "OII Gaming Study"
+author: "Matti Vuorre & Niklas Johannes"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+documentclass: book
+bibliography: []
+biblio-style: apalike
+link-citations: yes
+description: ""
+---
+
+# Preface {-}
+
+OII Gaming Study
+
+## Analyses and reproducibility
+
+The data analyses are organized into separate [R Markdown](https://rmarkdown.rstudio.com/) files for processing, describing, and modelling.
+
+The project is organized as a R [bookdown](https://bookdown.org/yihui/bookdown/) project, so you can reproduce all analyses by building the book (e.g. in RStudio click the "Build Book" button). The results are rendered to `docs/index.html` and can be viewed in a web browser.
+
+## Raw data
+
+Is in data-raw/ which can't yet be pushed online. Processed data is in data/
