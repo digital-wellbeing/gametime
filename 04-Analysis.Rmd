@@ -1,0 +1,31 @@
+# EDA
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  cache = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  # Save png and pdf figures
+  dev = c("png", "pdf"),
+  fig.ext = c("png", "pdf")
+)
+```
+
+
+```{r}
+game_time <- read_rds(here("data/ea/game_time.rds"))
+leveling <- read_rds(here("data/ea/leveling.rds"))
+xp <- read_rds(here("data/ea/xp.rds"))
+gestures <- read_rds(here("data/ea/gestures.rds"))
+prestige <- read_rds(here("data/ea/prestige.rds"))
+friends <- read_rds(here("data/ea/friends.rds"))
+pvz_bfn <- read_rds(here("data/ea/pvz_bfn.rds"))
+```
+
+## Preface
+
+## Question 1
+
+## Question 2
