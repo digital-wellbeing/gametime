@@ -20,8 +20,9 @@ p_load(
   knitr,
   patchwork,
   scales,
-  tidyverse,
-  parameters
+  parameters,
+  ggstance,
+  tidyverse
 )
 ```
 
@@ -113,4 +114,70 @@ parameters(x3, standardize = 'refit') %>%
   p2 + labs(x = "Hours played", y = "Affective well-being") | 
   p3 + labs(x = "Estimated hours", y = "Affective well-being")) +
   plot_annotation(tag_levels = "A")
+```
+
+## RQ2: Well-being and motivation
+
+```{r}
+rq2 <- pvz %>% 
+  select(spane_balance, autonomy, competence, relatedness, enjoyment, extrinsic, Hours) %>% 
+  filter(Hours < 140) %>% 
+  mutate(Hours = Hours / 10)
+  
+# Nice names for plots
+rq2 <- rq2 %>% rename_all(str_to_title)
+
+psych::cor.plot(
+  rq2, scale = FALSE, stars = TRUE, xlas = 2, show.legend = FALSE
+)
+
+# Standardize everything but Hours
+rq2 <- rq2 %>% 
+  mutate(across(Spane_balance:Extrinsic, ~as.numeric(scale(., T, T))))
+
+# Omnibus model with all variables
+x <- lm(
+  Spane_balance ~ (Autonomy + Competence + Relatedness + Enjoyment + Extrinsic) * Hours, 
+  data = rq2
+  )
+# Models for individual variables
+x1 <- lm(
+  Spane_balance ~ (Autonomy) * Hours, 
+  data = rq2
+  )
+x2 <- lm(
+  Spane_balance ~ (Competence) * Hours, 
+  data = rq2
+  )
+x3 <- lm(
+  Spane_balance ~ (Relatedness) * Hours, 
+  data = rq2
+  )
+x4 <- lm(
+  Spane_balance ~ (Enjoyment) * Hours, 
+  data = rq2
+  )
+x5 <- lm(
+  Spane_balance ~ (Extrinsic) * Hours, 
+  data = rq2
+  )
+```
+
+```{r rq2-figure, fig.height = 3}
+# Put it all together in one plot
+map(list(x, x1, x2, x3, x4, x5), ~as_tibble(parameters(.))) %>% 
+  bind_rows(.id = 'Model') %>% 
+  mutate(Model = ifelse(Model==1, 'Omnibus', 'Unique')) %>% 
+  filter(!(Parameter %in% c('(Intercept)'))) %>%
+  mutate(Parameter = fct_rev(fct_inorder(Parameter))) %>% 
+  ggplot(aes(Coefficient, Parameter, col = Model)) +
+  scale_x_continuous('Standardized coefficient', breaks = pretty_breaks()) +
+  geom_vline(xintercept = 0, lty = 2, size = .25) +
+  geom_pointrangeh(
+    aes(xmin = CI_low, xmax = CI_high), 
+    size = .4, position = position_dodgev(.25)
+    ) +
+  theme(axis.title.y = element_blank())
+
+last_plot() %+% (last_plot()$data %>% filter(Model=='Omnibus')) + aes(col=NULL)
 ```
