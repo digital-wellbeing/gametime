@@ -1,0 +1,478 @@
+# Descriptives
+
+Here, we get the descriptive info for both studies that we report in the Method section of the paper.
+First, let's load the packages we need and load the data sets.
+```{r}
+library(pacman)
+
+p_load(
+  tidyverse,
+  sjPlot,
+  patchwork,
+  cowplot
+)
+```
+
+```{r}
+game_time <- read_rds(here("data/ea/game_time.rds"))
+leveling <- read_rds(here("data/ea/leveling.rds"))
+xp <- read_rds(here("data/ea/xp.rds"))
+gestures <- read_rds(here("data/ea/gestures.rds"))
+prestige <- read_rds(here("data/ea/prestige.rds"))
+friends <- read_rds(here("data/ea/friends.rds"))
+pvz <- read_rds(here("data/ea/pvz_bfn.rds"))
+
+# remove one outlier here already?
+
+```
+
+Then, let's plot and describe demographic information first.
+```{r}
+# raincloud plot function from https://github.com/RainCloudPlots/RainCloudPlots/blob/master/tutorial_R/R_rainclouds.R
+# Defining the geom_flat_violin function ----
+# Note: the below code modifies the
+# existing github page by removing a parenthesis in line 50
+
+"%||%" <- function(a, b) {
+  if (!is.null(a)) a else b
+}
+
+geom_flat_violin <- function(mapping = NULL, data = NULL, stat = "ydensity",
+                             position = "dodge", trim = TRUE, scale = "area",
+                             show.legend = NA, inherit.aes = TRUE, ...) {
+  layer(
+    data = data,
+    mapping = mapping,
+    stat = stat,
+    geom = GeomFlatViolin,
+    position = position,
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(
+      trim = trim,
+      scale = scale,
+      ...
+    )
+  )
+}
+
+#' @rdname ggplot2-ggproto
+#' @format NULL
+#' @usage NULL
+#' @export
+GeomFlatViolin <-
+  ggproto("GeomFlatViolin", Geom,
+    setup_data = function(data, params) {
+      data$width <- data$width %||%
+        params$width %||% (resolution(data$x, FALSE) * 0.9)
+
+      # ymin, ymax, xmin, and xmax define the bounding rectangle for each group
+      data %>%
+        group_by(group) %>%
+        mutate(
+          ymin = min(y),
+          ymax = max(y),
+          xmin = x,
+          xmax = x + width / 2
+        )
+    },
+
+    draw_group = function(data, panel_scales, coord) {
+      # Find the points for the line to go all the way around
+      data <- transform(data,
+        xminv = x,
+        xmaxv = x + violinwidth * (xmax - x)
+      )
+
+      # Make sure it's sorted properly to draw the outline
+      newdata <- rbind(
+        plyr::arrange(transform(data, x = xminv), y),
+        plyr::arrange(transform(data, x = xmaxv), -y)
+      )
+
+      # Close the polygon: set first and last point the same
+      # Needed for coord_polar and such
+      newdata <- rbind(newdata, newdata[1, ])
+
+      ggplot2:::ggname("geom_flat_violin", GeomPolygon$draw_panel(newdata, panel_scales, coord))
+    },
+
+    draw_key = draw_key_polygon,
+
+    default_aes = aes(
+      weight = 1, colour = "grey20", fill = "white", size = 0.5,
+      alpha = NA, linetype = "solid"
+    ),
+
+    required_aes = c("x", "y")
+  )
+
+# function that returns summary stats
+describe <- function(
+  dat,
+  variable,
+  trait = FALSE
+){
+  # if variable is not repeated-measures, take only one measure per participant
+  if (trait == TRUE){
+    dat <- 
+      dat %>%
+      group_by(player_id) %>% 
+      slice(1) %>% 
+      ungroup()
+  }
+  
+  # then get descriptives
+  descriptives <-
+    dat %>%
+    filter(!is.na(UQ(sym(variable)))) %>% # remove missing values
+    summarise(
+      across(
+        !! variable,
+        list(
+          N = ~ n(),
+          mean = mean,
+          sd = sd,
+          median = median,
+          min = min,
+          max = max,
+          cilow = ~Rmisc::CI(.x)[[3]], # lower CI
+          cihigh = ~Rmisc::CI(.x)[[1]] # upper CI
+        )
+      )
+    )
+
+  descriptives <-
+    descriptives %>%
+
+    # only keep measure
+    rename_all(
+      ~ str_remove(
+        .,
+        paste0(variable, "_")
+      )
+    ) %>%
+    mutate(
+      variable = variable,
+      range = max - min
+    ) %>%
+    relocate(variable) %>%
+    relocate(
+      range,
+      .after = max
+    )
+  
+  return(descriptives)
+}
+
+single_cloud <- 
+  function(
+    raw_data,
+    summary_data,
+    variable,
+    color,
+    title,
+    trait = FALSE
+  ){
+    
+    # take only one row per person if it's a trait variable
+    if (trait == TRUE){
+      raw_data <-
+        raw_data %>% 
+        group_by(player_id) %>% 
+        slice(1) %>% 
+        ungroup()
+    }
+    
+    # the plot
+    p <- 
+      ggplot(
+        raw_data %>%
+          mutate(Density = 1),
+        aes(
+          x = Density,
+          y = get(variable)
+        )
+      ) +
+      geom_flat_violin( # the "cloud"
+        position = position_nudge(x = .2, y = 0),
+        adjust = 2,
+        color = NA,
+        fill = color,
+        alpha = 0.5
+      ) +
+      geom_point( # the "rain"
+        position = position_jitter(width = .15),
+        size = 1,
+        color = color,
+        alpha = 0.5
+      ) +
+      geom_point( # the mean from the summary stats
+        data = summary_data %>%
+          filter(variable == !! variable) %>%
+          mutate(Density = 1),
+        aes(
+          x = Density + 0.175,
+          y = mean
+        ),
+        color = color,
+        size = 2.5
+      ) +
+      geom_errorbar( # error bars
+        data = summary_data %>%
+          filter(variable == !! variable) %>%
+          mutate(Density = 1),
+        aes(
+          x = Density + 0.175,
+          y = mean,
+          ymin = cilow,
+          ymax = cihigh
+        ),
+        width = 0,
+        size = 0.8,
+        color = color
+      ) +
+      ylab(title) +
+      theme_cowplot() +
+      theme(
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line = element_blank()
+      ) +
+      guides(
+        color = FALSE,
+        fill = FALSE
+      ) +
+      coord_flip()
+    
+    return(p)
+  }
+
+single_cloud(
+  survey,
+  describe(survey, "age", trait = FALSE),
+  "age",
+  "#009E73",
+  "Distribution of age"
+)
+```
+
+In total, `r length(unique(pvz$player_id))` players responded to the survey.
+Their mean age was *M* = `r round(mean(survey$age), digits = 0)` with a standard deviation of *SD* = `r round(sd(survey$age), digits = 0)`.
+
+Then let's look at the gender distribution.
+```{r}
+count(survey, gender) %>% 
+  knitr::kable(., caption = "Gender frequencies")
+```
+
+Next, I'll create a table with the summary stats of the self-reported variables.
+```{r}
+# some proper names for the variables
+my_names <- 
+  c(
+    "SPANE positive",
+    "SPANE negative",
+    "SPANE balance",
+    "Autonomy",
+    "Competence",
+    "Relatedness",
+    "Enjoyment",
+    "Extrinsic motivation",
+    "Self-estimated play"
+  )
+
+# function to get an APA table with descriptive info
+get_table <- 
+  function(
+    dat,
+    variable_names,
+    file_name
+  ) {
+    dat %>% 
+      summarise(
+        across(
+          everything(),
+          list(
+            N = ~ n(),
+            Mean = ~ mean(.x, na.rm = TRUE),
+            SD = ~ sd(.x, na.rm = TRUE),
+            Median = ~ median(.x, na.rm = TRUE),
+            Min = ~ min(.x, na.rm = TRUE),
+            Max = ~ max(.x, na.rm = TRUE),
+            `Lower 95%CI` = ~Rmisc::CI(na.omit(.x))[[3]], # lower CI
+            `Upper 95%CI` = ~Rmisc::CI(na.omit(.x))[[1]]
+          )
+        )
+      ) %>% 
+      
+      # get into long format
+      pivot_longer(
+        everything(),
+        names_to = c("Variable", "Measure"),
+        values_to = "Value",
+        names_pattern = "(.*)_([^_]+$)" # match by last occurrence of underscore
+      ) %>%
+      
+      # and back to wide format
+      pivot_wider(
+        id_cols = Variable,
+        names_from = Measure,
+        values_from = Value
+      ) %>% 
+      
+      # round everything to two digits
+      mutate(
+        across(
+          -Variable,
+          ~ round(.x, digits = 2)
+        )
+      ) %>% 
+      
+      # give proper names
+      mutate(
+        Variable = variable_names # function argument
+      ) %>%  
+      
+      # print as apa table
+      tab_df( # fro sjPlot package
+        ., 
+        file = file_name)
+    }
+
+get_table(
+  pvz %>% 
+    select(
+      spane_positive:extrinsic,
+      active_play
+    ),
+  my_names,
+  "pvz_survey_descriptives.doc"
+)
+```
+
+And a check of the variable distributions.
+```{r}
+p1 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "spane_positive", trait = TRUE),
+    "spane_positive",
+    "#999999",
+    title = "SPANE positive",
+    trait = TRUE
+  )
+p2 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "spane_negative", trait = TRUE),
+    "spane_negative",
+    "#E69F00",
+    title = "SPANE negative",
+    trait = TRUE
+  )
+
+p3 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "spane_balance", trait = TRUE),
+    "spane_balance",
+    "#56B4E9",
+    title = "SPANE Balance",
+    trait = TRUE
+  )
+
+p4 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "autonomy", trait = TRUE),
+    "autonomy",
+    "#009E73",
+    title = "Autonomy",
+    trait = TRUE
+  )
+
+p5 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "competence", trait = TRUE),
+    "competence",
+    "#F0E442",
+    title = "Competence",
+    trait = TRUE
+  )
+
+p6 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "relatedness", trait = TRUE),
+    "relatedness",
+    "#000000",
+    title = "Relatedness",
+    trait = TRUE
+  )
+
+p7 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "enjoyment", trait = TRUE),
+    "enjoyment",
+    "#0072B2",
+    title = "Enjoyment",
+    trait = TRUE
+  )
+
+p8 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "extrinsic", trait = TRUE),
+    "extrinsic",
+    "#D55E00",
+    title = "Extrinsic motivation",
+    trait = TRUE
+  )
+
+p9 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "active_play", trait = TRUE),
+    "active_play",
+    "#CC79A7",
+    title = "Self-estimated play",
+    trait = TRUE
+  )
+
+(p1 | p2) / (p3 | p4) / (p5 | p6) / (p7 | p8) / p9
+```
+
+Alright, let's also create a table with descriptive info for the play events.
+```{r}
+my_names <- 
+  c(
+    "Total kill count",
+    "Total death count",
+    "Score",
+    "Damage dealt",
+    "Critical hits count",
+    "Shots fired",
+    "Shots hit",
+    "Friends made",
+    "Objective time played (in h)",
+    "Gestures used",
+    "Levels gained",
+    "Prestige levels gained",
+    "XP earned"
+  )
+
+get_table(
+  pvz %>% 
+    select(
+      total_kill_count:xp
+    ),
+  my_names,
+  "pvz_telemetry_descriptives.doc"
+)
+```
+
