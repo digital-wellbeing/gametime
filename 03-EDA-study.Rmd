@@ -1,7 +1,16 @@
 # EDA
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
+library(pacman)
+p_load(
+  knitr,
+  here,
+  visdat,
+  scales,
+  patchwork,
+  tidyverse
+)
+opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   cache = TRUE,
@@ -26,11 +35,80 @@ friends <- read_rds(here("data/ea/friends.rds"))
 pvz_bfn <- read_rds(here("data/ea/pvz_bfn.rds"))
 ```
 
-Set option for `ggthemr`.
-```{r}
-ggthemr("fresh", line_weight = .3)
-```
+Here's a function to draw quick bivariate figures, and another one for scatterplot matrices
 
+```{r custom-functions}
+edafig <- function(x, y) {
+  pvz_bfn %>% 
+    ggplot(aes({{x}}, {{y}})) +
+    scale_y_continuous(breaks = pretty_breaks()) +
+    geom_smooth(method = "lm", fill="#0072B2", color="#0072B2", alpha = .2) +
+    geom_point(color = "#56B4E9", alpha = 0.5) +
+    theme(aspect.ratio = 1)
+}
+lm_function <- 
+  function(
+    data, 
+    mapping, 
+    ...
+    ){
+  p <- 
+    ggplot(
+      data = data, 
+      mapping = mapping
+      ) + 
+    geom_point(
+      color = "#56B4E9",
+      alpha = 0.5
+    ) + 
+    geom_smooth(
+      method=lm, 
+      fill="#0072B2", 
+      color="#0072B2", 
+      ...)
+  p
+}
+
+dens_function <-
+  function(
+    data,
+    mapping,
+    ...
+  ){
+    p <- 
+      ggplot(
+        data = data,
+        mapping = mapping
+      ) +
+      geom_density(fill = "#009E73", color = NA, alpha = 0.5)
+  }
+
+pair_plot <- 
+  function(
+    dat
+  ) {
+    GGally::ggpairs(
+      data = dat,
+      lower = list(continuous = lm_function), # custom helper function
+      diag = list(continuous = dens_function), # custom helper function
+    ) +
+      theme(
+        axis.line=element_blank(),
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title.y=element_blank(),
+        axis.title.x=element_blank(),
+        legend.position="none",
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank(),
+        strip.background = element_blank()
+      )
+  }
+```
 
 The `pvz_bfn` table contains survey responses, along with each survey respondent's summarized engagement metrics (from the preceding 2 weeks).
 Note that the (cleaned, not aggregated) raw survey responses and engagement metrics are in their own tables for e.g. session level analyses.
@@ -310,22 +388,18 @@ labels2 <- c(
   "Very rarely\nor never"
 )
 
-p1 <- foo(levelings, enjoyment_1) + 
+p1 <- edafig(levelings, enjoyment_1) + 
   labs(x="Level ups", y = "I think PvZ\nwas fun to play")
-p2 <- foo(total_kill_count, competence_1) + 
+p2 <- edafig(total_kill_count, competence_1) + 
   labs(x = "Kill count", y = "I felt very capable and\neffective when playing")
-p3 <- foo(friends, spane_pvz_7) +
+p3 <- edafig(friends, spane_pvz_7) +
   scale_y_reverse(breaks = 1:7, labels = labels2) +
   labs(x="Friends made", y = "Playing PvZ made\nme feel happy")
-p4 <- foo(Hours, active_play) + 
+p4 <- edafig(Hours, active_play) + 
   scale_y_continuous() +
   coord_cartesian(ylim = c(0, 40), xlim = c(0, 40)) +
   labs(x = "Hours played", y = "Estimated hours played")
 (p1 | p2) / (p3 | p4)
-```
-
-```{r}
-ggthemr_reset()
 ```
 
 ## Well-being & motivations correlations

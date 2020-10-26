@@ -8,6 +8,7 @@ library(pacman)
 p_load(
   tidyverse,
   sjPlot,
+  here,
   patchwork,
   cowplot
 )
@@ -251,8 +252,8 @@ single_cloud <-
   }
 
 single_cloud(
-  survey,
-  describe(survey, "age", trait = FALSE),
+  pvz,
+  describe(pvz, "age", trait = FALSE),
   "age",
   "#009E73",
   "Distribution of age"
@@ -260,11 +261,11 @@ single_cloud(
 ```
 
 In total, `r length(unique(pvz$player_id))` players responded to the survey.
-Their mean age was *M* = `r round(mean(survey$age), digits = 0)` with a standard deviation of *SD* = `r round(sd(survey$age), digits = 0)`.
+Their mean age was *M* = `r round(mean(pvz$age), digits = 0)` with a standard deviation of *SD* = `r round(sd(pvz$age), digits = 0)`.
 
 Then let's look at the gender distribution.
 ```{r}
-count(survey, gender) %>% 
+count(pvz, gender) %>% 
   knitr::kable(., caption = "Gender frequencies")
 ```
 

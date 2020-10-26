@@ -1,7 +1,17 @@
+# (PART) Study 1 {-}
+
 # Preprocessing
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(
+library(pacman)
+p_load(
+  readxl,
+  knitr,
+  here,
+  lubridate,
+  tidyverse
+)
+opts_chunk$set(
   echo = TRUE, 
   message = FALSE, 
   warning = FALSE, 
@@ -21,6 +31,32 @@ After processing, we place the processed data sets in `data/ea/` as R data objec
 Last, we'll add these processed telemetry data to the survey responses (matching survey responses of a player with their telemetry data).
 
 ## Process raw files
+
+A function to read both PVZ waves' data
+
+```{r}
+read_both_waves <- function(stub = "OII_PVZ_Authentications", ...) {
+  # Filenames of wave 1 and 2 authentications files
+  list.files(
+    "data-raw/ea", pattern = stub, full.names = TRUE
+  ) %>% 
+    # Put wave 1 first
+    rev() %>% 
+    # Read into a list of data frames
+    map(read_csv, ...) %>% 
+    # Bind into one data frame with wave ID
+    bind_rows(.id = "wave") %>%
+    # Take only participants who filled out survey
+    filter(player_id %in% survey_ids)
+}
+```
+
+Ensure output directory exists
+
+```{r}
+dir.create("data/")
+dir.create("data/ea/", FALSE)
+```
 
 ### Survey
 
