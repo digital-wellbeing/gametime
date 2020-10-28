@@ -1,6 +1,4 @@
-# (PART) Study 1 {-}
-
-# Preprocessing
+# Process PVZ data
 
 ```{r setup, include=FALSE}
 library(pacman)

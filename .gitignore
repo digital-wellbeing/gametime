@@ -5,6 +5,6 @@
 .DS_Store
 # Can't share data yet
 data/
-data-raw/ea/
+data-raw/
 # Bookdown whatnots
 _bookdown_files/

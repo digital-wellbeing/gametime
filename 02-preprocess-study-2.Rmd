@@ -1,0 +1,247 @@
+# Process AC:NH data
+
+```{r setup, include=FALSE}
+library(pacman)
+p_load(
+  readxl,
+  knitr,
+  here,
+  lubridate,
+  tidyverse
+)
+# remotes::install_github("rubenarslan/formr")
+p_load(formr)
+opts_chunk$set(
+  echo = TRUE, 
+  message = FALSE, 
+  warning = FALSE, 
+  cache = TRUE
+)
+```
+
+Here, we process the AC:NH survey and telemetry files.
+
+Currently this script pulls survey data from formr.org, and saves to `data-raw/noa/`. If data already exists there, then it is loaded instead.
+
+Telemetry data doesn't exist yet.
+
+After processing, we place the processed data sets in `data/noa/` as R data objects.
+
+## Process formr surveys
+
+### Get raw data
+
+Ensure output directories exists
+
+```{r}
+dir.create("data-raw/", FALSE)
+dir.create("data-raw/noa/", FALSE)
+dir.create("data/", FALSE)
+dir.create("data/noa/", FALSE)
+```
+
+Read data from formr.org and save to `data-raw/` if it doesn't yet exist. For now you have to manually authenticate to formr if needed, sorry.
+
+```{r}
+if (!file.exists(here("data-raw/noa/formr.rds"))) {
+  formr_connect()
+  # These are the surveys
+  surveys <- c("gaming_welcome", paste0("gaming_block", 2:5))
+  # List of surveys' data frames
+  ac <- map(surveys, ~formr_results(.) %>% as_tibble)
+  saveRDS(ac, here("data-raw/noa/formr.rds"))
+} else(ac <- readRDS(here("data-raw/noa/formr.rds")))
+```
+
+Take only responses after the survey went live (i.e. take out our test sessions). Later, to make sure, we need to retain only rows where `code` exists in telemetry.
+
+```{r}
+ac[[1]] <- ac[[1]] %>% filter(created >= ymd("2020-10-27"))
+```
+
+Then, retain only rows where code exists, and consent & age check out
+
+```{r}
+# Keep only surveys whose code exists in gaming_welcome$code
+ac[[1]] <- filter(
+  ac[[1]], !is.na(code), of_age==1, consent_data==1, consent==1
+)
+```
+
+Now apply those exclusions to all five survey data frames
+
+```{r}
+ac <- map(ac, ~filter(., code %in% ac[[1]][["code"]]))
+```
+
+Take out all time variables except first created and last ended (when survey started and ended)
+
+```{r}
+ac[[1]] <- select(ac[[1]], -c(modified:expired))
+ac[2:4] <- map(ac[2:4], ~select(., -c(created:expired)))
+ac[[5]] <- select(ac[[5]], -c(created, modified, expired))
+```
+
+Put all five survey's responses on one row per participant
+
+```{r}
+ac <- ac %>% reduce(left_join)
+glimpse(ac)
+glimpse(as_factor(ac))
+```
+
+Create a file with codes (hashed ID) and when survey started
+
+```{r eval = FALSE}
+select(ac, code, survey_start = created) %>% 
+  arrange(survey_start) %>% 
+  write_csv(here(str_glue("ID---{Sys.time()}.csv")))
+```
+
+Because we only keep telemetry data of players who answered the survey, we'll get a variable with the IDs of ppl who filled survey
+
+```{r}
+survey_ids <- pull(ac, code) 
+```
+
+
+### Clean survey data
+
+- Create duration variable
+- give some sensible variable names
+- assign proper variable types
+
+```{r}
+# Duration of survey
+ac <- ac %>% 
+  mutate(
+    survey_duration = ended-created
+  )
+# Create variables for straightliners by checking if variance within a block of questions is zero
+ac$spane_straightliner <- apply(
+  select(ac, starts_with("spane_") & !starts_with("spane_acnh")), 
+  1, sd, na.rm = TRUE
+)
+ac$spane_straightliner <- ac$spane_straightliner==0
+ac$motivations_straightliner <- apply(
+  select(
+    ac, 
+    starts_with("autonomy_"), 
+    starts_with("competence_"), 
+    starts_with("related_"), 
+    starts_with("enjoymen_"), 
+    starts_with("extrinsic_")
+  ), 
+  1, sd, na.rm = TRUE
+)
+ac$motivations_straightliner <- ac$motivations_straightliner==0
+table(ac$spane_straightliner)
+table(ac$motivations_straightliner)
+
+# These are needed as factors
+ac <- ac %>% 
+  mutate(across(c(sex, played_with_others), as_factor))
+
+
+# reverse scored items
+ac <- ac %>% 
+  mutate(
+    across(
+      c(
+        related_not_close,
+        enjoyment_attention,
+        enjoymen_boring
+      ),
+      ~ 8 - .x
+    )
+  )
+```
+
+Next, let's create mean indices for the scales.
+SPANE has positive affect, negative affect, and an affect balance score (subtract negative from positive).
+```{r create-scales}
+select(ac, starts_with("spane_"))
+    # general spane
+ac <- ac %>% 
+  mutate(
+    spane_positive = rowSums(
+      select(
+        .,
+        spane_positive,
+        spane_good,
+        spane_pleasant,
+        spane_happy,
+        spane_joyful,
+        spane_contented
+      ),
+      na.rm = TRUE
+    ),
+    spane_negative = rowSums(
+      select(
+        .,
+        spane_negative,
+        spane_bad,
+        spane_unpleasant,
+        spane_sad,
+        spane_afraid,
+        spane_angry
+      ),
+      na.rm = TRUE
+    ),
+    spane_balance = spane_positive - spane_negative
+  )
+
+  # motivations
+ac <- ac %>% mutate(
+  autonomy = rowMeans(select(., starts_with("autonomy")), na.rm = TRUE),
+  competence = rowMeans(select(., starts_with("competence")), na.rm = TRUE),
+  relatedness = rowMeans(select(., starts_with("relatedness")), na.rm = TRUE),
+  enjoyment = rowMeans(select(., starts_with("enjoymen")), na.rm = TRUE),
+  extrinsic = rowMeans(select(., starts_with("extrinsic")), na.rm = TRUE)
+)
+
+  # spane because of playing AC:NH
+ac <- ac %>% 
+  mutate(
+  spane_acnh_positive = rowSums(
+    select(
+      .,
+      spane_acnh_positive,
+      spane_acnh_good,
+      spane_acnh_pleasant,
+      spane_acnh_happy,
+      spane_acnh_joyful,
+      spane_acnh_contented
+    ),
+    na.rm = TRUE
+  ),
+  spane_acnh_negative = rowSums(
+    select(
+      .,
+      spane_acnh_negative,
+      spane_acnh_bad,
+      spane_acnh_unpleasant,
+      spane_acnh_sad,
+      spane_acnh_afraid,
+      spane_acnh_angry
+    ),
+    na.rm = TRUE
+  ),
+  spane_acnh_balance = spane_acnh_positive - spane_acnh_negative
+  )
+  
+  # hours of estimated play
+ac <- ac %>% mutate(
+  active_play = active_play_hours + (active_play_minutes / 60)
+)
+```
+
+### Checking
+
+[todo]
+
+## Save file
+
+```{r}
+write_rds(ac, here("data/noa/ac.rds"))
+```
