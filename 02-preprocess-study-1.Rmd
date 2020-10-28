@@ -626,7 +626,7 @@ survey <-
     active_play_minutes = GT1c2,
     within_estimate = GT2,
     between_estimate = GT3,
-    spane_pvz_ = starts_with("GT4")
+    spane_game_ = starts_with("GT4")
   ) %>% 
   
   # assign proper variable types  and factor levels
@@ -728,34 +728,34 @@ survey <-
     enjoyment = rowMeans(select(., starts_with("enjoyment")), na.rm = TRUE),
     extrinsic = rowMeans(select(., starts_with("extrinsic")), na.rm = TRUE),
     
-    # spane because of playing pvz
-    spane_pvz_positive = rowSums(
+    # spane because of playing game
+    spane_game_positive = rowSums(
       select(
         .,
-        spane_pvz_1,
-        spane_pvz_3,
-        spane_pvz_5,
-        spane_pvz_7,
-        spane_pvz_10,
-        spane_pvz_12
+        spane_game_1,
+        spane_game_3,
+        spane_game_5,
+        spane_game_7,
+        spane_game_10,
+        spane_game_12
       ),
       na.rm = TRUE
     ),
     
-    spane_pvz_negative = rowSums(
+    spane_game_negative = rowSums(
       select(
         .,
-        spane_pvz_2,
-        spane_pvz_4,
-        spane_pvz_6,
-        spane_pvz_8,
-        spane_pvz_9,
-        spane_pvz_11
+        spane_game_2,
+        spane_game_4,
+        spane_game_6,
+        spane_game_8,
+        spane_game_9,
+        spane_game_11
       ),
       na.rm = TRUE
     ),
     
-    spane_pvz_balance = spane_pvz_positive - spane_pvz_negative,
+    spane_game_balance = spane_game_positive - spane_game_negative,
     
     # hours of estimated play
     active_play = active_play_hours + (active_play_minutes / 60)
