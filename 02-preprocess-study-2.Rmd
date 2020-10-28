@@ -195,7 +195,7 @@ ac <- ac %>%
 ac <- ac %>% mutate(
   autonomy = rowMeans(select(., starts_with("autonomy")), na.rm = TRUE),
   competence = rowMeans(select(., starts_with("competence")), na.rm = TRUE),
-  relatedness = rowMeans(select(., starts_with("relatedness")), na.rm = TRUE),
+  relatedness = rowMeans(select(., starts_with("related")), na.rm = TRUE),
   enjoyment = rowMeans(select(., starts_with("enjoymen")), na.rm = TRUE),
   extrinsic = rowMeans(select(., starts_with("extrinsic")), na.rm = TRUE)
 )
@@ -238,7 +238,23 @@ ac <- ac %>% mutate(
 
 ### Checking
 
-[todo]
+Codes (Player IDs)
+
+```{r}
+count(ac, code, sort = T)
+```
+
+There are two kinds of problems:
+1. No ID was captured
+2. An ID was used more than once
+
+For both cases, connecting to telemetry would be impossible (and wrong connections could be made in latter case), so we drop these cases
+
+```{r}
+ac <- add_count(ac, code) %>% 
+  filter(n == 1) %>% 
+  select(-n)
+```
 
 ## Save file
 
