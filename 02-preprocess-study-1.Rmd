@@ -764,8 +764,47 @@ survey <-
 
 Now we can merge and write the files.
 ```{r}
-pvz_bfn <- survey %>% 
+pvz <- survey %>% 
   left_join(meta, by = "player_id")
+```
 
-write_rds(pvz_bfn, here("data/ea/pvz_bfn.rds"))
+## Outliers
+
+Potential outliers. We replace all values that are more than 6SD away from the variable's mean with NAs. As a consequence, individuals are excluded on an analysis-by-analysis case (so if has bad data relevant to that analysis or figure).
+
+This is only done for a subset of variables (relavant to analyses; see below)
+
+```{r}
+pvz <- pvz %>% 
+  # These variables will be affected
+  pivot_longer(
+    c(spane_1:xp, -played_with_others, -contains("straightliner"))
+  ) %>% 
+  group_by(name) %>% 
+  mutate(z_value = as.numeric(scale(value))) 
+```
+
+These are the numbers of people taken out of each variable (only variables that were affected are shown):
+
+```{r}
+# This is what are taken out
+pvz %>% 
+  summarise(Extremes = sum(abs(z_value>=6), na.rm = TRUE)) %>% 
+  filter(Extremes > 0)
+```
+
+Code to do it:
+
+```{r}
+pvz <- pvz %>%
+  mutate(value = ifelse(abs(z_value >= 6), NA, value)) %>% 
+  select(-z_value) %>% 
+  pivot_wider(names_from = "name", values_from = "value") %>% 
+  ungroup()
+```
+
+## Save files
+
+```{r}
+write_rds(pvz, here("data/ea/pvz.rds"))
 ```
