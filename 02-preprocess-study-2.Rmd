@@ -160,14 +160,16 @@ ac <- ac %>%
 Next, let's create mean indices for the scales.
 SPANE has positive affect, negative affect, and an affect balance score (subtract negative from positive).
 ```{r create-scales}
-select(ac, starts_with("spane_"))
-    # general spane
+# Need to rename spane item so it doesnt become confused with sum score
+ac <- rename(ac, spane_positiveItem = spane_positive)
+
+# general spane
 ac <- ac %>% 
   mutate(
     spane_positive = rowSums(
       select(
         .,
-        spane_positive,
+        spane_positiveItem,
         spane_good,
         spane_pleasant,
         spane_happy,
@@ -191,7 +193,7 @@ ac <- ac %>%
     spane_balance = spane_positive - spane_negative
   )
 
-  # motivations
+# motivations
 ac <- ac %>% mutate(
   autonomy = rowMeans(select(., starts_with("autonomy")), na.rm = TRUE),
   competence = rowMeans(select(., starts_with("competence")), na.rm = TRUE),
@@ -200,7 +202,7 @@ ac <- ac %>% mutate(
   extrinsic = rowMeans(select(., starts_with("extrinsic")), na.rm = TRUE)
 )
 
-  # spane because of playing AC:NH
+# spane because of playing AC:NH
 ac <- ac %>% 
   mutate(
   spane_game_positive = rowSums(
@@ -230,10 +232,11 @@ ac <- ac %>%
   spane_game_balance = spane_game_positive - spane_game_negative
   )
   
-  # hours of estimated play
-ac <- ac %>% mutate(
-  active_play = active_play_hours + (active_play_minutes / 60)
-)
+# hours of estimated play
+ac <- ac %>% 
+  mutate(
+    active_play = active_play_hours + (active_play_minutes / 60)
+  )
 ```
 
 ### Checking
