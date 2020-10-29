@@ -118,12 +118,12 @@ ac <- ac %>%
     survey_duration = ended-created
   )
 # Create variables for straightliners by checking if variance within a block of questions is zero
-ac$spane_straightliner <- apply(
+ac$straightliner_spane <- apply(
   select(ac, starts_with("spane_") & !starts_with("spane_acnh")), 
   1, sd, na.rm = TRUE
 )
-ac$spane_straightliner <- ac$spane_straightliner==0
-ac$motivations_straightliner <- apply(
+ac$straightliner_spane <- ac$straightliner_spane==0
+ac$straightliner_motivations <- apply(
   select(
     ac, 
     starts_with("autonomy_"), 
@@ -134,9 +134,7 @@ ac$motivations_straightliner <- apply(
   ), 
   1, sd, na.rm = TRUE
 )
-ac$motivations_straightliner <- ac$motivations_straightliner==0
-table(ac$spane_straightliner)
-table(ac$motivations_straightliner)
+ac$straightliner_motivations <- ac$straightliner_motivations==0
 
 # These are needed as factors
 ac <- ac %>% 
@@ -289,7 +287,17 @@ Change some names to better match the other data
 ac <- rename(ac, player_id = code)
 ```
 
-## Outliers
+## Exclusions
+
+### Straightliners
+
+We take out all individuals who straightlined (gave the same response to every item) thru SPANE or motivations questions
+
+```{r}
+table(ac$straightliner_motivations|ac$straightliner_spane)
+```
+
+### Outliers
 
 Potential outliers. We replace all values that are more than 6SD away from the variable's mean with NAs. As a consequence, individuals are excluded on an analysis-by-analysis case (so if has bad data relevant to that analysis or figure).
 

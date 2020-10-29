@@ -610,7 +610,7 @@ survey <-
     
     # well-being
     spane_ = starts_with("A1"), # general well-being in the two weeks
-    spane_straightliner = hA1Straight, # whether someone straightlined on spane
+    straightliner_spane = hA1Straight, # whether someone straightlined on spane
     
     # motivations
     played_with_others = NSat1, # filter question that determines whether relatedness items were shown
@@ -619,7 +619,7 @@ survey <-
     relatedness_ = NSat2r7:NSat2r9,
     enjoyment_ = NSat2r10:NSat2r13,
     extrinsic_ = NSat2r14:NSat2r17,
-    motivations_straighliner = hNSat2Straight,
+    straightliner_motivations = hNSat2Straight,
     
     # self-reported play
     active_play_hours = GT1c1,
@@ -684,6 +684,10 @@ survey <-
       ~ 8 - .x
     )
   )
+
+# Indicators for straightliners
+survey <- survey %>% 
+  mutate(across(contains("straightliner"), ~.x==1))
 ```
 
 Next, let's create mean indices for the scales.
@@ -768,7 +772,17 @@ pvz <- survey %>%
   left_join(meta, by = "player_id")
 ```
 
-## Outliers
+## Exclusions
+
+### Straightliners
+
+We take out all individuals who straightlined (gave the same response to every item) thru SPANE or motivations questions
+
+```{r}
+table(pvz$straightliner_motivations|pvz$straightliner_spane)
+```
+
+### Outliers
 
 Potential outliers. We replace all values that are more than 6SD away from the variable's mean with NAs. As a consequence, individuals are excluded on an analysis-by-analysis case (so if has bad data relevant to that analysis or figure).
 
@@ -802,6 +816,7 @@ pvz <- pvz %>%
   pivot_wider(names_from = "name", values_from = "value") %>% 
   ungroup()
 ```
+
 
 ## Save files
 
