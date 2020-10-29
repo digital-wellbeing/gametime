@@ -78,9 +78,9 @@ Check how many participants in each wave
 ```{r}
 survey %>% 
   select(UID, date) %>% 
-  mutate(wave = ifelse(date < ymd("2020-08-31"), "Wave 1", "Wave 2")) %>% 
+  mutate(wave = ifelse(date <= ymd("2020-08-31"), "Wave 1", "Wave 2")) %>% 
   group_by(wave) %>% 
-  summarise(min = min(date), max = max(date))
+  summarise(min = min(date), max = max(date), total_respondents = n())
 ```
 
 ## Authentications
