@@ -21,7 +21,7 @@ xp <- read_rds(here("data/ea/xp.rds"))
 gestures <- read_rds(here("data/ea/gestures.rds"))
 prestige <- read_rds(here("data/ea/prestige.rds"))
 friends <- read_rds(here("data/ea/friends.rds"))
-pvz <- read_rds(here("data/ea/pvz_bfn.rds"))
+pvz <- read_rds(here("data/ea/pvz.rds"))
 
 # remove one outlier here already?
 
