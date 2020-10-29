@@ -256,7 +256,33 @@ ac <- add_count(ac, code) %>%
   select(-n)
 ```
 
-## Save file
+## Telemetry
+
+**We don't have it yet but I'll make some up to help set up the pipeline.**
+
+```{r}
+set.seed(1)
+game_time <- tibble(
+  code = ac$code,
+  Hours = rgamma(nrow(ac), 15)
+)
+```
+
+## Join survey and telemetry
+
+```{r}
+ac <- left_join(ac, game_time)
+```
+
+## Harmonize data to Study 1
+
+Change some names to better match the other data
+
+```{r}
+ac <- rename(ac, player_id = code)
+```
+
+## Save files
 
 ```{r}
 write_rds(ac, here("data/noa/ac.rds"))
