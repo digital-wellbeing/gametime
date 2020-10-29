@@ -32,14 +32,14 @@ xp <- read_rds(here("data/ea/xp.rds"))
 gestures <- read_rds(here("data/ea/gestures.rds"))
 prestige <- read_rds(here("data/ea/prestige.rds"))
 friends <- read_rds(here("data/ea/friends.rds"))
-pvz_bfn <- read_rds(here("data/ea/pvz_bfn.rds"))
+pvz <- read_rds(here("data/ea/pvz.rds"))
 ```
 
 Here's a function to draw quick bivariate figures, and another one for scatterplot matrices
 
 ```{r custom-functions}
 edafig <- function(x, y) {
-  pvz_bfn %>% 
+  pvz %>% 
     ggplot(aes({{x}}, {{y}})) +
     scale_y_continuous(breaks = pretty_breaks()) +
     geom_smooth(method = "lm", fill="#0072B2", color="#0072B2", alpha = .2) +
@@ -110,13 +110,13 @@ pair_plot <-
   }
 ```
 
-The `pvz_bfn` table contains survey responses, along with each survey respondent's summarized engagement metrics (from the preceding 2 weeks).
+The `pvz` table contains survey responses, along with each survey respondent's summarized engagement metrics (from the preceding 2 weeks).
 Note that the (cleaned, not aggregated) raw survey responses and engagement metrics are in their own tables for e.g. session level analyses.
 
 For example, we can plot the correlations among the aggregated engagement metrics:
 ```{r}
 psych::cor.plot(
-  pvz_bfn[,c(70:83)], 
+  pvz[,c(70:83)], 
   numbers = FALSE, cex.axis = .75, xlas = 2, upper = FALSE, diag = FALSE,
   main = "PvZ: BfN engagement metrics correlation matrix",
 )
@@ -124,7 +124,7 @@ psych::cor.plot(
 
 Or from which date the surveys were.
 ```{r}
-pvz_bfn %>% 
+pvz %>% 
   mutate(Respondent = reorder(player_id, date)) %>% 
   ggplot(aes(date, Respondent)) +
   geom_point() +
@@ -134,18 +134,18 @@ pvz_bfn %>%
 ## Missingness
 
 ```{r}
-data(pvz_bfn)
-vis_dat(pvz_bfn[,1:20], sort_type = FALSE)
-vis_dat(pvz_bfn[,21:40], sort_type = FALSE)
-vis_dat(pvz_bfn[,41:60], sort_type = FALSE)
-vis_dat(pvz_bfn[,61:ncol(pvz_bfn)], sort_type = FALSE)
+data(pvz)
+vis_dat(pvz[,1:20], sort_type = FALSE)
+vis_dat(pvz[,21:40], sort_type = FALSE)
+vis_dat(pvz[,41:60], sort_type = FALSE)
+vis_dat(pvz[,61:ncol(pvz)], sort_type = FALSE)
 ```
 
 ## Example correlations
 
 ```{r}
 psych::cor.plot(
-  pvz_bfn %>% select(autonomy_2:relatedness_1, Hours, xp, score), 
+  pvz %>% select(autonomy_2:relatedness_1, Hours, xp, score), 
   numbers = FALSE, cex.axis = .75, xlas = 2,
   main = "Example correlation matrix",
 )
@@ -159,7 +159,7 @@ When did gameplay and surveys take place?
 This is also to do some preliminary checking of our preprocessing.
 
 ```{r}
-hist(pvz_bfn$date, breaks = 31, main = "Survey date")
+hist(pvz$date, breaks = 31, main = "Survey date")
 hist(xp$date_time, breaks = 100, main = "XP events")
 ```
 
@@ -168,16 +168,16 @@ hist(xp$date_time, breaks = 100, main = "XP events")
 Two observations are > 10 SD away from mean on XP and Hours, we take those out for now.
 
 ```{r outliers}
-plot(pvz_bfn$Hours, pvz_bfn$xp)
-pvz_bfn <- filter(pvz_bfn, xp < 2000000, Hours < 100)
-plot(scale(pvz_bfn$Hours), scale(pvz_bfn$xp))
+plot(pvz$Hours, pvz$xp)
+pvz <- filter(pvz, xp < 2000000, Hours < 100)
+plot(scale(pvz$Hours), scale(pvz$xp))
 ```
 
 ## Correlation matrix
 
 ```{r correlation-matrix}
 par(pty = "s")
-pvz_bfn %>% 
+pvz %>% 
   select(
     affect = spane_balance, 
     autonomy, competence, relatedness, enjoyment, extrinsic,
@@ -373,9 +373,9 @@ GT4: Last, weâ€™re interested again in how you felt in the past two weeks. Youâ€
 
 ```{r fig-example-correlations}
 # I think we may have an outlier, which I'll cut for this figure
-pvz_bfn <- filter(pvz_bfn, total_kill_count < 20000)
+pvz <- filter(pvz, total_kill_count < 20000)
 # Friends should be zero if NA
-pvz_bfn$friends <- coalesce(pvz_bfn$friends, 0)
+pvz$friends <- coalesce(pvz$friends, 0)
 
 labels <- c(
   "Strongly\ndisagree", 
@@ -392,7 +392,7 @@ p1 <- edafig(levelings, enjoyment_1) +
   labs(x="Level ups", y = "I think PvZ\nwas fun to play")
 p2 <- edafig(total_kill_count, competence_1) + 
   labs(x = "Kill count", y = "I felt very capable and\neffective when playing")
-p3 <- edafig(friends, spane_pvz_7) +
+p3 <- edafig(friends, spane_game_7) +
   scale_y_reverse(breaks = 1:7, labels = labels2) +
   labs(x="Friends made", y = "Playing PvZ made\nme feel happy")
 p4 <- edafig(Hours, active_play) + 
@@ -407,10 +407,10 @@ p4 <- edafig(Hours, active_play) +
 Let's have a look at the correlations between the concepts of well-being and motivations (aggregated).
 ```{r, message=FALSE, warning=FALSE}
 # call the function
-pair_plot(pvz_bfn%>% 
+pair_plot(pvz%>% 
         select(
           spane_balance:extrinsic,
-          spane_pvz_balance
+          spane_game_balance
         ))
 ```
 
@@ -419,7 +419,7 @@ pair_plot(pvz_bfn%>%
 Next, the correlations between indicators of competence and well-being.
 ```{r warning=FALSE, message=FALSE}
 pair_plot(
-  pvz_bfn %>% 
+  pvz %>% 
     select(
       competence,
       levelings,
@@ -427,7 +427,7 @@ pair_plot(
       prestige,
       total_kill_count,
       spane_balance,
-      spane_pvz_balance
+      spane_game_balance
     )
 )
 ```
@@ -437,13 +437,13 @@ pair_plot(
 Next, the correlations between indicators of relatedness and well-being.
 ```{r warning=FALSE, message=FALSE}
 pair_plot(
-  pvz_bfn %>% 
+  pvz %>% 
     select(
       relatedness,
       gestures,
       friends,
       spane_balance,
-      spane_pvz_balance
+      spane_game_balance
     )
 )
 ```
@@ -453,13 +453,13 @@ pair_plot(
 Then correlations between well-being, autonomy motivation, enjoyment, and extrinsic motivation.
 ```{r, warning=FALSE, message=FALSE}
 pair_plot(
-  pvz_bfn %>% 
+  pvz %>% 
     select(
       autonomy,
       extrinsic,
       enjoyment,
       spane_balance,
-      spane_pvz_balance
+      spane_game_balance
     )
 )
 ```
@@ -467,14 +467,14 @@ pair_plot(
 Next relations between self-estimated play (effects) and well-being.
 ```{r, warning=FALSE, message=FALSE}
 pair_plot(
-  pvz_bfn %>% 
+  pvz %>% 
     select(
       Hours,
       active_play,
       within_estimate,
       between_estimate,
       spane_balance,
-      spane_pvz_balance
+      spane_game_balance
     )
   )
 ```
