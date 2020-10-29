@@ -161,7 +161,11 @@ Next, let's create mean indices for the scales.
 SPANE has positive affect, negative affect, and an affect balance score (subtract negative from positive).
 ```{r create-scales}
 # Need to rename spane item so it doesnt become confused with sum score
-ac <- rename(ac, spane_positiveItem = spane_positive)
+ac <- rename(
+  ac, 
+  spane_positiveItem = spane_positive,
+  spane_negativeItem = spane_negative
+  )
 
 # general spane
 ac <- ac %>% 
@@ -181,7 +185,7 @@ ac <- ac %>%
     spane_negative = rowSums(
       select(
         .,
-        spane_negative,
+        spane_negativeItem,
         spane_bad,
         spane_unpleasant,
         spane_sad,
