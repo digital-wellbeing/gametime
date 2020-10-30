@@ -65,7 +65,7 @@ dat <- bind_rows(
   .id = "Study"
   ) %>% 
   # ! here to remind that data contains simulated stuff in prep for real data
-  mutate(Study = factor(Study, labels = c("PVZ", "AC!")))
+  mutate(Study = factor(Study, labels = c("PVZ", "AC:NH")))
 ```
 
 ## RQ1: Time and well-being
@@ -144,7 +144,8 @@ dat <- dat %>% rename_all(str_to_title)
 
 # Standardize everything
 # Hours (centered) is divided by 10 to put on same scale with others.
-dat <- dat %>% 
+dat <- dat %>%
+  group_by(Study) %>% 
   mutate(
     across(Spane_balance:Extrinsic, ~as.numeric(scale(., T, T))),
     Hours = as.numeric(scale(Hours / 10, T, F))
