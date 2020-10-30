@@ -261,30 +261,157 @@ ac <- add_count(ac, code) %>%
   select(-n)
 ```
 
-## Telemetry
-
-**We don't have it yet but I'll make some up to help set up the pipeline.**
-
-```{r}
-set.seed(1)
-game_time <- tibble(
-  code = ac$code,
-  Hours = rgamma(nrow(ac), 15)
-)
-```
-
-## Join survey and telemetry
-
-```{r}
-ac <- left_join(ac, game_time)
-```
-
 ## Harmonize data to Study 1
 
 Change some names to better match the other data
 
 ```{r}
 ac <- rename(ac, player_id = code)
+```
+
+## Telemetry
+
+We provided NOA with the hashed IDs of players who took the survey, they then sent us only those players telemetry.
+
+```{r}
+game_time <- read_tsv(here("data-raw/noa/telem_data.txt"))
+```
+
+Column definition	
+lc_recorded_at = Session start date/time
+nc_recorded_at = Session end date/time
+nsa_id_hex [(now hashed_id)] = Hashed account ID
+product_model =	Switch model game was played on
+operation_mode = Identifies handheld mode, TV mode
+duration = Duration of session (seconds)
+storage_id = Whether game is played off game card, SD card or internal = system memory
+application_id_hex = Game's hashed ID
+
+We drop some unnecessary variables
+
+```{r}
+game_time <- select(
+  game_time,
+  hashed_id, 
+  contains("recorded"),
+  duration
+)
+```
+
+Then rename
+
+```{r}
+names(game_time) <- c(
+  "player_id", "session_start", "session_end", "Hours"
+  )
+```
+
+And turn duration into hours
+
+```{r}
+game_time$Hours <- game_time$Hours/60/60
+```
+
+Variable types
+
+Assume that timestamps are US Pacific as this was used to report data collection dates & times.
+
+```{r}
+game_time <- game_time %>% 
+  mutate(
+    across(contains("session"), ~mdy_hm(.x, tz = "US/Pacific"))
+  )
+```
+
+### Clean
+
+We don't need to limit to IDs who took the survey as NOA has already done that--these data only contain folks who filled survey.
+
+But we do need to limit the data to two weeks preceding the survey.
+
+We therefore need to use the session start/end times to find out when the sessions happened.
+
+There are now a bunch of questions related to this:
+
+Why are lots of start and end times the same? Even though the duration is non-zero for those rows.
+
+```{r}
+prop.table(
+  table(game_time$session_start==game_time$session_end)
+)
+summary(
+  game_time$Hours
+  [game_time$session_start==game_time$session_end]
+  )
+```
+
+Why are many start times before AC:NH was released?
+
+```{r}
+table(game_time$session_start < ymd("2020-03-20"))
+table(game_time$session_end < ymd("2020-03-20"))
+```
+
+Here's a figure of all session start times (day of year) separately for each year. Also shown are when ACNH was released, and survey window, as vertical lines. We see here that lots of sessions happened prior to launch, and no sessions happened during survey window!
+
+```{r}
+game_time %>%
+  mutate(
+    year = year(session_start), yday = yday(session_start)
+    ) %>% 
+  ggplot(aes(yday)) +
+  # Three lines note when AC:NH was released...
+  geom_vline(
+    xintercept = yday(ymd("2020-03-20")), col="red"
+    ) +
+  # When survey started
+  geom_vline(
+    xintercept = yday(ymd("2020-10-27")), col = "red"
+    ) +
+  # And two weeks preceding it
+  geom_vline(
+    xintercept = yday(ymd("2020-10-13")), col = "red"
+    ) +
+  geom_histogram() +
+  facet_wrap("year", scales = "free_y")
+```
+
+Using the session end variable doesn't really help because so few sessions ended in the survey window
+
+```{r}
+game_time %>% 
+  left_join(select(ac, player_id, created)) %>% 
+  filter(session_end >= (created - days(14))) %>% 
+  nrow(.)
+```
+
+But that's the only thing we can do so we go ahead with it.
+
+```{r}
+game_time <- game_time %>% 
+  left_join(select(ac, player_id, created)) %>% 
+  filter(session_end >= (created - days(14)))
+```
+
+We then summarize to total hours per person
+
+```{r}
+game_time <- game_time %>% 
+  group_by(player_id) %>% 
+  summarise(
+    Hours = sum(Hours), 
+    n_sessions = n()
+    )
+arrange(game_time, desc(Hours))
+summary(game_time$Hours)
+```
+
+We are left with 37 people for whom telemetry exists in the survey window!
+
+## Join survey and telemetry
+
+```{r}
+ac <- left_join(ac, game_time)
 ```
 
 ## Exclusions
@@ -295,6 +422,8 @@ We take out all individuals who straightlined (gave the same response to every i
 
 ```{r}
 table(ac$straightliner_motivations|ac$straightliner_spane)
+ac <- filter(ac, !straightliner_motivations)
+ac <- filter(ac, !straightliner_spane)
 ```
 
 ### Outliers
