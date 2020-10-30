@@ -790,6 +790,8 @@ We take out all individuals who straightlined (gave the same response to every i
 
 ```{r}
 table(pvz$straightliner_motivations|pvz$straightliner_spane)
+pvz <- filter(pvz, !straightliner_motivations)
+pvz <- filter(pvz, !straightliner_spane)
 ```
 
 ### Outliers
