@@ -65,6 +65,13 @@ dat <- bind_rows(pvz, ac, .id = "Study") %>%
   mutate(Study = factor(Study, labels = c("PVZ", "AC:NH")))
 ```
 
+Game time is in units of 10 hours to make the size of the coefficients bigger and thus easier to interpret e.g. when shown with 2 decimal points.
+
+```{r}
+dat$Hours10 <- dat$Hours / 10
+dat$active_play10 <- dat$active_play / 10
+```
+
 ## RQ1: Time and well-being
 
 ### Objective vs subjective game time
@@ -91,7 +98,9 @@ Model fitted separately to both datasets
 ```{r}
 x1 <- dat %>% 
   group_by(Study) %>%
-  group_modify(~tidy(lm(active_play ~ Hours, data = .x), conf.int = TRUE))
+  group_modify(
+    ~tidy(lm(active_play ~ Hours, data = .x), conf.int = TRUE)
+  )
 kable(x1, digits = c(0,0,2,2,1,3,2,2))
 ```
 
@@ -108,7 +117,9 @@ Model fitted separately to both datasets
 ```{r}
 x2 <- dat %>% 
   group_by(Study) %>%
-  group_modify(~tidy(lm(spane_balance ~ Hours, data = .x), conf.int = TRUE))
+  group_modify(
+    ~tidy(lm(spane_balance ~ Hours10, data = .x), conf.int = TRUE)
+    )
 kable(x2, digits = c(0,0,2,2,1,3,2,2))
 ```
 
@@ -122,7 +133,7 @@ p3 <- p0 + aes(x = active_play, y = spane_balance)
 x3 <- dat %>% 
   group_by(Study) %>% 
   group_modify(
-    ~tidy(lm(spane_balance ~ active_play, data = .x), conf.int = TRUE)
+    ~tidy(lm(spane_balance ~ active_play10, data = .x), conf.int = TRUE)
     ) 
 kable(x3, digits = c(0,0,2,2,1,3,2,2))
 ```
@@ -148,7 +159,7 @@ dat <- dat %>%
   group_by(Study) %>% 
   mutate(
     across(Spane_balance:Extrinsic, ~as.numeric(scale(., T, T))),
-    Hours = as.numeric(scale(Hours / 10, T, F))
+    Hours = as.numeric(scale(Hours10, T, F))
     ) %>% 
   mutate(Hours = ifelse(Study=="PVZ", Hours, 0))
 
