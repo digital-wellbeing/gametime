@@ -4,7 +4,7 @@
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  cache = TRUE,
+  cache = FALSE,
   warning = FALSE,
   message = FALSE,
   # Save png and pdf figures
@@ -37,8 +37,10 @@ theme_set(
 ```
 
 ```{r}
-ac <- read_rds(here("data/noa/ac.rds"))
-pvz <- read_rds(here("data/ea/pvz.rds"))
+ac <- read_rds(here("data/noa/ac-excluded.rds"))
+pvz <- read_rds(here("data/ea/pvz-excluded.rds"))
+ac2 <- read_rds(here("data/noa/ac.rds"))
+pvz2 <- read_rds(here("data/ea/pvz.rds"))
 ```
 
 ## Create joint dataset
@@ -53,18 +55,13 @@ ac <- ac %>%
     competence, relatedness, enjoyment, 
     extrinsic, active_play, Hours
   )
-
-dat <- bind_rows(
-  pvz %>% 
+pvz <- pvz %>% 
   select(
     player_id, spane_balance, autonomy, 
     competence, relatedness, enjoyment, 
     extrinsic, active_play, Hours
-  ), 
-  ac, 
-  .id = "Study"
-  ) %>% 
-  # ! here to remind that data contains simulated stuff in prep for real data
+  )
+dat <- bind_rows(pvz, ac, .id = "Study") %>% 
   mutate(Study = factor(Study, labels = c("PVZ", "AC:NH")))
 ```
 
@@ -84,7 +81,8 @@ p0 <- dat %>%
 ```
 
 ```{r}
-p1 <- p0 +
+p1 <- p0 %+% 
+  filter(p0$data, Study == "PVZ") +
   geom_abline(lty = 2, size = .25)
 ```
 
@@ -100,7 +98,9 @@ kable(x1, digits = c(0,0,2,2,1,3,2,2))
 ### Objective time and SWB
 
 ```{r}
-p2 <- p0 + aes(y = spane_balance)
+p2 <- p0 %+%
+  filter(p0$data, Study == "PVZ") +
+  aes(y = spane_balance)
 ```
 
 Model fitted separately to both datasets
@@ -149,7 +149,8 @@ dat <- dat %>%
   mutate(
     across(Spane_balance:Extrinsic, ~as.numeric(scale(., T, T))),
     Hours = as.numeric(scale(Hours / 10, T, F))
-    )
+    ) %>% 
+  mutate(Hours = ifelse(Study=="PVZ", Hours, 0))
 
 # Fit all models to both datasets
 xs <- dat %>% 
@@ -180,23 +181,27 @@ tmp <- xs %>%
       str_detect(term, ":"), labels = c("Main effect", "Moderation")
     )
   ) 
-p1 <- tmp %>%   
-  ggplot(aes(estimate, term, col = Model)) +
-  scale_x_continuous('Standardized coefficient', breaks = pretty_breaks()) +
+p1 <- tmp %>% 
+  filter(Model == "Omnibus") %>% 
+  drop_na() %>% 
+  ggplot(aes(estimate, term)) +
+  scale_x_continuous(
+    'Standardized coefficient', breaks = pretty_breaks()
+  ) +
   geom_vline(xintercept = 0, lty = 2, size = .2) +
   geom_pointrangeh(
     aes(xmin = conf.low, xmax = conf.high), 
     size = .4, position = position_dodgev(.25)
     ) +
   theme(axis.title.y = element_blank()) +
-  facet_wrap(~Study, scales = "free")
-p1 %+% 
-  (p1$data %>% filter(Model=='Omnibus')) + 
-  aes(col=NULL)
+  facet_wrap("Study", scales = "free")
+p1
 ```
 
 We also compared the omnibus estimates to independent estimates
 
 ```{r}
-p1
+p1 %+%
+  drop_na(tmp) +
+  aes(col = Model)
 ```
