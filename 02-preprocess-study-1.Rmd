@@ -784,6 +784,12 @@ pvz <- survey %>%
 
 ## Exclusions
 
+First save a file with no exclusions
+
+```{r}
+write_rds(pvz, here("data/ea/pvz.rds"))
+```
+
 ### Straightliners
 
 We take out all individuals who straightlined (gave the same response to every item) thru SPANE or motivations questions
@@ -833,5 +839,5 @@ pvz <- pvz %>%
 ## Save files
 
 ```{r}
-write_rds(pvz, here("data/ea/pvz.rds"))
+write_rds(pvz, here("data/ea/pvz-excluded.rds"))
 ```

@@ -416,6 +416,12 @@ ac <- left_join(ac, game_time)
 
 ## Exclusions
 
+First save a file with no exclusions
+
+```{r}
+write_rds(ac, here("data/noa/ac.rds"))
+```
+
 ### Straightliners
 
 We take out all individuals who straightlined (gave the same response to every item) thru SPANE or motivations questions
@@ -468,5 +474,5 @@ ac <- ac %>%
 ## Save files
 
 ```{r}
-write_rds(ac, here("data/noa/ac.rds"))
+write_rds(ac, here("data/noa/ac-excluded.rds"))
 ```
