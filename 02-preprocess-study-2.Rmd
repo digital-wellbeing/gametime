@@ -8,6 +8,7 @@ p_load(
   here,
   lubridate,
   scales,
+  janitor,
   tidyverse
 )
 # remotes::install_github("rubenarslan/formr")
@@ -87,8 +88,17 @@ Put all five survey's responses on one row per participant
 
 ```{r}
 ac <- ac %>% reduce(left_join)
+```
+
+Remove some unnecessary variables
+
+```{r}
+ac <- ac %>% 
+  select(-c(session, browser, last_outside_referrer))
+```
+
+```{r}
 glimpse(ac)
-glimpse(as_factor(ac))
 ```
 
 Create a file with codes (hashed ID) and when survey started
@@ -425,15 +435,23 @@ write_rds(ac, here("data/noa/ac.rds"))
 
 ### Straightliners
 
-We take out all individuals who straightlined (gave the same response to every item) thru SPANE or motivations questions
+We take out all individuals who straightlined (gave the same response to every item) through SPANE and motivations scales. (If only SPANE items existed, then we didn't exclude.)
 
 ```{r}
-table(ac$straightliner_motivations|ac$straightliner_spane)
-prop.table(
-  table(ac$straightliner_motivations|ac$straightliner_spane)
-)
-ac <- filter(ac, !straightliner_motivations)
-ac <- filter(ac, !straightliner_spane)
+ac <- ac %>% 
+  mutate(
+    straightliner = 
+      straightliner_spane & straightliner_motivations
+  ) 
+ac %>%   
+  select(contains("straight")) %>% 
+  group_by_all() %>% 
+  count
+ac %>%   
+  tabyl(straightliner) %>% 
+  adorn_pct_formatting()
+# filter() would also exclude NAs!
+ac <- filter(ac, !straightliner | is.na(straightliner))
 ```
 
 ### Outliers

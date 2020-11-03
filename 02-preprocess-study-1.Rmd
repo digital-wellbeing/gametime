@@ -8,6 +8,7 @@ p_load(
   here,
   lubridate,
   scales,
+  janitor,
   tidyverse
 )
 opts_chunk$set(
@@ -793,15 +794,23 @@ write_rds(pvz, here("data/ea/pvz.rds"))
 
 ### Straightliners
 
-We take out all individuals who straightlined (gave the same response to every item) thru SPANE or motivations questions
+We take out all individuals who straightlined (gave the same response to every item) through SPANE and motivations scales. (If only SPANE items existed, then we didn't exclude.)
 
 ```{r}
-table(pvz$straightliner_motivations|pvz$straightliner_spane)
-prop.table(
-  table(pvz$straightliner_motivations|pvz$straightliner_spane)
-)
-pvz <- filter(pvz, !straightliner_motivations)
-pvz <- filter(pvz, !straightliner_spane)
+pvz <- pvz %>% 
+  mutate(
+    straightliner = 
+      straightliner_spane & straightliner_motivations
+  ) 
+pvz %>%   
+  select(contains("straight")) %>% 
+  group_by_all() %>% 
+  count
+pvz %>%   
+  tabyl(straightliner) %>% 
+  adorn_pct_formatting()
+# filter() would also exclude NAs!
+pvz <- filter(pvz, !straightliner | is.na(straightliner))
 ```
 
 ### Outliers
