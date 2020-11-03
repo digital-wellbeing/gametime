@@ -50,7 +50,7 @@ if (!file.exists(here("data-raw/noa/formr.rds"))) {
   # List of surveys' data frames
   ac <- map(surveys, ~formr_results(.) %>% as_tibble)
   saveRDS(ac, here("data-raw/noa/formr.rds"))
-} else(ac <- readRDS(here("data-raw/noa/formr.rds")))
+} else {ac <- readRDS(here("data-raw/noa/formr.rds"))}
 ```
 
 Take only responses after the survey went live (i.e. take out our test sessions). Later, to make sure, we need to retain only rows where `code` exists in telemetry.
