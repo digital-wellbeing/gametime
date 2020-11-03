@@ -7,6 +7,7 @@ p_load(
   knitr,
   here,
   lubridate,
+  scales,
   tidyverse
 )
 opts_chunk$set(
@@ -14,7 +15,7 @@ opts_chunk$set(
   message = FALSE, 
   warning = FALSE, 
   cache = TRUE
-  )
+)
 ```
 
 Here, we process the survey and telemetry files (so gaming data that was captured by EA's servers).
@@ -667,14 +668,14 @@ survey <-
       "Other" = "3",
       "Prefer not to say" = "4"
     ),
-
+    
     country = fct_recode(
       country,
       "US" = "1",
       "UK" = "2",
       "Canada" = "5"
     ),
-
+    
     survey_language = fct_recode(
       survey_language,
       "English" = "1",
@@ -796,6 +797,9 @@ We take out all individuals who straightlined (gave the same response to every i
 
 ```{r}
 table(pvz$straightliner_motivations|pvz$straightliner_spane)
+prop.table(
+  table(pvz$straightliner_motivations|pvz$straightliner_spane)
+)
 pvz <- filter(pvz, !straightliner_motivations)
 pvz <- filter(pvz, !straightliner_spane)
 ```
@@ -821,7 +825,10 @@ These are the numbers of people taken out of each variable (only variables that 
 ```{r}
 # This is what are taken out
 pvz %>% 
-  summarise(Extremes = sum(abs(z_value>=6), na.rm = TRUE)) %>% 
+  summarise(
+    Extremes = sum(abs(z_value>=6), na.rm = TRUE),
+    Extremes_p = percent(Extremes/n(), accuracy = .01)
+  ) %>% 
   filter(Extremes > 0)
 ```
 

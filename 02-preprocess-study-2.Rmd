@@ -7,6 +7,7 @@ p_load(
   knitr,
   here,
   lubridate,
+  scales,
   tidyverse
 )
 # remotes::install_github("rubenarslan/formr")
@@ -163,7 +164,7 @@ ac <- rename(
   ac, 
   spane_positiveItem = spane_positive,
   spane_negativeItem = spane_negative
-  )
+)
 
 # general spane
 ac <- ac %>% 
@@ -207,33 +208,33 @@ ac <- ac %>% mutate(
 # spane because of playing AC:NH
 ac <- ac %>% 
   mutate(
-  spane_game_positive = rowSums(
-    select(
-      .,
-      spane_acnh_positive,
-      spane_acnh_good,
-      spane_acnh_pleasant,
-      spane_acnh_happy,
-      spane_acnh_joyful,
-      spane_acnh_contented
+    spane_game_positive = rowSums(
+      select(
+        .,
+        spane_acnh_positive,
+        spane_acnh_good,
+        spane_acnh_pleasant,
+        spane_acnh_happy,
+        spane_acnh_joyful,
+        spane_acnh_contented
+      ),
+      na.rm = TRUE
     ),
-    na.rm = TRUE
-  ),
-  spane_game_negative = rowSums(
-    select(
-      .,
-      spane_acnh_negative,
-      spane_acnh_bad,
-      spane_acnh_unpleasant,
-      spane_acnh_sad,
-      spane_acnh_afraid,
-      spane_acnh_angry
+    spane_game_negative = rowSums(
+      select(
+        .,
+        spane_acnh_negative,
+        spane_acnh_bad,
+        spane_acnh_unpleasant,
+        spane_acnh_sad,
+        spane_acnh_afraid,
+        spane_acnh_angry
+      ),
+      na.rm = TRUE
     ),
-    na.rm = TRUE
-  ),
-  spane_game_balance = spane_game_positive - spane_game_negative
+    spane_game_balance = spane_game_positive - spane_game_negative
   )
-  
+
 # hours of estimated play
 ac <- ac %>% 
   mutate(
@@ -303,7 +304,7 @@ Then rename
 ```{r}
 names(game_time) <- c(
   "player_id", "session_start", "session_end", "Hours"
-  )
+)
 ```
 
 And turn duration into hours
@@ -342,7 +343,7 @@ prop.table(
 summary(
   game_time$Hours
   [game_time$session_start==game_time$session_end]
-  )
+)
 ```
 
 Why are many start times before AC:NH was released?
@@ -358,20 +359,20 @@ Here's a figure of all session start times (day of year) separately for each yea
 game_time %>%
   mutate(
     year = year(session_start), yday = yday(session_start)
-    ) %>% 
+  ) %>% 
   ggplot(aes(yday)) +
   # Three lines note when AC:NH was released...
   geom_vline(
     xintercept = yday(ymd("2020-03-20")), col="red"
-    ) +
+  ) +
   # When survey started
   geom_vline(
     xintercept = yday(ymd("2020-10-27")), col = "red"
-    ) +
+  ) +
   # And two weeks preceding it
   geom_vline(
     xintercept = yday(ymd("2020-10-13")), col = "red"
-    ) +
+  ) +
   geom_histogram() +
   facet_wrap("year", scales = "free_y")
 ```
@@ -401,7 +402,7 @@ game_time <- game_time %>%
   summarise(
     Hours = sum(Hours), 
     n_sessions = n()
-    )
+  )
 arrange(game_time, desc(Hours))
 summary(game_time$Hours)
 ```
@@ -428,6 +429,9 @@ We take out all individuals who straightlined (gave the same response to every i
 
 ```{r}
 table(ac$straightliner_motivations|ac$straightliner_spane)
+prop.table(
+  table(ac$straightliner_motivations|ac$straightliner_spane)
+)
 ac <- filter(ac, !straightliner_motivations)
 ac <- filter(ac, !straightliner_spane)
 ```
@@ -457,7 +461,10 @@ These are the numbers of people taken out of each variable (only variables that 
 ```{r}
 # This is what are taken out
 ac %>% 
-  summarise(Extremes = sum(abs(z_value>=6), na.rm = TRUE)) %>% 
+  summarise(
+    Extremes = sum(abs(z_value>=6), na.rm = TRUE),
+    Extremes_p = percent(Extremes/n(), accuracy = .01)
+  ) %>% 
   filter(Extremes > 0)
 ```
 
