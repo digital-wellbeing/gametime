@@ -708,7 +708,7 @@ survey <-
   survey %>% 
   mutate(
     # general spane
-    spane_positive = rowSums(
+    spane_positive = rowMeans(
       select(
         .,
         spane_1,
@@ -721,7 +721,7 @@ survey <-
       na.rm = TRUE
     ),
     
-    spane_negative = rowSums(
+    spane_negative = rowMeans(
       select(
         .,
         spane_2,
@@ -744,7 +744,7 @@ survey <-
     extrinsic = rowMeans(select(., starts_with("extrinsic")), na.rm = TRUE),
     
     # spane because of playing game
-    spane_game_positive = rowSums(
+    spane_game_positive = rowMeans(
       select(
         .,
         spane_game_1,
@@ -757,7 +757,7 @@ survey <-
       na.rm = TRUE
     ),
     
-    spane_game_negative = rowSums(
+    spane_game_negative = rowMeans(
       select(
         .,
         spane_game_2,
