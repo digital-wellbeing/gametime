@@ -17,7 +17,7 @@ opts_chunk$set(
   echo = TRUE, 
   message = FALSE, 
   warning = FALSE, 
-  cache = TRUE
+  cache = FALSE
 )
 ```
 
@@ -285,7 +285,7 @@ ac <- rename(ac, player_id = code)
 We provided NOA with the hashed IDs of players who took the survey, they then sent us only those players telemetry.
 
 ```{r}
-game_time <- read_tsv(here("data-raw/noa/telem_data.txt"))
+gt <- read_tsv(here("data-raw/noa/telem_data (since Sep 2020).txt"))
 ```
 
 Column definition	
@@ -301,8 +301,8 @@ application_id_hex = Game's hashed ID
 We drop some unnecessary variables
 
 ```{r}
-game_time <- select(
-  game_time,
+gt <- select(
+  gt,
   hashed_id, 
   contains("recorded"),
   duration
@@ -312,7 +312,7 @@ game_time <- select(
 Then rename
 
 ```{r}
-names(game_time) <- c(
+names(gt) <- c(
   "player_id", "session_start", "session_end", "Hours"
 )
 ```
@@ -320,7 +320,7 @@ names(game_time) <- c(
 And turn duration into hours
 
 ```{r}
-game_time$Hours <- game_time$Hours/60/60
+gt$Hours <- gt$Hours/60/60
 ```
 
 Variable types
@@ -328,7 +328,7 @@ Variable types
 Assume that timestamps are US Pacific as this was used to report data collection dates & times.
 
 ```{r}
-game_time <- game_time %>% 
+gt <- gt %>% 
   mutate(
     across(contains("session"), ~mdy_hm(.x, tz = "US/Pacific"))
   )
@@ -344,29 +344,40 @@ We therefore need to use the session start/end times to find out when the sessio
 
 There are now a bunch of questions related to this:
 
-Why are lots of start and end times the same? Even though the duration is non-zero for those rows.
+Many start times are the same (or later) than the end time
 
 ```{r}
-prop.table(
-  table(game_time$session_start==game_time$session_end)
-)
-summary(
-  game_time$Hours
-  [game_time$session_start==game_time$session_end]
-)
+gt %>% 
+  mutate(
+    later_or_same_start = session_start >= session_end
+  ) %>% 
+  tabyl(later_or_same_start) %>% 
+  adorn_pct_formatting()
 ```
 
-Why are many start times before AC:NH was released?
+Session duration doesn't match when we calculate it by hand
 
 ```{r}
-table(game_time$session_start < ymd("2020-03-20"))
-table(game_time$session_end < ymd("2020-03-20"))
+gt %>% 
+  mutate(
+    duration = as.numeric(session_end - session_start)/60/60
+  ) %>% 
+  mutate(match = duration/60/60==Hours) %>% 
+  tabyl(match) %>% 
+  adorn_pct_formatting()
+```
+
+These data are from September 2020 onwards, so shouldn't have early start dates
+
+```{r}
+table(gt$session_start < ymd("2020-09-01"))
+table(gt$session_end < ymd("2020-09-01"))
 ```
 
 Here's a figure of all session start times (day of year) separately for each year. Also shown are when ACNH was released, and survey window, as vertical lines. We see here that lots of sessions happened prior to launch, and no sessions happened during survey window!
 
 ```{r}
-game_time %>%
+gt %>%
   mutate(
     year = year(session_start), yday = yday(session_start)
   ) %>% 
@@ -387,42 +398,46 @@ game_time %>%
   facet_wrap("year", scales = "free_y")
 ```
 
-Using the session end variable doesn't really help because so few sessions ended in the survey window
+Filter out sessions that aren't in the two weeks preceding each player's survey
 
 ```{r}
-game_time %>% 
-  left_join(select(ac, player_id, created)) %>% 
-  filter(session_end >= (created - days(14))) %>% 
-  nrow(.)
-```
-
-But that's the only thing we can do so we go ahead with it.
-
-```{r}
-game_time <- game_time %>% 
-  left_join(select(ac, player_id, created)) %>% 
-  filter(session_end >= (created - days(14)))
+gt <- select(ac, player_id, created) %>% 
+  left_join(gt) 
+gt <- gt %>%   
+  filter(session_start >= (created - days(14))) %>% 
+  filter(session_start < created) %>% 
+  filter(session_end < created)
 ```
 
 We then summarize to total hours per person
 
 ```{r}
-game_time <- game_time %>% 
+gt <- gt %>% 
   group_by(player_id) %>% 
   summarise(
     Hours = sum(Hours), 
     n_sessions = n()
   )
-arrange(game_time, desc(Hours))
-summary(game_time$Hours)
 ```
-
-We are left with 37 people for whom telemetry exists in the survey window!
 
 ## Join survey and telemetry
 
 ```{r}
-ac <- left_join(ac, game_time)
+ac <- left_join(ac, gt)
+```
+
+### Checking
+
+People reported if they played AC:NH in the past 14 days. Lets summarise the players, number of players with telemetry, and mean hours, for these two groups
+
+```{r}
+ac %>% 
+  group_by(played) %>% 
+  summarise(
+    Players = n(),
+    Missing_Hours = sum(is.na(Hours)),
+    Mean_Hours = mean(Hours, na.rm = TRUE)
+    )
 ```
 
 ## Exclusions
