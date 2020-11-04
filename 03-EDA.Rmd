@@ -24,7 +24,7 @@ opts_chunk$set(
 
 In this section, we describe and plot the data.
 
-First, let's load the data again (not necessary, but in case you only run this chapter and not the preprocessing chapter).
+First, let's load the data.
 ```{r}
 game_time <- read_rds(here("data/ea/game_time.rds"))
 leveling <- read_rds(here("data/ea/leveling.rds"))

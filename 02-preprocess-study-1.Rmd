@@ -15,20 +15,36 @@ opts_chunk$set(
   echo = TRUE, 
   message = FALSE, 
   warning = FALSE, 
-  cache = TRUE
+  cache = FALSE
 )
+dir.create("data/", FALSE)
+dir.create("data/ea/", FALSE)
+dir.create("data-raw/", FALSE)
+dir.create("data-raw/ea/", FALSE)
 ```
 
-Here, we process the survey and telemetry files (so gaming data that was captured by EA's servers).
+Here, we process the PVZ survey and telemetry data files (gaming data that was captured by EA's servers).
+
 This script expects the raw data files to be in `data-raw/ea/` with their original file names as provided by EA.
 
-In total, there are nine telemetry files, each one recording a different aspect of play events in Plants vs. Zombies: Battle for Neighborville.
+These files, including the raw survey data, are in a zip compressed file on OSF: <https://osf.io/cjd6z/>. (A user ID column was manually removed from the survey data before uploading.) Start by downloading that file and unpacking it to the target directory:
+
+```{r}
+file_dest <- here("data-raw/ea/ea.zip")
+# Download & extract file only if you haven't yet
+if (!file.exists(file_dest)) {
+  download.file("https://osf.io//download", file_dest)
+  unzip(file_dest, exdir = here("data-raw/ea/"))
+}
+```
+
+In total, there are nine telemetry files, each one recording a different aspect of play events in Plants vs. Zombies: Battle for Neighborville, and one file for the survey results.
 
 We'll process those nine raw data files, with particular attention to data on gaming times (which has duplicates, see the respective section below).
-To make our job a little bit easier, we'll only process telemetry data from those players who also responded to the survey.
-That makes the data sets smaller and we only do the processing for data that we'll actually use later.
-After processing, we place the processed data sets in `data/ea/` as R data objects.
-Last, we'll add these processed telemetry data to the survey responses (matching survey responses of a player with their telemetry data).
+
+We only process telemetry data from players who responded to the survey. That makes the data sets smaller and we only do the processing for data that we'll actually use later.
+
+After processing, we place the combined survey & telemetry data in `data/ea/`.
 
 ## Process raw files
 
@@ -38,7 +54,7 @@ A function to read both PVZ waves' data
 read_both_waves <- function(stub = "OII_PVZ_Authentications", ...) {
   # Filenames of wave 1 and 2 authentications files
   list.files(
-    "data-raw/ea", pattern = stub, full.names = TRUE
+    here("data-raw/ea"), pattern = stub, full.names = TRUE
   ) %>% 
     # Put wave 1 first
     rev() %>% 
@@ -51,13 +67,6 @@ read_both_waves <- function(stub = "OII_PVZ_Authentications", ...) {
 }
 ```
 
-Ensure output directory exists
-
-```{r}
-dir.create("data/")
-dir.create("data/ea/", FALSE)
-```
-
 ### Survey
 
 Because we only keep telemetry data of players who answered the survey, we'll load the survey first and store the player IDs to compare the telemetry data to.
@@ -67,546 +76,41 @@ survey <- read_excel(
 )
 
 survey <- survey %>% 
-  # To BST!
   mutate(
-    date = mdy_hm(date)
-  )
+    # Ensure date data type
+    date = mdy_hm(date),
+    # Need another name to use in filtering telemetry
+    start_date = date
+  ) %>% 
+  # Other files use player_id
+  rename(player_id = UID)
 
-survey_ids <- pull(survey, UID) 
+survey_ids <- pull(survey, player_id) 
 ```
 
 Check how many participants in each wave
 
 ```{r}
 survey %>% 
-  select(UID, date) %>% 
-  mutate(wave = ifelse(date <= ymd("2020-08-31"), "Wave 1", "Wave 2")) %>% 
+  select(player_id, date) %>% 
+  mutate(
+    wave = ifelse(date <= ymd("2020-08-31"), "Wave 1", "Wave 2")
+  ) %>% 
   group_by(wave) %>% 
   summarise(min = min(date), max = max(date), total_respondents = n())
 ```
 
-## Authentications
+#### Clean and transform
 
-The authentifications data set logs events when a player (`player_id`) logs into the game.
-The variables are:
-
-* player_id = Unique identifier for a player.
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* date = Date of the login.
-* country = Country the login came from.
-
-We read, view, and save the authentication data into `data/ea/`.
-
-```{r}
-authentications <- read_both_waves("OII_PVZ_Authentications")
-
-glimpse(authentications)
-
-write_rds(authentications, here("data/ea/authentications.rds"))
-```
-
-## Characters
-
-The characters data provides performance stats for a player while they play as a specific character in the game.
-The variables are:
-
-* player_id
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* game_session = Unique identifier for a game session.
-* game_mode = The game mode, primarily multiplayer or single player.
-* game_type = Notes if the game is offline/online and if it is splitscreen
-* game_level = The level's name where the session took place.
-* character_class = The character key noting the character used.
-* total_kill_count = Total kills earned by the player.
-* total_death_count = Total deaths suffered by the player.
-* score = Total score earned by the player.
-* damage_dealt = Total damage dealt by the player.
-* critical_hit_count = Number of critical hits earned by the player.
-* shots_fired = Number of shots fired by the player.
-* shots_hit = Number of shots by the player which successfully hit.
-
-```{r}
-characters <- read_both_waves("OII_PVZ_Character")
-
-glimpse(characters)
-
-write_rds(characters, here("data/ea/characters.rds"))
-```
-
-## Friends
-
-The friends data show when two players became friends and at what time (in PvZ, not on the platform?).
-The variables:
-
-* player_id = Unique identifier for a player.
-* friend_player_id = Unique identifier for a player, who is marked as a friend of the player_id.
-* date_time = The date time when the friend invite was accepted.
-
-```{r}
-friends <- read_both_waves("OII_PVZ_Friends")
-
-glimpse(friends)
-
-write_rds(friends, here("data/ea/friends.rds"))
-```
-
-## Game time
-
-The game time data are the most complicated.
-The data show us when a player started a session and how long that session lasted, plus whether they played the game in multiplayer or single player.
-The variables:
-
-* player_id = Unique identifier for a player.
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* game_start_time = Session start date time.
-* game_end_time = Session end date time.
-* game_mode = The game mode, primarily multiplayer or single player.
-* game_type = Notes if the game is offline/online and if it is splitscreen
-* game_level = The level's name where the session took place.
-* game_session = Unique identifier for a game session.
-
-```{r}
-game_time <- read_both_waves("OII_PVZ_Game_Time")
-
-glimpse(game_time)
-```
-
-A game session starts when a player starts playing.
-That means, `game_session` records when a match starts, which includes going to the Hub World.
-Game sessions can be shared between players when they're playing multiplayer, but should be unique to a `player_id` when in single player.
-However, it's not easy to say when a session ends - for technical reasons.
-```{r}
-counts <- game_time %>% 
-  count(player_id, game_session, sort = T)
-# Reduce player_id X game_session combos with multiple rows to one row
-
-game_time %>% 
-  filter(game_session %in% counts$game_session[counts$n>1])
-```
-
-Ideally, we'd have one game session per row.
-Because it's hard to determine when a session ends, there are instances where a given player has multiple rows with the same `game_session`.
-For example, the player below has `r counts %>% slice(1) %>% pull(n)` rows with identical `player_id` and `game_session`.
-Some of those rows have identical start and end times for the session, but the majority are in "chunks" with the same start times, but slightly different end times.
-This pattern shows the problems with determining the end of a session.
-See the figure below to see how the rows overlap in their game durations.
-```{r}
-# example of one player_idXgame_session with multiple entries
-tmp <- counts %>% 
-  slice(1) %>% 
-  left_join(game_time) %>%
-  arrange(game_start_time, game_end_time)
-
-tmp %>%   
-  rowid_to_column() %>% 
-  ggplot(aes(game_start_time, rowid, col = game_session)) +
-  geom_segment(aes(xend = game_end_time, yend = rowid)) +
-  facet_wrap("player_id", labeller = label_both) +
-  theme(legend.position = "bottom")
-```
-
-For those instances where a player has multiple (overlapping) game sessions, we'll simply use the earliest start time and latest end time of that session to collapse all overlapping rows into one.
-For that, we look for each combination of `player_id` and `game_session` and replace `game_start_time` with the earliest time within that combo; likewise, we replace `game_end_time` with the latest time within that combo.
-If a player only has one row, they'll maintain that one row this way.
-If a player has multiple rows, they're collapsed into one row that encompasses the game durations of all rows.
-See the figure below which now only has one duration for that player, which goes from the minimum to the maximum time of the previous figure.
-```{r}
-# Key point: Replace start and end times with first and last start/end time
-#  then take unique rows. This results in 1 row per session.
-tmp <- tmp %>% 
-  group_by(player_id, game_session) %>% 
-  mutate(
-    game_start_time = min(game_start_time),
-    game_end_time = max(game_end_time)
-  ) %>% 
-  slice(1) # distinct() didn't work when there were different levels within the same session
-last_plot() %+% mutate(tmp, rowid = 1:n())
-```
-
-Next, we apply these procedure to all players.
-However, some start times are missing, which won't allow us to compute duration for that session.
-Whenever a `game_start_time` is missing, we'll set it to the end time of that session.
-That creates game sessions with a duration of 0, which we'll set to `NA` again later.
-(Note: `game_end_time` doesn't have missing values, which is why we can use `coalesce`)
-```{r, echo=TRUE}
-# Now we just apply that to all the data. Except it wont work because some start times are missing. We replace missing start times with the end time to create these sessions. Those sessions will have a duration of 0 and are thus easily identifiable.
-game_time <- game_time %>% 
-  mutate(
-    game_start_time = coalesce(
-      game_time$game_start_time, game_time$game_end_time
-    )
-  )
-
-# now collapse the rows
-game_time <- game_time %>% 
-  group_by(player_id, game_session) %>% 
-  mutate(
-    game_start_time = min(game_start_time),
-    game_end_time = max(game_end_time),
-  ) %>% 
-  slice(1) %>% 
-  ungroup()
-```
-
-```{r}
-# save data and remove the tmp file
-write_rds(game_time, here("data/ea/game_time.rds"))
-rm(tmp)
-```
-
-## Gestures
-
-The gesture data shows when a player used a gesture (gesture/emote/command) that can be seen by other players.
-The variables:
-
-* player_id = Unique identifier for a player.
-* gesture_key = Key name of the geature used.
-* gesture_type = Whether the gesture was a gesture, command or emote.
-* game_session = Unique identifier for a game session.
-* date_time = The date time when the gesture was used.
-
-
-```{r}
-gestures <- read_both_waves("OII_PVZ_Gesture")
-
-glimpse(gestures)
-
-write_rds(gestures, here("data/ea/gestures.rds"))
-```
-
-## Leveling
-
-This data set shows when a player went up a level with a character.
-The variables:
-
-* player_id = Unique identifier for a player.
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* level = The level earned for the character.
-* date_time = The date time when the level was earned.
-* character_class = The character key noting the character used.
-
-```{r}
-leveling <- read_both_waves("OII_PVZ_Leveling")
-
-glimpse(leveling)
-
-write_rds(leveling, here("data/ea/leveling.rds"))
-```
-
-## Prestige
-
-This data set show when a a player went up a prestige level with a character. 
-Prestige levels are different from character levels.
-The variables:
-
-* player_id = Unique identifier for a player.
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* prestige_level = The prestige level for the character.
-* date_time = The date time the prestige level was earned.
-* character_class = The character key noting the character used.
-
-```{r}
-prestige <- read_both_waves("OII_PVZ_Presti")
-
-glimpse(prestige)
-
-write_rds(prestige, here("data/ea/prestige.rds"))
-```
-
-## Registrations
-
-Registrations only happen once per player and show when a player registered with PvZ for the first time.
-Won't be needed later.
-The variables:
-
-* player_id = Unique identifier for a player.
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* date = Date of the registration.
-* country = Country the login came from.
-
-```{r}
-registrations <- read_both_waves("OII_PVZ_Registration")
-
-glimpse(registrations)
-
-write_rds(registrations, here("data/ea/registrations.rds"))
-
-rm(registrations)
-```
-
-## Experience Points
-
-This data set shows how many XP a player earned at what time and in what session.
-The variables:
-
-* player_id = Unique identifier for a player.
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* date_time = The date time when the xp was earned.
-* character_class = The character key noting the character used.
-* game_session = Unique identifier for a game session.
-* xp_earned = The xp amount earned.
-
-```{r}
-# Gotta process dates because they are entered differently into the two files
-xp <- read_both_waves("OII_PVZ_XPEarned", col_types = cols(date_time = "c"))
-
-# All other timestamps, above, are automatically parsed to UTC so we do that here as well
-xp <- xp %>% 
-  mutate(date_time = anytime::anytime(date_time, "UTC"))
-
-range(xp$date_time)
-
-glimpse(xp)
-
-write_rds(xp, here("data/ea/xp.rds"))
-```
-
-## Survey data
-
-Survey data was loaded first to obtain UIDs/player_id. 
-```{r}
-# Old pilot data file had a "start_date" variable, which is presumably the same as "date" (unless someone did the survey for 24 hours??), this start_date is used in processing below so here we temporarily fix this by creating start_date in the survey data
-survey <- survey %>% 
-  mutate(start_date = date)
-
-glimpse(survey)
-
-write_rds(survey, here("data/ea/survey.rds"))
-```
-
-## Creating enriched survey data
-
-Next, we create a survey data table that includes, on the participant's single row, info on their gaming engagement.
-The survey asked participants about their past two weeks, whereas most game data sets have data on the session level.
-So we need to aggregate the game data and summarize to a single row per participant. 
-The resulting data set will not deal with session level data, but summarizes, for each participant, their engagement in the 2 week observation period.
-
-## Authentications
-
-First, we only keep authentications of players who also participated in the survey.
-Then we count how many times players logged in to PvZ.
-In the survey, players reflected on their well-being and gaming in the past two weeks, so we'll only count those game events that occurred within 14 days prior to the time the participant took the survey.
-The `date` variable in `authentications` doesn't have time, so we'll make it easy and also reduce `start_time` in the survey to a date (without time of day).
-```{r}
-glimpse(authentications)
-
-authentications <- authentications %>% 
-  # add the start date by player ID
-  left_join(
-    .,
-    survey %>% 
-      select(UID, start_date),
-    by = c("player_id" = "UID")
-  ) %>% 
-  # mutate(diff = as_date(start_date) - date) %>% # to check the difference 
-  # only keep authentication events that occured within 14 days before the survey was taken
-  filter(date >= (as_date(start_date) - days(14)) ) %>% 
-  count(player_id, name = "authentications")
-```
-
-## Gaming stats
-
-We do the same for the performance stats in the `characters` data set.
-The data set doesn't have a start time for the game sessions, so we'll add those start times by matching the `player_id` and `game_session` with those of the `game_time` data set, which has start times for the game sessions, thereby adding the `game_start_time` for a game session.
-Then we include only those game sessions that happened within 14 days of a participant taking the survey.
-After that, we sum up all player stats for that period.
-```{r}
-glimpse(characters)
-
-characters <- characters %>%
-  left_join(
-    .,
-    game_time %>% 
-      select(player_id, game_session, game_start_time),
-    by = c("player_id", "game_session")
-  ) %>%
-  left_join(
-    .,
-    survey %>% 
-      select(UID, start_date),
-    by = c("player_id" = "UID")
-  ) %>% 
-  filter(game_start_time >= (start_date - days(14))) %>% 
-  group_by(player_id) %>% 
-  summarise(across(total_kill_count:shots_hit, sum, na.rm = TRUE)) %>% 
-  ungroup()
-```
-
-## Game time
-
-Next, we do the same for the game time stats.
-First, we check which game sessions happened within the 14 days a participant took a survey (the file is already filtered to only include participants who actually filled out the survey). 
-Afterwards, we aggregate the remaining game sessions per participant to get to how many hours they played in the two weeks before the survey (i.e., only aggregate/summarize `game_session`s that happened within the past 14 days).
-
-```{r}
-glimpse(game_time)
-
-# get sessions that happened within the time frame of 14 days
-game_time <- game_time %>% 
-  left_join(
-    .,
-    survey %>% 
-      select(UID, start_date),
-    by = c("player_id" = "UID")
-  ) %>% 
-  filter(game_start_time >= (start_date - days(14))) %>% 
-  select(player_id, game_start_time, game_end_time) %>% 
-  mutate(duration = game_end_time-game_start_time) %>% 
-  mutate(Hours = as.numeric(duration)/60/60) %>% 
-  group_by(player_id) %>% 
-  summarise(Hours = sum(Hours)) %>% 
-  ungroup()
-```
-
-## Friends
-
-Then we count the number of friend connections made.
-`player_id` is the player; `friend_player_id` is the player who was sent a friend request from `player_id`.
-That means some players will be in the `player_id` column when they send a friend request, but also in the `friend_player_id` column when they receive a friend request.
-Therefore, we sum over sent and received friend connections in the 14 days prior to the survey.
-
-```{r}
-glimpse(friends)
-
-# filter out those that didn't happen within the past two weeks
-friends <- 
-  friends %>% 
-  left_join(
-    .,
-    survey %>% 
-      select(UID, start_date),
-    by = c("player_id" = "UID")
-  ) %>% 
-  filter(event_date_time >= (start_date - days(14)))
-
-# get friend requests sent
-a <- friends %>%
-  group_by(player_id) %>% 
-  summarise(requests_sent = length(unique(friend_player_id)))
-
-# get friend requests received
-b <- friends %>%
-  group_by(friend_player_id) %>% 
-  summarise(requests_received = length(unique(player_id)))
-
-# add those new variables to the data
-friends <- left_join(a, b, by = c("player_id" = "friend_player_id"))
-
-# not a lot of people received friend requests (meaning they're NA), so before adding sent and received up, we set NAs to zero
-friends <- friends %>%
-  mutate(
-    across(
-      c(starts_with("requests")),
-      ~ if_else(is.na(.x), 0L, .x)
-    ),
-    friends = requests_sent + requests_received
-  ) %>% 
-  select(-starts_with("requests"))
-
-rm(a, b)
-```
-
-## Gestures
-
-For gestures, we first match only those sessions that were within the time frame, then count how many gestures a player used.
-
-```{r}
-glimpse(gestures)
-
-gestures <- gestures %>% 
-  left_join(
-    .,
-    survey %>% 
-      select(UID, start_date),
-    by = c("player_id" = "UID")
-  ) %>% 
-  filter(date_time >= (start_date - days(14))) %>% 
-  count(player_id, name = "gestures")
-```
-
-## Leveling
-
-For leveling, we use the same logic: First we only include those sessions that happened within the time frame, then we count how many times a player went up a level.
-
-```{r}
-glimpse(leveling)
-
-leveling <- leveling %>%
-  left_join(
-    .,
-    survey %>% 
-      select(UID, start_date),
-    by = c("player_id" = "UID")
-  ) %>% 
-  count(player_id, name = "levelings")
-```
-
-## Prestige
-
-Same logic for prestige as for leveling.
-
-```{r}
-glimpse(prestige)
-
-prestige <- prestige %>%
-  left_join(
-    .,
-    survey %>% 
-      select(UID, start_date),
-    by = c("player_id" = "UID")
-  ) %>% 
-  filter(date_time >= (start_date - days(14))) %>% 
-  count(player_id, name = "prestige")
-```
-
-## XP
-
-For XP, we sum up how many experience points a player got in total during the two weeks before the survey.
-
-```{r}
-glimpse(xp)
-
-xp <- xp %>% 
-  left_join(
-    .,
-    survey %>% 
-      select(UID, start_date),
-    by = c("player_id" = "UID")
-  ) %>% 
-  filter(date_time >= (start_date - days(14))) %>% 
-  group_by(player_id) %>% 
-  summarise(xp = sum(xp_earned)) %>% 
-  ungroup()
-```
-
-## Join
-
-Last, we add all of the aggregated gaming info to the survey.
-
-```{r}
-meta <- authentications %>% 
-  left_join(characters) %>% 
-  left_join(friends) %>% 
-  left_join(game_time) %>% 
-  left_join(gestures) %>% 
-  left_join(leveling) %>% 
-  left_join(prestige) %>% 
-  left_join(xp)
-```
-
-```{r}
-glimpse(survey)
-```
-
-Before merging everything with the survey, let's give some sensible variable names and assign proper variable types.
+Give some sensible variable names and assign proper variable types.
 ```{r give-proper-variable-names}
 survey <- 
   survey %>% 
   select(
     
     # meta-info
-    player_id = UID, # no need for record etc because we have this identifier that we also use for merging with telemetry
-    date,
+    player_id,
+    start_date, date,
     survey_duration = qtime,
     of_age = Q2,
     consent = Q3,
@@ -702,7 +206,7 @@ survey <- survey %>%
   mutate(across(contains("straightliner"), ~.x==1))
 ```
 
-Next, let's create mean indices for the scales.
+Create mean indices for the scales.
 SPANE has positive affect, negative affect, and an affect balance score (subtract negative from positive).
 ```{r create-scales}
 survey <- 
@@ -778,10 +282,388 @@ survey <-
   )
 ```
 
-Now we can merge and write the files.
+### Game time
+
+The game time data are the most complicated. We work on it first because the times are needed for some of the other telemetry files.
+The data show us when a player started a session and how long that session lasted, plus whether they played the game in multiplayer or single player.
+The variables:
+
+* player_id = Unique identifier for a player.
+* platform = One of the major platforms, eg. PC, Playstation, Xbox.
+* game_start_time = Session start date time.
+* game_end_time = Session end date time.
+* game_mode = The game mode, primarily multiplayer or single player.
+* game_type = Notes if the game is offline/online and if it is splitscreen
+* game_level = The level's name where the session took place.
+* game_session = Unique identifier for a game session.
+
+```{r cache = TRUE}
+game_time <- read_both_waves("OII_PVZ_Game_Time")
+glimpse(game_time)
+```
+
+A game session starts when a player starts playing.
+That means, `game_session` records when a match starts, which includes going to the Hub World.
+Game sessions can be shared between players when they're playing multiplayer, but should be unique to a `player_id` when in single player.
+However, it's not easy to say when a session ends for technical reasons.
+```{r}
+counts <- game_time %>% 
+  count(player_id, game_session, sort = T)
+```
+
+Ideally, we'd have one game session per row.
+Because it's hard to determine when a session ends, there are instances where a given player has multiple rows with the same `game_session`.
+For example, the player below has `r counts %>% slice(1) %>% pull(n)` rows with identical `player_id` and `game_session`.
+Some of those rows have identical start and end times for the session, but the majority are in "chunks" with the same start times, but slightly different end times.
+This pattern shows the problems with determining the end of a session.
+See the figure below to see how the rows overlap in their game durations.
+```{r}
+# example of one player_idXgame_session with multiple entries
+tmp <- counts %>% 
+  slice(1) %>% 
+  left_join(game_time) %>%
+  arrange(game_start_time, game_end_time)
+
+tmp %>%   
+  rowid_to_column() %>% 
+  ggplot(aes(game_start_time, rowid, col = game_session)) +
+  geom_segment(aes(xend = game_end_time, yend = rowid)) +
+  facet_wrap("player_id", labeller = label_both) +
+  theme(legend.position = "bottom")
+```
+
+For those instances where a player has multiple (overlapping) game sessions, we'll simply use the earliest start time and latest end time of that "super-session" to collapse all overlapping rows into one.
+For that, we look for each combination of `player_id` and `game_session` and replace `game_start_time` with the earliest time within that super-session; likewise, we replace `game_end_time` with the latest time within that super-session.
+If a player only has one row, they'll maintain that one row this way.
+If a player has multiple rows, they're collapsed into one row that encompasses the game durations of all rows.
+See the figure below which now only has one duration for that player, which goes from the minimum to the maximum time of the previous figure.
+```{r}
+# Key point: Replace start and end times with first and last start/end time
+#  then take unique rows. This results in 1 row per session.
+tmp <- tmp %>% 
+  group_by(player_id, game_session) %>% 
+  mutate(
+    game_start_time = min(game_start_time),
+    game_end_time = max(game_end_time)
+  ) %>% 
+  slice(1) # distinct() didn't work when there were different levels within the same session
+last_plot() %+% mutate(tmp, rowid = 1:n())
+rm(tmp)
+```
+
+Next, we apply this procedure to all players.
+However, some start times are missing, which won't allow us to compute duration for that session.
+Whenever a `game_start_time` is missing, we'll set it to the end time of that session.
+That creates game sessions with a duration of 0, which we'll set to `NA` again later.
+(Note: `game_end_time` doesn't have missing values, which is why we can use `coalesce`)
+```{r}
+# Now we just apply that to all the data. Except it wont work because some start times are missing. We replace missing start times with the end time to create these sessions. Those sessions will have a duration of 0 and are thus easily identifiable.
+game_time <- game_time %>% 
+  mutate(
+    game_start_time = coalesce(
+      game_start_time, game_end_time
+    )
+  )
+
+# now collapse the rows
+game_time <- game_time %>% 
+  group_by(player_id, game_session) %>% 
+  mutate(
+    game_start_time = min(game_start_time),
+    game_end_time = max(game_end_time),
+  ) %>% 
+  # Take the first of each (identical) person-session combo
+  slice(1) %>% 
+  ungroup()
+```
+
+### Authentications
+
+The authentifications data set logs events when a player (`player_id`) logs into the game.
+The variables are:
+
+* player_id = Unique identifier for a player.
+* platform = One of the major platforms, eg. PC, Playstation, Xbox.
+* date = Date of the login.
+* country = Country the login came from.
+
+```{r cache = TRUE}
+authentications <- read_both_waves("OII_PVZ_Authentications")
+glimpse(authentications)
+```
+
+First, we only keep authentications of players who also participated in the survey.
+Then we count how many times players logged in to PvZ.
+In the survey, players reflected on their well-being and gaming in the past two weeks, so we'll only count those game events that occurred within 14 days prior to the time the participant took the survey.
+The `date` variable in `authentications` doesn't have time, so we'll make it easy and also reduce `start_time` in the survey to a date (without time of day).
+```{r}
+authentications <- authentications %>% 
+  # add the start date by player ID
+  left_join(select(survey, player_id, start_date)) %>% 
+  # only keep authentication events that occured within 14 days before the survey was taken
+  filter(date >= (as_date(start_date) - days(14)) ) %>% 
+  count(player_id, name = "authentications")
+```
+
+### Characters
+
+The characters data provides performance stats for a player while they play as a specific character in the game.
+The variables are:
+
+* player_id
+* platform = One of the major platforms, eg. PC, Playstation, Xbox.
+* game_session = Unique identifier for a game session.
+* game_mode = The game mode, primarily multiplayer or single player.
+* game_type = Notes if the game is offline/online and if it is splitscreen
+* game_level = The level's name where the session took place.
+* character_class = The character key noting the character used.
+* total_kill_count = Total kills earned by the player.
+* total_death_count = Total deaths suffered by the player.
+* score = Total score earned by the player.
+* damage_dealt = Total damage dealt by the player.
+* critical_hit_count = Number of critical hits earned by the player.
+* shots_fired = Number of shots fired by the player.
+* shots_hit = Number of shots by the player which successfully hit.
+
+```{r cache = TRUE}
+characters <- read_both_waves("OII_PVZ_Character")
+glimpse(characters)
+```
+
+We do the same for the performance stats in the `characters` data set.
+The data set doesn't have a start time for the game sessions, so we'll add those start times by matching the `player_id` and `game_session` with those of the `game_time` data set, which has start times for the game sessions, thereby adding the `game_start_time` for a game session.
+Then we include only those game sessions that happened within 14 days of a participant taking the survey.
+After that, we sum up all player stats for that period.
+```{r}
+characters <- characters %>%
+  left_join(
+    game_time %>% 
+      select(player_id, game_session, game_start_time),
+    by = c("player_id", "game_session")
+  ) %>%
+  left_join(select(survey, player_id, start_date)) %>% 
+  filter(game_start_time >= (start_date - days(14))) %>% 
+  group_by(player_id) %>% 
+  summarise(across(total_kill_count:shots_hit, sum, na.rm = TRUE)) %>% 
+  ungroup()
+```
+
+### Friends
+
+The friends data show when two players became friends and at what time (in PvZ, not on the platform?).
+The variables:
+
+* player_id = Unique identifier for a player.
+* friend_player_id = Unique identifier for a player, who is marked as a friend of the player_id.
+* date_time = The date time when the friend invite was accepted.
+
+```{r cache = TRUE}
+friends <- read_both_waves("OII_PVZ_Friends")
+glimpse(friends)
+```
+
+Then we count the number of friend connections made.
+`player_id` is the player; `friend_player_id` is the player who was sent a friend request from `player_id`.
+That means some players will be in the `player_id` column when they send a friend request, but also in the `friend_player_id` column when they receive a friend request.
+Therefore, we sum over sent and received friend connections in the 14 days prior to the survey.
+
+```{r}
+# filter out those that didn't happen within the past two weeks
+friends <- friends %>% 
+  left_join(select(survey, player_id, start_date)) %>% 
+  filter(event_date_time >= (start_date - days(14)))
+
+# get friend requests sent
+a <- friends %>%
+  group_by(player_id) %>% 
+  summarise(requests_sent = length(unique(friend_player_id)))
+
+# get friend requests received
+b <- friends %>%
+  group_by(friend_player_id) %>% 
+  summarise(requests_received = length(unique(player_id)))
+
+# add those new variables to the data
+friends <- left_join(a, b, by = c("player_id" = "friend_player_id"))
+
+# not a lot of people received friend requests (meaning they're NA), so before adding sent and received up, we set NAs to zero
+friends <- friends %>%
+  mutate(
+    across(
+      c(starts_with("requests")),
+      ~ if_else(is.na(.x), 0L, .x)
+    ),
+    friends = requests_sent + requests_received
+  ) %>% 
+  select(-starts_with("requests"))
+
+rm(a, b)
+```
+
+
+### Gestures
+
+The gesture data shows when a player used a gesture (gesture/emote/command) that can be seen by other players.
+The variables:
+
+* player_id = Unique identifier for a player.
+* gesture_key = Key name of the geature used.
+* gesture_type = Whether the gesture was a gesture, command or emote.
+* game_session = Unique identifier for a game session.
+* date_time = The date time when the gesture was used.
+
+```{r cache = TRUE}
+gestures <- read_both_waves("OII_PVZ_Gesture")
+glimpse(gestures)
+```
+
+We first match only those sessions that were within the time frame, then count how many gestures a player used.
+
+```{r}
+gestures <- gestures %>% 
+  left_join(select(survey, player_id, start_date)) %>% 
+  filter(date_time >= (start_date - days(14))) %>% 
+  count(player_id, name = "gestures")
+```
+
+### Leveling
+
+This data set shows when a player went up a level with a character.
+The variables:
+
+* player_id = Unique identifier for a player.
+* platform = One of the major platforms, eg. PC, Playstation, Xbox.
+* level = The level earned for the character.
+* date_time = The date time when the level was earned.
+* character_class = The character key noting the character used.
+
+```{r cache = TRUE}
+leveling <- read_both_waves("OII_PVZ_Leveling")
+glimpse(leveling)
+```
+
+We only include those sessions that happened within the time frame, then we count how many times a player went up a level.
+
+```{r}
+leveling <- leveling %>%
+  left_join(select(survey, player_id, start_date)) %>% 
+  filter(date_time >= (start_date - days(14))) %>% 
+  count(player_id, name = "levelings")
+```
+
+### Prestige
+
+This data set show when a a player went up a prestige level with a character. 
+Prestige levels are different from character levels.
+The variables:
+
+* player_id = Unique identifier for a player.
+* platform = One of the major platforms, eg. PC, Playstation, Xbox.
+* prestige_level = The prestige level for the character.
+* date_time = The date time the prestige level was earned.
+* character_class = The character key noting the character used.
+
+```{r cache = TRUE}
+prestige <- read_both_waves("OII_PVZ_Presti")
+glimpse(prestige)
+```
+
+```{r}
+prestige <- prestige %>%
+  left_join(select(survey, player_id, start_date)) %>% 
+  filter(date_time >= (start_date - days(14))) %>% 
+  count(player_id, name = "prestige")
+```
+
+### Registrations
+
+Registrations only happen once per player and show when a player registered with PvZ for the first time.
+Won't be needed later, but code is here for completeness.
+The variables:
+
+* player_id = Unique identifier for a player.
+* platform = One of the major platforms, eg. PC, Playstation, Xbox.
+* date = Date of the registration.
+* country = Country the login came from.
+
+```{r eval = FALSE}
+registrations <- read_both_waves("OII_PVZ_Registration")
+```
+
+### Experience Points
+
+This data set shows how many XP a player earned at what time and in what session.
+The variables:
+
+* player_id = Unique identifier for a player.
+* platform = One of the major platforms, eg. PC, Playstation, Xbox.
+* date_time = The date time when the xp was earned.
+* character_class = The character key noting the character used.
+* game_session = Unique identifier for a game session.
+* xp_earned = The xp amount earned.
+
+```{r cache = TRUE}
+# Gotta process dates because they are different across the two files
+xp <- read_both_waves(
+  "OII_PVZ_XPEarned", 
+  col_types = cols(date_time = "c")
+)
+
+# All other timestamps, above, are automatically parsed to UTC so we do that here as well
+xp <- xp %>% 
+  mutate(date_time = anytime::anytime(date_time, "UTC"))
+glimpse(xp)
+```
+
+We sum up how many experience points a player got in total during the two weeks before the survey.
+
+```{r}
+xp <- xp %>% 
+  left_join(select(survey, player_id, start_date)) %>% 
+  filter(date_time >= (start_date - days(14))) %>% 
+  group_by(player_id) %>% 
+  summarise(xp = sum(xp_earned)) %>% 
+  ungroup()
+```
+
+### Process game time
+
+The raw game times were used in processing the other files, so we left processing it until here.
+
+First, we check which game sessions happened within the 14 days a participant took a survey (the file is already filtered to only include participants who actually filled out the survey). 
+
+Afterwards, we aggregate the remaining game sessions per participant to get to how many hours they played in the two weeks before the survey (i.e., only aggregate/summarize `game_session`s that happened within the past 14 days).
+
+```{r}
+game_time <- game_time %>% 
+  left_join(select(survey, player_id, start_date)) %>% 
+  filter(game_start_time >= (start_date - days(14))) %>% 
+  select(player_id, game_start_time, game_end_time) %>% 
+  mutate(duration = game_end_time-game_start_time) %>% 
+  mutate(Hours = as.numeric(duration)/60/60) %>% 
+  group_by(player_id) %>% 
+  summarise(Hours = sum(Hours)) %>% 
+  ungroup()
+```
+
+## Merge survey and telemetry
+
+Next, we add the person-level aggregated telemetry variables to the survey data.
+The resulting data set will not deal with session level data, but summarizes, for each participant, their engagement in the 2 week observation period.
+
+First put all the aggregated telemetry into one data frame
+
+```{r}
+telemetry <- reduce(
+  list(authentications, characters, friends, game_time, gestures, leveling, prestige, xp),
+  left_join
+)
+```
+
+And then merge them to the survey
 ```{r}
 pvz <- survey %>% 
-  left_join(meta, by = "player_id")
+  left_join(telemetry, by = "player_id")
 ```
 
 ## Exclusions
@@ -856,4 +738,10 @@ pvz <- pvz %>%
 
 ```{r}
 write_rds(pvz, here("data/ea/pvz-excluded.rds"))
+write_rds(friends, here("data/ea/friends.rds"))
+write_rds(game_time, here("data/ea/game_time.rds"))
+write_rds(gestures, here("data/ea/gestures.rds"))
+write_rds(leveling, here("data/ea/leveling.rds"))
+write_rds(prestige, here("data/ea/prestige.rds"))
+write_rds(xp, here("data/ea/xp.rds"))
 ```

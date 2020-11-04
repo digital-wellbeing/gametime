@@ -3,8 +3,15 @@
 .RData
 .Ruserdata
 .DS_Store
-# Can't share data yet
+
+# Ignore temporarily stored local data files
 data/
+
+# Ignore raw data files: These are minimally processed
+# (to e.g. remove survey user IDs) and uploaded to OSF
 data-raw/
+
 # Bookdown whatnots
 _bookdown_files/
+*.rds
+

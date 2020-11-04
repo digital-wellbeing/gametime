@@ -11,110 +11,78 @@ p_load(
   janitor,
   tidyverse
 )
-# remotes::install_github("rubenarslan/formr")
-p_load(formr)
 opts_chunk$set(
   echo = TRUE, 
   message = FALSE, 
   warning = FALSE, 
   cache = FALSE
 )
+dir.create("data/", FALSE)
+dir.create("data/noa/", FALSE)
+dir.create("data-raw/", FALSE)
+dir.create("data-raw/noa/", FALSE)
 ```
 
 Here, we process the AC:NH survey and telemetry files.
 
-Currently this script pulls survey data from formr.org, and saves to `data-raw/noa/`. If data already exists there, then it is loaded instead.
+## Get raw survey data
 
-Telemetry data doesn't exist yet.
+This script expects the raw data files to be in `data-raw/noa/`. These files, including the raw survey data, are in a zip compressed file on OSF: <https://osf.io/cjd6z/>. 
 
-After processing, we place the processed data sets in `data/noa/` as R data objects.
+The raw survey data was edited to exclude test sessions, any data from individuals who did not consent / below 18, and some unnecessary variables, before uploading to OSF. The code to do that is shown below (but cannot be executed without our formr credentials)
 
-## Process formr surveys
-
-### Get raw data
-
-Ensure output directories exists
-
-```{r}
-dir.create("data-raw/", FALSE)
-dir.create("data-raw/noa/", FALSE)
-dir.create("data/", FALSE)
-dir.create("data/noa/", FALSE)
-```
-
-Read data from formr.org and save to `data-raw/` if it doesn't yet exist. For now you have to manually authenticate to formr if needed, sorry.
-
-```{r}
-if (!file.exists(here("data-raw/noa/formr.rds"))) {
-  formr_connect()
-  # These are the surveys
+```{r eval = FALSE, error = TRUE}
+# Dont download if already downloaded
+if (!file.exists(here("data-raw/noa/formr-raw.rds"))) {
+  # Connect to formr
+  formr::formr_connect()
+  # These are the survey names
   surveys <- c("gaming_welcome", paste0("gaming_block", 2:5))
-  # List of surveys' data frames
-  ac <- map(surveys, ~formr_results(.) %>% as_tibble)
-  saveRDS(ac, here("data-raw/noa/formr.rds"))
-} else {ac <- readRDS(here("data-raw/noa/formr.rds"))}
-```
+  # Download data into a list of data frames
+  ac <- map(surveys, ~formr::formr_results(.) %>% as_tibble)
+  saveRDS(ac, here("data-raw/noa/formr-raw.rds"))
+} else {ac <- readRDS(here("data-raw/noa/formr-raw.rds"))}
+  
+# Limit data before saving
 
-Take only responses after the survey went live (i.e. take out our test sessions). Later, to make sure, we need to retain only rows where `code` exists in telemetry.
-
-```{r}
-ac[[1]] <- ac[[1]] %>% filter(created >= ymd("2020-10-27"))
-```
-
-Then, retain only rows where code exists, and consent & age check out
-
-```{r}
-# Keep only surveys whose code exists in gaming_welcome$code
-ac[[1]] <- filter(
-  ac[[1]], !is.na(code), of_age==1, consent_data==1, consent==1
-)
-```
-
-Now apply those exclusions to all five survey data frames
-
-```{r}
-ac <- map(ac, ~filter(., code %in% ac[[1]][["code"]]))
-```
-
-Take out all time variables except first created and last ended (when survey started and ended)
-
-```{r}
+# Take out all time variables except first created and last ended (when survey started and ended)
 ac[[1]] <- select(ac[[1]], -c(modified:expired))
 ac[2:4] <- map(ac[2:4], ~select(., -c(created:expired)))
 ac[[5]] <- select(ac[[5]], -c(created, modified, expired))
-```
 
-Put all five survey's responses on one row per participant
-
-```{r}
+# Transform to one data frame with one row per participant
 ac <- ac %>% reduce(left_join)
-```
 
-Remove some unnecessary variables
-
-```{r}
+# Limit data to survey window to exclude our test sessions
 ac <- ac %>% 
-  select(-c(session, browser, last_outside_referrer))
+  filter(created >= ymd("2020-10-27")) %>% 
+  filter(created <= ymd("2020-10-27") + days(7))
+range(ac$created)
+# Keep only surveys whose code exists and consents check out
+ac <- filter(
+  ac, !is.na(code), of_age==1, consent_data==1, consent==1
+)
+
+# Take out unnecessary variables
+ac <- ac %>% 
+  select(
+    -c(session, browser, last_outside_referrer, of_age:consent)
+    )
+write_rds(ac, here("data-raw/noa/formr.rds"))
 ```
+
+The file produced by the above code chunk was uploaded to OSF in a zip compressed archive with the telemetry file.
+
+Start by downloading that file and unpacking it to the target directory:
 
 ```{r}
-glimpse(ac)
+file_dest <- here("data-raw/noa/noa.zip")
+# Download & extract file only if you haven't yet
+if (!file.exists(file_dest)) {
+  download.file("https://osf.io/fev95/download", file_dest)
+  unzip(file_dest, exdir = here("data-raw/noa/"))
+}
 ```
-
-Create a file with codes (hashed ID) and when survey started
-
-```{r eval = FALSE}
-select(ac, code, survey_start = created) %>% 
-  arrange(survey_start) %>% 
-  write_csv(here(str_glue("ID---{Sys.time()}.csv")))
-```
-
-Because we only keep telemetry data of players who answered the survey, we'll get a variable with the IDs of ppl who filled survey
-
-```{r}
-survey_ids <- pull(ac, code) 
-```
-
 
 ### Clean survey data
 
