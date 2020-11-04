@@ -84,6 +84,12 @@ if (!file.exists(file_dest)) {
 }
 ```
 
+Load the survey data file
+
+```{r}
+ac <- readRDS(here("data-raw/noa/formr.rds"))
+```
+
 ### Clean survey data
 
 - Create duration variable
