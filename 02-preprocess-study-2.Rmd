@@ -90,6 +90,12 @@ Load the survey data file
 ac <- readRDS(here("data-raw/noa/formr.rds"))
 ```
 
+Response rate: All who consented, so rows in this table
+
+```{r}
+percent(nrow(ac) / 342825, accuracy = .01)
+```
+
 ### Clean survey data
 
 - Create duration variable
