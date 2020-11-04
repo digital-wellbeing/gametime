@@ -33,7 +33,7 @@ These files, including the raw survey data, are in a zip compressed file on OSF:
 file_dest <- here("data-raw/ea/ea.zip")
 # Download & extract file only if you haven't yet
 if (!file.exists(file_dest)) {
-  download.file("https://osf.io//download", file_dest)
+  download.file("https://osf.io/4gp3r/download", file_dest)
   unzip(file_dest, exdir = here("data-raw/ea/"))
 }
 ```
