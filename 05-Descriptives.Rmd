@@ -11,6 +11,7 @@ p_load(
   here,
   patchwork,
   cowplot,
+  janitor,
   ggbeeswarm
 )
 ```
@@ -286,14 +287,28 @@ single_cloud(
 )
 ```
 
+## Demographics
+
 In total, `r length(unique(dat$player_id))` players responded to the survey.
 Their mean age was *M* = `r round(mean(dat$age, na.rm = T), digits = 0)` with a standard deviation of *SD* = `r round(sd(dat$age, na.rm = T), digits = 0)`.
 
+Ages by study:
+
+```{r}
+dat %>% 
+  group_by(Study) %>% 
+  summarise(
+    m_age = mean(age, na.rm = TRUE),
+    s_age = sd(age, na.rm = TRUE),
+    min_age = min(age, na.rm = TRUE),
+    max_age = max(age, na.rm = TRUE)
+    )
+```
+
 Then let's look at the gender distribution.
 ```{r}
-count(dat, sex) %>% 
-  mutate(Proportion = round(n / sum(n), digits = 2) * 100) %>% 
-  knitr::kable(., caption = "Gender frequencies")
+tabyl(pvz, gender) %>% adorn_pct_formatting()
+tabyl(ac, sex) %>% adorn_pct_formatting()
 ```
 
 And a check of the variable distributions.
