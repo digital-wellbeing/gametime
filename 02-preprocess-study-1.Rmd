@@ -377,6 +377,12 @@ game_time <- game_time %>%
   ungroup()
 ```
 
+Save file
+
+```{r}
+write_rds(game_time, here("data/ea/game_time.rds"))
+```
+
 ### Authentications
 
 The authentifications data set logs events when a player (`player_id`) logs into the game.
@@ -460,6 +466,7 @@ The variables:
 ```{r cache = TRUE}
 friends <- read_both_waves("OII_PVZ_Friends")
 glimpse(friends)
+write_rds(friends, here("data/ea/friends.rds"))
 ```
 
 Then we count the number of friend connections made.
@@ -515,6 +522,7 @@ The variables:
 ```{r cache = TRUE}
 gestures <- read_both_waves("OII_PVZ_Gesture")
 glimpse(gestures)
+write_rds(gestures, here("data/ea/gestures.rds"))
 ```
 
 We first match only those sessions that were within the time frame, then count how many gestures a player used.
@@ -540,6 +548,7 @@ The variables:
 ```{r cache = TRUE}
 leveling <- read_both_waves("OII_PVZ_Leveling")
 glimpse(leveling)
+write_rds(leveling, here("data/ea/leveling.rds"))
 ```
 
 We only include those sessions that happened within the time frame, then we count how many times a player went up a level.
@@ -566,6 +575,7 @@ The variables:
 ```{r cache = TRUE}
 prestige <- read_both_waves("OII_PVZ_Presti")
 glimpse(prestige)
+write_rds(prestige, here("data/ea/prestige.rds"))
 ```
 
 ```{r}
@@ -613,6 +623,7 @@ xp <- read_both_waves(
 xp <- xp %>% 
   mutate(date_time = anytime::anytime(date_time, "UTC"))
 glimpse(xp)
+write_rds(xp, here("data/ea/xp.rds"))
 ```
 
 We sum up how many experience points a player got in total during the two weeks before the survey.
@@ -738,10 +749,4 @@ pvz <- pvz %>%
 
 ```{r}
 write_rds(pvz, here("data/ea/pvz-excluded.rds"))
-write_rds(friends, here("data/ea/friends.rds"))
-write_rds(game_time, here("data/ea/game_time.rds"))
-write_rds(gestures, here("data/ea/gestures.rds"))
-write_rds(leveling, here("data/ea/leveling.rds"))
-write_rds(prestige, here("data/ea/prestige.rds"))
-write_rds(xp, here("data/ea/xp.rds"))
 ```
