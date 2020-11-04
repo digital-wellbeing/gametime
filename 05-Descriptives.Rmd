@@ -10,24 +10,50 @@ p_load(
   sjPlot,
   here,
   patchwork,
-  cowplot
+  cowplot,
+  ggbeeswarm
 )
 ```
 
+Get the data sets.
 ```{r}
-game_time <- read_rds(here("data/ea/game_time.rds"))
-leveling <- read_rds(here("data/ea/leveling.rds"))
-xp <- read_rds(here("data/ea/xp.rds"))
-gestures <- read_rds(here("data/ea/gestures.rds"))
-prestige <- read_rds(here("data/ea/prestige.rds"))
-friends <- read_rds(here("data/ea/friends.rds"))
-pvz <- read_rds(here("data/ea/pvz.rds"))
-
-# remove one outlier here already?
-
+ac <- read_rds(here("data/noa/ac-excluded.rds"))
+pvz <- read_rds(here("data/ea/pvz-excluded.rds"))
 ```
 
+## Create joint dataset
+
+Join the two data sets.
+
+```{r}
+ac <- ac %>% 
+  select(
+    age,
+    sex,
+    player_id,
+    spane_balance, autonomy, 
+    competence, relatedness, enjoyment, 
+    extrinsic, active_play, Hours
+  )
+
+dat <- bind_rows(
+  pvz %>% 
+  select(
+    player_id, age, sex = gender, spane_balance, autonomy, 
+    competence, relatedness, enjoyment, 
+    extrinsic, active_play, Hours
+  ), 
+  ac, 
+  .id = "Study"
+  ) %>% 
+  # ! here to remind that data contains simulated stuff in prep for real data
+  mutate(Study = factor(Study, labels = c("PVZ", "AC:NH")))
+```
+
+## Plot studies combined
+
 Then, let's plot and describe demographic information first.
+The plots in this section will be for both studies combined.
 ```{r}
 # raincloud plot function from https://github.com/RainCloudPlots/RainCloudPlots/blob/master/tutorial_R/R_rainclouds.R
 # Defining the geom_flat_violin function ----
@@ -252,37 +278,325 @@ single_cloud <-
   }
 
 single_cloud(
-  pvz,
-  describe(pvz, "age", trait = FALSE),
+  dat,
+  describe(dat, "age", trait = FALSE),
   "age",
   "#009E73",
   "Distribution of age"
 )
 ```
 
-In total, `r length(unique(pvz$player_id))` players responded to the survey.
-Their mean age was *M* = `r round(mean(pvz$age), digits = 0)` with a standard deviation of *SD* = `r round(sd(pvz$age), digits = 0)`.
+In total, `r length(unique(dat$player_id))` players responded to the survey.
+Their mean age was *M* = `r round(mean(dat$age, na.rm = T), digits = 0)` with a standard deviation of *SD* = `r round(sd(dat$age, na.rm = T), digits = 0)`.
 
 Then let's look at the gender distribution.
 ```{r}
-count(pvz, gender) %>% 
+count(dat, sex) %>% 
+  mutate(Proportion = round(n / sum(n), digits = 2) * 100) %>% 
   knitr::kable(., caption = "Gender frequencies")
 ```
 
-Next, I'll create a table with the summary stats of the self-reported variables.
+And a check of the variable distributions.
 ```{r}
-# some proper names for the variables
+p1 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "spane_balance", trait = TRUE),
+    "spane_balance",
+    "#56B4E9",
+    title = "SPANE Balance",
+    trait = TRUE
+  )
+
+p2 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "autonomy", trait = TRUE),
+    "autonomy",
+    "#009E73",
+    title = "Autonomy",
+    trait = TRUE
+  )
+
+p3 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "competence", trait = TRUE),
+    "competence",
+    "#F0E442",
+    title = "Competence",
+    trait = TRUE
+  )
+
+p4 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "relatedness", trait = TRUE),
+    "relatedness",
+    "#000000",
+    title = "Relatedness",
+    trait = TRUE
+  )
+
+p5 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "enjoyment", trait = TRUE),
+    "enjoyment",
+    "#0072B2",
+    title = "Enjoyment",
+    trait = TRUE
+  )
+
+p6 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "extrinsic", trait = TRUE),
+    "extrinsic",
+    "#D55E00",
+    title = "Extrinsic motivation",
+    trait = TRUE
+  )
+
+p7 <- 
+  single_cloud(
+    pvz,
+    describe(pvz, "active_play", trait = TRUE),
+    "active_play",
+    "#CC79A7",
+    title = "Self-estimated play",
+    trait = TRUE
+  )
+
+(p1 | p2) / (p3 | p4) / (p5 | p6) / p7
+```
+
+## Create summary figure
+
+Alright, here I'll create a summary figure that shows a beeswarm plot for each of the variables we're interested in.
+
+First, because we'll plot per measure, let's turn the data into the long format.
+```{r}
+dat_long <- 
+  dat %>% 
+  pivot_longer(
+    spane_balance:Hours,
+    names_to = "Variable",
+    values_to = "value"
+  ) %>% 
+  mutate(Variable = as.factor(Variable))
+```
+
+Now, let's get summary stats for each measure.
+```{r}
+# function to get summary stats
+get_summary <- 
+  function(
+    dat
+  ) {
+    summary_stats <- 
+      dat %>%
+      group_by(Study) %>% 
+      summarise(
+        across(
+          spane_balance:Hours,
+          list(
+            N = ~ sum(!is.na(.x)),
+            Mean = ~ mean(.x, na.rm = TRUE),
+            SD = ~ sd(.x, na.rm = TRUE),
+            Median = ~ median(.x, na.rm = TRUE),
+            Min = ~ min(.x, na.rm = TRUE),
+            Max = ~ max(.x, na.rm = TRUE),
+            `Lower 95%CI` = ~Rmisc::CI(na.omit(.x))[[3]], # lower CI
+            `Upper 95%CI` = ~Rmisc::CI(na.omit(.x))[[1]]
+          )
+        )
+      ) %>% 
+      
+      # get into long format
+      pivot_longer(
+        -Study,
+        names_to = c("Variable", "Measure"),
+        values_to = "Value",
+        names_pattern = "(.*)_([^_]+$)" # match by last occurrence of underscore
+      ) %>%
+
+      # and back to wide format
+      pivot_wider(
+        id_cols = c(Study, Variable),
+        names_from = Measure,
+        values_from = Value
+      )
+    
+    return(summary_stats)
+    }
+
+summary_stats <- get_summary(dat)
+
+# rename both so that we have the same order of factor levels for the figure
+rename_and_relevel <- 
+  function(
+    dat
+  ) {
+    dat <- 
+      dat %>% 
+      mutate(
+        Variable = fct_relevel(
+          Variable,
+          "SPANE" = "spane_balance",
+          "Hours",
+          "active_play",
+          "autonomy",
+          "competence",
+          "relatedness",
+          "enjoyment",
+          "extrinsic"
+        ),
+        
+      Variable = fct_recode(
+        Variable,
+        "SPANE" = "spane_balance",
+        "Objective play time" = "Hours",
+        "Self-reported play time" = "active_play",
+        "Autonomy" = "autonomy",
+        "Competence" = "competence",
+        "Relatedness" = "relatedness",
+        "Enjoyment" = "enjoyment",
+        "Extrinsic" = "extrinsic"
+      )
+    )
+    
+    return(dat)
+  }
+
+dat_long <- rename_and_relevel(dat_long)
+summary_stats <- rename_and_relevel(summary_stats)
+```
+
+And then the beeswarm plots.
+```{r, message=F, warning=F}
+summary_stats <-
+  summary_stats %>% 
+  group_by(Variable) %>% 
+  mutate( # the position of geom_text
+    x = max(Max) * 0.9,
+    across(
+      c(Mean, SD),
+      ~ round(.x, digits = 1)
+    )
+  )
+
+# a function because we "split" up the plot with patchwork
+beeswarm_plots <- 
+  function(
+    dat,
+    subset,
+    mean_position,
+    sd_position,
+    col_font_size,
+    row_font_size
+  ){
+    ggplot(
+      dat %>% 
+        filter(
+          !Variable %in% subset
+        ),
+      aes(
+        x = value,
+        y = 1
+      )
+    ) +
+      geom_quasirandom(
+        color = "grey30", 
+        size = 0.8, 
+        groupOnX = FALSE
+      ) +
+      facet_grid(
+        Study ~ Variable, 
+        scales = "free_x"
+      ) +
+      geom_text(
+        data = summary_stats %>% 
+          filter(!Variable %in% subset),
+        aes(
+          x = x,
+          y = mean_position,
+          label = paste0("M = ", Mean)
+        )
+      ) +
+      geom_text(
+        data = summary_stats %>% 
+          filter(!Variable %in% subset),
+        aes(
+          x = x,
+          y = sd_position,
+          label = paste0("SD = ", SD)
+        )
+      ) +
+      theme(
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        strip.background.x = element_blank(),
+        strip.background.y = element_blank(),
+        panel.border = element_rect(
+          colour = "black", 
+          fill = NA, 
+          size = 1
+        ),
+        strip.text.x = element_text(size = col_font_size),
+        strip.text.y = element_text(size = row_font_size)
+      ) -> p
+    
+    return(p)
+  }
+
+p1 <- 
+  beeswarm_plots(
+    dat_long,
+    c("Competence", "Relatedness", "Enjoyment", "Extrinsic", "Autonomy"),
+    1.6,
+    1.5,
+    14,
+    16
+  )
+
+p2 <- 
+  beeswarm_plots(
+    dat_long,
+    c("SPANE", "Objective play time", "Self-reported play time"),
+    1.9,
+    1.8,
+    16,
+    16
+  )
+
+p1 / p2
+```
+
+Last, PVZ also had additional telemetry data besides game playing time.
+Below, I create a table with summary stats for those variables.
+```{r}
 my_names <- 
   c(
-    "SPANE positive",
-    "SPANE negative",
-    "SPANE balance",
-    "Autonomy",
-    "Competence",
-    "Relatedness",
-    "Enjoyment",
-    "Extrinsic motivation",
-    "Self-estimated play"
+    "Total kill count",
+    "Total death count",
+    "Score",
+    "Damage dealt",
+    "Critical hits count",
+    "Shots fired",
+    "Shots hit",
+    "Friends made",
+    "Objective time played (in h)",
+    "Gestures used",
+    "Levels gained",
+    "Prestige levels gained",
+    "XP earned"
   )
 
 # function to get an APA table with descriptive info
@@ -341,131 +655,7 @@ get_table <-
       tab_df( # fro sjPlot package
         ., 
         file = file_name)
-    }
-
-get_table(
-  pvz %>% 
-    select(
-      spane_positive:extrinsic,
-      active_play
-    ),
-  my_names,
-  "pvz_survey_descriptives.doc"
-)
-```
-
-And a check of the variable distributions.
-```{r}
-p1 <- 
-  single_cloud(
-    pvz,
-    describe(pvz, "spane_positive", trait = TRUE),
-    "spane_positive",
-    "#999999",
-    title = "SPANE positive",
-    trait = TRUE
-  )
-p2 <- 
-  single_cloud(
-    pvz,
-    describe(pvz, "spane_negative", trait = TRUE),
-    "spane_negative",
-    "#E69F00",
-    title = "SPANE negative",
-    trait = TRUE
-  )
-
-p3 <- 
-  single_cloud(
-    pvz,
-    describe(pvz, "spane_balance", trait = TRUE),
-    "spane_balance",
-    "#56B4E9",
-    title = "SPANE Balance",
-    trait = TRUE
-  )
-
-p4 <- 
-  single_cloud(
-    pvz,
-    describe(pvz, "autonomy", trait = TRUE),
-    "autonomy",
-    "#009E73",
-    title = "Autonomy",
-    trait = TRUE
-  )
-
-p5 <- 
-  single_cloud(
-    pvz,
-    describe(pvz, "competence", trait = TRUE),
-    "competence",
-    "#F0E442",
-    title = "Competence",
-    trait = TRUE
-  )
-
-p6 <- 
-  single_cloud(
-    pvz,
-    describe(pvz, "relatedness", trait = TRUE),
-    "relatedness",
-    "#000000",
-    title = "Relatedness",
-    trait = TRUE
-  )
-
-p7 <- 
-  single_cloud(
-    pvz,
-    describe(pvz, "enjoyment", trait = TRUE),
-    "enjoyment",
-    "#0072B2",
-    title = "Enjoyment",
-    trait = TRUE
-  )
-
-p8 <- 
-  single_cloud(
-    pvz,
-    describe(pvz, "extrinsic", trait = TRUE),
-    "extrinsic",
-    "#D55E00",
-    title = "Extrinsic motivation",
-    trait = TRUE
-  )
-
-p9 <- 
-  single_cloud(
-    pvz,
-    describe(pvz, "active_play", trait = TRUE),
-    "active_play",
-    "#CC79A7",
-    title = "Self-estimated play",
-    trait = TRUE
-  )
-
-(p1 | p2) / (p3 | p4) / (p5 | p6) / (p7 | p8) / p9
-```
-
-Alright, let's also create a table with descriptive info for the play events.
-```{r}
-my_names <- 
-  c(
-    "Total kill count",
-    "Total death count",
-    "Score",
-    "Damage dealt",
-    "Critical hits count",
-    "Shots fired",
-    "Shots hit",
-    "Friends made",
-    "Objective time played (in h)",
-    "Gestures used",
-    "Levels gained",
-    "Prestige levels gained",
-    "XP earned"
-  )
+  }
 
 get_table(
   pvz %>% 
