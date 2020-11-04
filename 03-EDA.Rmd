@@ -134,7 +134,6 @@ pvz %>%
 ## Missingness
 
 ```{r}
-data(pvz)
 vis_dat(pvz[,1:20], sort_type = FALSE)
 vis_dat(pvz[,21:40], sort_type = FALSE)
 vis_dat(pvz[,41:60], sort_type = FALSE)
