@@ -25,6 +25,7 @@ p_load(
   lubridate,
   scales,
   janitor,
+  anytime,
   tidyverse
 )
 ```
@@ -629,7 +630,7 @@ xp <- read_both_waves(
 
 # All other timestamps, above, are automatically parsed to UTC so we do that here as well
 xp <- xp %>% 
-  mutate(date_time = anytime::anytime(date_time, "UTC"))
+  mutate(date_time = anytime(date_time, "UTC"))
 glimpse(xp)
 write_rds(xp, here("data/ea/xp.rds"))
 ```
