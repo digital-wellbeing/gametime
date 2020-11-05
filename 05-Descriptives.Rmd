@@ -509,7 +509,7 @@ summary_stats <-
   summary_stats %>% 
   group_by(Variable) %>% 
   mutate( # the position of geom_text
-    x = max(Max) * 0.9,
+    x = max(Max) * 0.85,
     across(
       c(Mean, SD),
       ~ round(.x, digits = 1)
@@ -555,7 +555,8 @@ beeswarm_plots <-
           y = mean_position,
           label = paste0("M = ", Mean)
         ),
-        color = "black"
+        color = "black",
+        size = 1.5
       ) +
       geom_text(
         data = summary_stats %>% 
@@ -565,7 +566,8 @@ beeswarm_plots <-
           y = sd_position,
           label = paste0("SD = ", SD)
         ),
-        color = "black"
+        color = "black",
+        size = 1.5
       ) +
       facet_rep_grid(
         Study ~ Variable, 
@@ -597,22 +599,33 @@ p1 <-
     c("Competence", "Relatedness", "Enjoyment", "Extrinsic", "Autonomy"),
     1.6,
     1.5,
-    14,
-    16
+    10,
+    11
   )
 
 p2 <- 
   beeswarm_plots(
     dat_long,
     c("SPANE", "Objective play time", "Self-reported play time"),
-    1.9,
+    1.95,
     1.8,
-    14,
-    16
+    10,
+    11
   )
 
 p1 / p2
 ```
+
+Save the plot as PDF and png.
+```{r}
+ggsave(
+  "figure1.png",
+  width = 6,
+  height = 4,
+  units = "in"
+)
+```
+
 
 Last, PVZ also had additional telemetry data besides game playing time.
 Below, I create a table with summary stats for those variables.
