@@ -212,7 +212,8 @@ vis_miss(ac)
 ```{r}
 tmp <- dat %>%
   mutate(multiplier = ifelse(Study=="PvZ", -.1, .1)) %>% 
-  pivot_longer(spane_balance:Hours) %>% 
+  rename(`Affective_well-being` = spane_balance) %>% 
+  pivot_longer(c(`Affective_well-being`, autonomy:extrinsic)) %>% 
   mutate(name = str_to_title(name)) %>% 
   mutate(name = str_replace_all(name, "_", " "))
 filter(tmp, Study == "PvZ") %>%   
@@ -224,6 +225,43 @@ filter(tmp, Study == "PvZ") %>%
   scale_x_continuous("Value", breaks = pretty_breaks()) +
   geom_point(data = group_by(tmp, Study, multiplier, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(y = -1.1)) +
   labs(y = "Normalized count") +
+  facet_wrap("name", scales = "free")
+
+
+```
+
+```{r}
+dat %>% 
+  select(Study, active_play, Hours) %>% 
+  ggplot(aes(fill = Study)) +
+  scale_fill_manual(values = colors) + 
+  geom_histogram(
+    aes(active_play, y = stat(ncount)), binwidth = 1, alpha = .7
+    ) +
+  geom_histogram(
+    aes(Hours, y = stat(ncount)*-1), binwidth = 1
+    ) +
+  geom_hline(yintercept = 0, size = .25) +
+  scale_x_continuous("Hours", breaks = pretty_breaks()) +
+  labs(y = "Normalized count") +
+  facet_wrap("Study", scales = "free_x")
+```
+
+```{r}
+tmp <- dat %>%
+  mutate(multiplier = ifelse(Study=="PvZ", -.1, .1)) %>% 
+  pivot_longer(spane_balance:Hours) %>% 
+  mutate(name = str_to_title(name)) %>% 
+  mutate(name = str_replace_all(name, "_", " "))
+filter(tmp, Study == "PvZ") %>%   
+  ggplot(aes(value, col = Study, fill = Study)) +
+  coord_cartesian(clip = "off", ylim = c(-1, 1)) +
+  scale_color_manual(values = colors, aesthetics = c("color", "fill")) +
+  geom_histogram(col=NA, aes(y = stat(ncount))) +
+  geom_histogram(data = filter(tmp, Study == "AC:NH"), aes(y = stat(ncount)*-1), col = NA) +
+  scale_x_continuous("Value", breaks = pretty_breaks()) +
+  labs(y = "Normalized count") +
+  geom_point(data = group_by(tmp, Study, multiplier, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(y = -1.1)) +
   facet_wrap("name", scales = "free")
 ```
 
