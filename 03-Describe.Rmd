@@ -1,4 +1,4 @@
-# Descriptives
+# Describe & explore
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
@@ -15,55 +15,280 @@ knitr::opts_chunk$set(
 ```
 
 Here, we get the descriptive info for both studies that we report in the Method section of the paper.
-First, let's load the packages we need and load the data sets.
-```{r}
-library(pacman)
 
+We used these packages:
+
+```{r, include = FALSE}
+library(pacman)
 p_load(
-  tidyverse,
-  sjPlot,
+  knitr,
   here,
+  visdat,
+  scales,
   patchwork,
+  sjPlot,
   cowplot,
   janitor,
   ggbeeswarm,
-  lemon
+  lemon,
+  lubridate,
+  tidyverse
 )
 ```
 
-Get the data sets.
+```{r}
+theme_set(
+  theme_classic(base_line_size = .25, base_rect_size = 0) +
+    theme(
+      strip.text = element_text(size = rel(1)),
+      strip.background = element_blank(),
+      legend.position = "none"
+    )
+)
+colors <- c("navyblue", "#E60012")
+```
+
+Then, we load the data sets.
+
 ```{r}
 ac <- read_rds(here("data/noa/ac-excluded.rds"))
 pvz <- read_rds(here("data/ea/pvz-excluded.rds"))
-```
 
-## Create joint dataset
+ac_full <- read_rds(here("data/noa/ac.rds"))
+pvz_full <- read_rds(here("data/ea/pvz.rds"))
+```
 
 Join the two data sets.
 
 ```{r}
 ac <- ac %>% 
   select(
-    age,
-    sex,
-    player_id,
-    spane_balance, autonomy, 
+    player_id, gender, created, age,
+    spane_balance, spane_positive, spane_negative, 
+    spane_game_balance, within_estimate, between_estimate,
+    autonomy, 
     competence, relatedness, enjoyment, 
     extrinsic, active_play, Hours
   )
-
-dat <- bind_rows(
-  pvz %>% 
+pvz <- pvz %>% 
   select(
-    player_id, age, sex = gender, spane_balance, autonomy, 
+    player_id, gender, created = date, age,
+    spane_balance, spane_positive, spane_negative,
+    spane_game_balance, within_estimate, between_estimate,
+    autonomy, 
     competence, relatedness, enjoyment, 
     extrinsic, active_play, Hours
-  ), 
-  ac, 
-  .id = "Study"
-  ) %>% 
-  # ! here to remind that data contains simulated stuff in prep for real data
-  mutate(Study = factor(Study, labels = c("PVZ", "AC:NH")))
+  )
+dat <- bind_rows(pvz, ac, .id = "Study") %>% 
+  mutate(Study = factor(Study, labels = c("PvZ", "AC:NH")))
+```
+
+Here's a function to draw quick bivariate figures, and another one for scatterplot matrices
+
+```{r custom-functions}
+lm_function <- 
+  function(
+    data, 
+    mapping, 
+    ...
+    ){
+  p <- 
+    ggplot(
+      data = data, 
+      mapping = mapping
+      ) + 
+    geom_point(
+      color = "#56B4E9",
+      alpha = 0.5
+    ) + 
+    geom_smooth(
+      method=lm, 
+      fill="#0072B2", 
+      color="#0072B2", 
+      ...)
+  p
+}
+
+dens_function <-
+  function(
+    data,
+    mapping,
+    ...
+  ){
+    p <- 
+      ggplot(
+        data = data,
+        mapping = mapping
+      ) +
+      geom_density(fill = "#009E73", color = NA, alpha = 0.5)
+  }
+
+pair_plot <- 
+  function(
+    dat
+  ) {
+    GGally::ggpairs(
+      data = dat,
+      lower = list(continuous = lm_function), # custom helper function
+      diag = list(continuous = dens_function), # custom helper function
+    ) +
+      theme(
+        axis.line=element_blank(),
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title.y=element_blank(),
+        axis.title.x=element_blank(),
+        legend.position="none",
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank(),
+        strip.background = element_blank()
+      )
+  }
+```
+
+## Demographics
+
+In total, `r length(unique(dat$player_id))` players responded to the survey.
+Their mean age was *M* = `r round(mean(dat$age, na.rm = T), digits = 0)` with a standard deviation of *SD* = `r round(sd(dat$age, na.rm = T), digits = 0)`.
+
+Ages by study:
+
+```{r}
+dat %>% 
+  group_by(Study) %>% 
+  summarise(
+    m_age = mean(age, na.rm = TRUE),
+    s_age = sd(age, na.rm = TRUE),
+    min_age = min(age, na.rm = TRUE),
+    max_age = max(age, na.rm = TRUE)
+    )
+```
+
+Then let's look at the gender distribution.
+```{r}
+tabyl(pvz, gender) %>% adorn_pct_formatting()
+tabyl(ac, gender) %>% adorn_pct_formatting()
+```
+
+## Survey dates
+
+```{r}
+dat %>% 
+  mutate(Date = as.Date(created)) %>% 
+  count(Study, Date) %>% 
+  kable()
+```
+
+## Response rates
+
+```{r}
+# PvZ wave 1
+p1 <- nrow(pvz_full %>% filter(date < ymd("2020-09-01")))
+# PvZ wave 2
+p2 <- nrow(pvz_full %>% filter(date > ymd("2020-09-01")))
+# AC:NH
+a1 <- nrow(ac)
+tibble(
+  Study = c("PvZ w1", "PvZ w2", "AC:NH"),
+  Invitations = c(50000, 200000, 342825),
+  Responses = c(p1, p2, a1),
+  Rate = percent(Responses/Invitations, .01)
+)
+```
+
+## Missingness
+
+```{r}
+vis_miss(pvz)
+vis_miss(ac)
+```
+
+## Univariate figures
+
+```{r}
+tmp <- dat %>%
+  mutate(multiplier = ifelse(Study=="PvZ", -.1, .1)) %>% 
+  pivot_longer(spane_balance:Hours) %>% 
+  mutate(name = str_to_title(name)) %>% 
+  mutate(name = str_replace_all(name, "_", " "))
+filter(tmp, Study == "PvZ") %>%   
+  ggplot(aes(value, col = Study, fill = Study)) +
+  coord_cartesian(clip = "off", ylim = c(-1, 1)) +
+  scale_color_manual(values = colors, aesthetics = c("color", "fill")) +
+  geom_histogram(col=NA, aes(y = stat(ncount))) +
+  geom_histogram(data = filter(tmp, Study == "AC:NH"), aes(y = stat(ncount)*-1), col = NA) +
+  scale_x_continuous("Value", breaks = pretty_breaks()) +
+  geom_point(data = group_by(tmp, Study, multiplier, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(y = -1.1)) +
+  labs(y = "Normalized count") +
+  facet_wrap("name", scales = "free")
+```
+
+## Correlation matrices
+
+```{r}
+cormat <- function(data, title) {
+  data %>% 
+    rename_all(str_to_title) %>% 
+    psych::cor.plot(
+      scale = FALSE, stars = TRUE, 
+      xlas = 2, show.legend = FALSE,
+      main = str_glue("{title} correlation matrix"),
+    )
+}
+
+select(pvz, where(is.numeric)) %>% 
+  cormat("PvZ")
+select(ac, where(is.numeric)) %>% 
+  cormat("AC:NH")
+```
+
+### Well-being & motivations correlations
+
+Let's have a look at the correlations between the concepts of well-being and motivations (aggregated).
+```{r cache = TRUE}
+# call the function
+pair_plot(
+  dat%>% 
+    select(
+      spane_balance:extrinsic,
+      spane_game_balance
+    )
+)
+```
+
+### More well-being correlations
+
+Then correlations between well-being, autonomy motivation, enjoyment, and extrinsic motivation.
+```{r cache = TRUE}
+pair_plot(
+  dat %>% 
+    select(
+      autonomy,
+      extrinsic,
+      enjoyment,
+      spane_balance,
+      spane_game_balance
+    )
+)
+```
+
+Next relations between self-estimated play (effects) and well-being.
+```{r cache = TRUE}
+pair_plot(
+  dat %>% 
+    select(
+      Hours,
+      active_play,
+      within_estimate,
+      between_estimate,
+      spane_balance,
+      spane_game_balance
+    )
+  )
 ```
 
 ## Plot studies combined
@@ -302,32 +527,8 @@ single_cloud(
 )
 ```
 
-## Demographics
-
-In total, `r length(unique(dat$player_id))` players responded to the survey.
-Their mean age was *M* = `r round(mean(dat$age, na.rm = T), digits = 0)` with a standard deviation of *SD* = `r round(sd(dat$age, na.rm = T), digits = 0)`.
-
-Ages by study:
-
-```{r}
-dat %>% 
-  group_by(Study) %>% 
-  summarise(
-    m_age = mean(age, na.rm = TRUE),
-    s_age = sd(age, na.rm = TRUE),
-    min_age = min(age, na.rm = TRUE),
-    max_age = max(age, na.rm = TRUE)
-    )
-```
-
-Then let's look at the gender distribution.
-```{r}
-tabyl(pvz, gender) %>% adorn_pct_formatting()
-tabyl(ac, sex) %>% adorn_pct_formatting()
-```
-
 And a check of the variable distributions.
-```{r}
+```{r cache = TRUE}
 p1 <- 
   single_cloud(
     pvz,
@@ -485,7 +686,7 @@ rename_and_relevel <-
         
       Variable = fct_recode(
         Variable,
-        "SPANE" = "spane_balance",
+        "Affective well-being" = "spane_balance",
         "Objective play time" = "Hours",
         "Self-reported play time" = "active_play",
         "Autonomy" = "autonomy",
@@ -504,7 +705,7 @@ summary_stats <- rename_and_relevel(summary_stats)
 ```
 
 And then the beeswarm plots.
-```{r, message=F, warning=F}
+```{r beeswarm, message=F, warning=F}
 summary_stats <-
   summary_stats %>% 
   group_by(Variable) %>% 
@@ -512,7 +713,7 @@ summary_stats <-
     x = max(Max) * 0.85,
     across(
       c(Mean, SD),
-      ~ round(.x, digits = 1)
+      ~ format(round(.x, digits = 1), nsmall = 1)
     )
   )
 
@@ -529,7 +730,7 @@ beeswarm_plots <-
     ggplot(
       dat %>% 
         filter(
-          !Variable %in% subset
+          Variable %in% subset
         ),
       aes(
         x = value,
@@ -549,25 +750,25 @@ beeswarm_plots <-
       ) +
       geom_text(
         data = summary_stats %>% 
-          filter(!Variable %in% subset),
+          filter(Variable %in% subset),
         aes(
           x = x,
           y = mean_position,
           label = paste0("M = ", Mean)
         ),
         color = "black",
-        size = 1.5
+        size = 2.5
       ) +
       geom_text(
         data = summary_stats %>% 
-          filter(!Variable %in% subset),
+          filter(Variable %in% subset),
         aes(
           x = x,
           y = sd_position,
           label = paste0("SD = ", SD)
         ),
         color = "black",
-        size = 1.5
+        size = 2.5
       ) +
       facet_rep_grid(
         Study ~ Variable, 
@@ -597,7 +798,7 @@ p1 <-
   beeswarm_plots(
     dat_long,
     c("Competence", "Relatedness", "Enjoyment", "Extrinsic", "Autonomy"),
-    1.6,
+    1.65,
     1.5,
     10,
     11
@@ -606,112 +807,12 @@ p1 <-
 p2 <- 
   beeswarm_plots(
     dat_long,
-    c("SPANE", "Objective play time", "Self-reported play time"),
-    1.95,
+    c("Affective well-being", "Objective play time", "Self-reported play time"),
+    2.0,
     1.8,
     10,
     11
   )
 
-p1 / p2
+p2 / p1
 ```
-
-Save the plot as PDF and png.
-```{r}
-ggsave(
-  "figure1.png",
-  width = 6,
-  height = 4,
-  units = "in"
-)
-```
-
-
-Last, PVZ also had additional telemetry data besides game playing time.
-Below, I create a table with summary stats for those variables.
-```{r}
-my_names <- 
-  c(
-    "Total kill count",
-    "Total death count",
-    "Score",
-    "Damage dealt",
-    "Critical hits count",
-    "Shots fired",
-    "Shots hit",
-    "Friends made",
-    "Objective time played (in h)",
-    "Gestures used",
-    "Levels gained",
-    "Prestige levels gained",
-    "XP earned"
-  )
-
-# function to get an APA table with descriptive info
-get_table <- 
-  function(
-    dat,
-    variable_names,
-    file_name
-  ) {
-    dat %>% 
-      summarise(
-        across(
-          everything(),
-          list(
-            N = ~ n(),
-            Mean = ~ mean(.x, na.rm = TRUE),
-            SD = ~ sd(.x, na.rm = TRUE),
-            Median = ~ median(.x, na.rm = TRUE),
-            Min = ~ min(.x, na.rm = TRUE),
-            Max = ~ max(.x, na.rm = TRUE),
-            `Lower 95%CI` = ~Rmisc::CI(na.omit(.x))[[3]], # lower CI
-            `Upper 95%CI` = ~Rmisc::CI(na.omit(.x))[[1]]
-          )
-        )
-      ) %>% 
-      
-      # get into long format
-      pivot_longer(
-        everything(),
-        names_to = c("Variable", "Measure"),
-        values_to = "Value",
-        names_pattern = "(.*)_([^_]+$)" # match by last occurrence of underscore
-      ) %>%
-      
-      # and back to wide format
-      pivot_wider(
-        id_cols = Variable,
-        names_from = Measure,
-        values_from = Value
-      ) %>% 
-      
-      # round everything to two digits
-      mutate(
-        across(
-          -Variable,
-          ~ round(.x, digits = 2)
-        )
-      ) %>% 
-      
-      # give proper names
-      mutate(
-        Variable = variable_names # function argument
-      ) %>%  
-      
-      # print as apa table
-      tab_df( # fro sjPlot package
-        ., 
-        file = file_name)
-  }
-
-get_table(
-  pvz %>% 
-    select(
-      total_kill_count:xp
-    ),
-  my_names,
-  "pvz_telemetry_descriptives.doc"
-)
-```
-
