@@ -1,5 +1,19 @@
 # Descriptives
 
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  cache = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  # Save png and pdf figures
+  dev = c("png", "pdf"),
+  fig.ext = c("png", "pdf"),
+  fig.retina = 2
+)
+```
+
 Here, we get the descriptive info for both studies that we report in the Method section of the paper.
 First, let's load the packages we need and load the data sets.
 ```{r}
