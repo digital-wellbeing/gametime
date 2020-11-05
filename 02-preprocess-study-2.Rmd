@@ -1,6 +1,21 @@
 # Process AC:NH data
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  message = FALSE, 
+  warning = FALSE, 
+  cache = FALSE
+)
+dir.create("data/noa/", FALSE, TRUE)
+dir.create("data-raw/noa/", FALSE, TRUE)
+```
+
+Here, we process the AC:NH survey and telemetry files.
+
+We used the following R packages:
+
+```{r}
 library(pacman)
 p_load(
   readxl,
@@ -11,23 +26,11 @@ p_load(
   janitor,
   tidyverse
 )
-opts_chunk$set(
-  echo = TRUE, 
-  message = FALSE, 
-  warning = FALSE, 
-  cache = FALSE
-)
-dir.create("data/", FALSE)
-dir.create("data/noa/", FALSE)
-dir.create("data-raw/", FALSE)
-dir.create("data-raw/noa/", FALSE)
 ```
 
-Here, we process the AC:NH survey and telemetry files.
+## Raw data
 
-## Get raw survey data
-
-This script expects the raw data files to be in `data-raw/noa/`. These files, including the raw survey data, are in a zip compressed file on OSF: <https://osf.io/cjd6z/>. 
+This script expects the raw data files to be in `data-raw/noa/`. The raw telemetry and survey files are in a zip compressed file on OSF: <https://osf.io/cjd6z/>. 
 
 The raw survey data was edited to exclude test sessions, any data from individuals who did not consent / below 18, and some unnecessary variables, before uploading to OSF. The code to do that is shown below (but cannot be executed without our formr credentials)
 
@@ -36,16 +39,14 @@ The raw survey data was edited to exclude test sessions, any data from individua
 if (!file.exists(here("data-raw/noa/formr-raw.rds"))) {
   # Connect to formr
   formr::formr_connect()
-  # These are the survey names
+  # These are the survey names on formr
   surveys <- c("gaming_welcome", paste0("gaming_block", 2:5))
   # Download data into a list of data frames
   ac <- map(surveys, ~formr::formr_results(.) %>% as_tibble)
   saveRDS(ac, here("data-raw/noa/formr-raw.rds"))
 } else {ac <- readRDS(here("data-raw/noa/formr-raw.rds"))}
-  
-# Limit data before saving
 
-# Take out all time variables except first created and last ended (when survey started and ended)
+# Take out all intermediate time variables
 ac[[1]] <- select(ac[[1]], -c(modified:expired))
 ac[2:4] <- map(ac[2:4], ~select(., -c(created:expired)))
 ac[[5]] <- select(ac[[5]], -c(created, modified, expired))
@@ -58,6 +59,7 @@ ac <- ac %>%
   filter(created >= ymd("2020-10-27")) %>% 
   filter(created <= ymd("2020-10-27") + days(7))
 range(ac$created)
+
 # Keep only surveys whose code exists and consents check out
 ac <- filter(
   ac, !is.na(code), of_age==1, consent_data==1, consent==1
@@ -67,7 +69,7 @@ ac <- filter(
 ac <- ac %>% 
   select(
     -c(session, browser, last_outside_referrer, of_age:consent)
-    )
+  )
 write_rds(ac, here("data-raw/noa/formr.rds"))
 ```
 
@@ -90,19 +92,19 @@ Load the survey data file
 ac <- readRDS(here("data-raw/noa/formr.rds"))
 ```
 
-Response rate: All who consented, so rows in this table
-
-```{r}
-percent(nrow(ac) / 342825, accuracy = .01)
-```
+## Process raw files
 
 ### Clean survey data
 
+- Harmonize names to other data set
 - Create duration variable
 - give some sensible variable names
 - assign proper variable types
 
 ```{r}
+# player id as in PvZ data set
+ac <- rename(ac, player_id = code)
+
 # Duration of survey
 ac <- ac %>% 
   mutate(
@@ -129,10 +131,9 @@ ac$straightliner_motivations <- ac$straightliner_motivations==0
 
 # These are needed as factors
 ac <- ac %>% 
-  mutate(across(c(sex, played_with_others), as_factor))
+  mutate(across(c(sex, played), as_factor))
 
-
-# reverse scored items
+# Reverse scored items
 ac <- ac %>% 
   mutate(
     across(
@@ -149,14 +150,14 @@ ac <- ac %>%
 Next, let's create mean indices for the scales.
 SPANE has positive affect, negative affect, and an affect balance score (subtract negative from positive).
 ```{r create-scales}
-# Need to rename spane item so it doesnt become confused with sum score
+# Need to rename SPANE item so it doesnt become confused with scale score name
 ac <- rename(
   ac, 
   spane_positiveItem = spane_positive,
   spane_negativeItem = spane_negative
 )
 
-# general spane
+# General SPANE
 ac <- ac %>% 
   mutate(
     spane_positive = rowMeans(
@@ -186,16 +187,27 @@ ac <- ac %>%
     spane_balance = spane_positive - spane_negative
   )
 
-# motivations
-ac <- ac %>% mutate(
-  autonomy = rowMeans(select(., starts_with("autonomy")), na.rm = TRUE),
-  competence = rowMeans(select(., starts_with("competence")), na.rm = TRUE),
-  relatedness = rowMeans(select(., starts_with("related")), na.rm = TRUE),
-  enjoyment = rowMeans(select(., starts_with("enjoymen")), na.rm = TRUE),
-  extrinsic = rowMeans(select(., starts_with("extrinsic")), na.rm = TRUE)
-)
+# Motivations
+ac <- ac %>% 
+  mutate(
+    autonomy = rowMeans(
+      select(., starts_with("autonomy")), na.rm = TRUE
+    ),
+    competence = rowMeans(
+      select(., starts_with("competence")), na.rm = TRUE
+    ),
+    relatedness = rowMeans(
+      select(., starts_with("related")), na.rm = TRUE
+    ),
+    enjoyment = rowMeans(
+      select(., starts_with("enjoymen")), na.rm = TRUE
+    ),
+    extrinsic = rowMeans(
+      select(., starts_with("extrinsic")), na.rm = TRUE
+    )
+  )
 
-# spane because of playing AC:NH
+# SPANE because of playing AC:NH
 ac <- ac %>% 
   mutate(
     spane_game_positive = rowMeans(
@@ -225,7 +237,7 @@ ac <- ac %>%
     spane_game_balance = spane_game_positive - spane_game_negative
   )
 
-# hours of estimated play
+# Hours of estimated play
 ac <- ac %>% 
   mutate(
     active_play = active_play_hours + (active_play_minutes / 60)
@@ -234,49 +246,43 @@ ac <- ac %>%
 
 ### Checking
 
-Codes (Player IDs)
+Player IDs
 
 ```{r}
-count(ac, code, sort = T)
+count(ac, player_id, sort = T)
 ```
 
 There are two kinds of problems:
+
 1. No ID was captured
 2. An ID was used more than once
 
 For both cases, connecting to telemetry would be impossible (and wrong connections could be made in latter case), so we drop these cases
 
 ```{r}
-ac <- add_count(ac, code) %>% 
+ac <- add_count(ac, player_id) %>% 
   filter(n == 1) %>% 
   select(-n)
 ```
 
-## Harmonize data to Study 1
+### Telemetry
 
-Change some names to better match the other data
-
-```{r}
-ac <- rename(ac, player_id = code)
-```
-
-## Telemetry
-
-We provided NOA with the hashed IDs of players who took the survey, they then sent us only those players telemetry.
+This file is in the ZIP archive.
 
 ```{r}
 gt <- read_tsv(here("data-raw/noa/telem_data (since Sep 2020).txt"))
 ```
 
-Column definition	
-lc_recorded_at = Session start date/time
-nc_recorded_at = Session end date/time
-nsa_id_hex [(now hashed_id)] = Hashed account ID
-product_model =	Switch model game was played on
-operation_mode = Identifies handheld mode, TV mode
-duration = Duration of session (seconds)
-storage_id = Whether game is played off game card, SD card or internal = system memory
-application_id_hex = Game's hashed ID
+Column definitions:
+
+- `lc_recorded_at` = Session start date/time
+- `nc_recorded_at` = Session end date/time
+- `hashed_id` = Hashed account ID
+- `product_model` =	Switch model game was played on
+- `operation_mode` = Identifies handheld mode, TV mode
+- `duration` = Duration of session (seconds)
+- `storage_id` = Whether game is played off game card, SD card or internal system memory
+- `application_id_hex` = Game's hashed ID
 
 We drop some unnecessary variables
 
@@ -303,8 +309,6 @@ And turn duration into hours
 gt$Hours <- gt$Hours/60/60
 ```
 
-Variable types
-
 Assume that timestamps are US Pacific as this was used to report data collection dates & times.
 
 ```{r}
@@ -312,19 +316,16 @@ gt <- gt %>%
   mutate(
     across(contains("session"), ~mdy_hm(.x, tz = "US/Pacific"))
   )
+glimpse(gt)
 ```
 
 ### Clean
 
 We don't need to limit to IDs who took the survey as NOA has already done that--these data only contain folks who filled survey.
 
-But we do need to limit the data to two weeks preceding the survey.
+We do need to limit the data to two weeks preceding the survey, and count session durations within that window. We therefore need to use the session start/end times to find out when the sessions happened.
 
-We therefore need to use the session start/end times to find out when the sessions happened.
-
-There are now a bunch of questions related to this:
-
-Many start times are the same (or later) than the end time
+Some processing is required to do that as the times can have noise due to e.g. players' system times being incorrectly set. Thus, many start times are the same (or even later) than the end time:
 
 ```{r}
 gt %>% 
@@ -335,7 +336,7 @@ gt %>%
   adorn_pct_formatting()
 ```
 
-Session duration doesn't match when we calculate it by hand
+However, session durations are not based on the device time (session times):
 
 ```{r}
 gt %>% 
@@ -347,42 +348,30 @@ gt %>%
   adorn_pct_formatting()
 ```
 
-These data are from September 2020 onwards, so shouldn't have early start dates
+And end and start times should be within a window. 
 
 ```{r}
-table(gt$session_start < ymd("2020-09-01"))
-table(gt$session_end < ymd("2020-09-01"))
-```
-
-Here's a figure of all session start times (day of year) separately for each year. Also shown are when ACNH was released, and survey window, as vertical lines. We see here that lots of sessions happened prior to launch, and no sessions happened during survey window!
-
-```{r}
-gt %>%
-  mutate(
-    year = year(session_start), yday = yday(session_start)
+tmp <- gt %>% 
+  filter(
+    session_start < ymd("2020-09-01") |
+      session_end < ymd("2020-09-01") |
+      session_start > ymd("2020-11-03") |
+      session_end > ymd("2020-11-03") 
   ) %>% 
-  ggplot(aes(yday)) +
-  # Three lines note when AC:NH was released...
-  geom_vline(
-    xintercept = yday(ymd("2020-03-20")), col="red"
-  ) +
-  # When survey started
-  geom_vline(
-    xintercept = yday(ymd("2020-10-27")), col = "red"
-  ) +
-  # And two weeks preceding it
-  geom_vline(
-    xintercept = yday(ymd("2020-10-13")), col = "red"
-  ) +
-  geom_histogram() +
-  facet_wrap("year", scales = "free_y")
+  arrange(session_start) %>% 
+  mutate(player_id = fct_inorder(player_id))
+# Proportion of these bad dates
+percent(nrow(tmp) / nrow(gt), .1)
 ```
 
-Filter out sessions that aren't in the two weeks preceding each player's survey
+We filter out sessions that aren't in the two weeks preceding each player's survey. Note not all survey respondents have telemetry so the resulting table will be longer
 
 ```{r}
+# Get survey times from survey table
 gt <- select(ac, player_id, created) %>% 
   left_join(gt) 
+
+# Limit telemetry sessions to appropriate time window
 gt <- gt %>%   
   filter(session_start >= (created - days(14))) %>% 
   filter(session_start < created) %>% 
@@ -400,7 +389,7 @@ gt <- gt %>%
   )
 ```
 
-## Join survey and telemetry
+### Join survey and telemetry
 
 ```{r}
 ac <- left_join(ac, gt)
@@ -417,7 +406,7 @@ ac %>%
     Players = n(),
     Missing_Hours = sum(is.na(Hours)),
     Mean_Hours = mean(Hours, na.rm = TRUE)
-    )
+  )
 ```
 
 ## Exclusions
@@ -445,7 +434,7 @@ ac %>%
 ac %>%   
   tabyl(straightliner) %>% 
   adorn_pct_formatting()
-# filter() would also exclude NAs!
+# filter() would also exclude NAs
 ac <- filter(ac, !straightliner | is.na(straightliner))
 ```
 
