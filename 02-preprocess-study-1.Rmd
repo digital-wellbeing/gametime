@@ -1,6 +1,22 @@
 # Process PVZ data
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  message = FALSE, 
+  warning = FALSE, 
+  cache = FALSE
+)
+# Create directories for saving data
+dir.create("data/ea/", FALSE, TRUE)
+dir.create("data-raw/ea/", FALSE, TRUE)
+```
+
+Here, we process the Plants vs. Zombies: Battle for Neighborville (PVZ) survey and telemetry data files (gaming data that was captured by EA's servers).
+
+We used the following R packages:
+
+```{r packages}
 library(pacman)
 p_load(
   readxl,
@@ -11,23 +27,11 @@ p_load(
   janitor,
   tidyverse
 )
-opts_chunk$set(
-  echo = TRUE, 
-  message = FALSE, 
-  warning = FALSE, 
-  cache = FALSE
-)
-dir.create("data/", FALSE)
-dir.create("data/ea/", FALSE)
-dir.create("data-raw/", FALSE)
-dir.create("data-raw/ea/", FALSE)
 ```
 
-Here, we process the PVZ survey and telemetry data files (gaming data that was captured by EA's servers).
+## Raw data
 
-This script expects the raw data files to be in `data-raw/ea/` with their original file names as provided by EA.
-
-These files, including the raw survey data, are in a zip compressed file on OSF: <https://osf.io/cjd6z/>. (A user ID column was manually removed from the survey data before uploading.) Start by downloading that file and unpacking it to the target directory:
+The raw data files, including the raw survey data, are in a zip compressed file on OSF: <https://osf.io/cjd6z/>. (A user ID column was manually removed from the survey data before uploading.) Start by downloading that file and unpacking it to the target directory:
 
 ```{r}
 file_dest <- here("data-raw/ea/ea.zip")
@@ -38,17 +42,13 @@ if (!file.exists(file_dest)) {
 }
 ```
 
-In total, there are nine telemetry files, each one recording a different aspect of play events in Plants vs. Zombies: Battle for Neighborville, and one file for the survey results.
+In total, there are nine telemetry files, each one recording a different aspect of play events in Plants vs. Zombies: Battle for Neighborville (the data were collected in two waves, so technically there are 18 telemetry files), and one file for the survey results.
 
-We'll process those nine raw data files, with particular attention to data on gaming times (which has duplicates, see the respective section below).
-
-We only process telemetry data from players who responded to the survey. That makes the data sets smaller and we only do the processing for data that we'll actually use later.
-
-After processing, we place the combined survey & telemetry data in `data/ea/`.
+These telemetry files contain info on PVZ play events from a long period of time, including for individuals who did not participate in the survey. We limit our analyses to the individuals who participated in the survey, and to the 2 weeks preceding the survey. However, the raw data files might be of interest to additional analyses.
 
 ## Process raw files
 
-A function to read both PVZ waves' data
+Because there were two of each telemetry files (waves), we create a function to read both waves' data into a single table:
 
 ```{r}
 read_both_waves <- function(stub = "OII_PVZ_Authentications", ...) {
@@ -63,13 +63,13 @@ read_both_waves <- function(stub = "OII_PVZ_Authentications", ...) {
     # Bind into one data frame with wave ID
     bind_rows(.id = "wave") %>%
     # Take only participants who filled out survey
-    filter(player_id %in% survey_ids)
+    filter(player_id %in% survey$player_id)
 }
 ```
 
 ### Survey
 
-Because we only keep telemetry data of players who answered the survey, we'll load the survey first and store the player IDs to compare the telemetry data to.
+Because we only keep telemetry data of players who answered the survey, we'll load the survey first.
 ```{r}
 survey <- read_excel(
   here("data-raw/ea/Oxford PvZ - Pilot Wave + Wave 1 Download.xlsx")
@@ -84,26 +84,13 @@ survey <- survey %>%
   ) %>% 
   # Other files use player_id
   rename(player_id = UID)
-
-survey_ids <- pull(survey, player_id) 
-```
-
-Check how many participants in each wave
-
-```{r}
-survey %>% 
-  select(player_id, date) %>% 
-  mutate(
-    wave = ifelse(date <= ymd("2020-08-31"), "Wave 1", "Wave 2")
-  ) %>% 
-  group_by(wave) %>% 
-  summarise(min = min(date), max = max(date), total_respondents = n())
 ```
 
 #### Clean and transform
 
 Give some sensible variable names and assign proper variable types.
 ```{r give-proper-variable-names}
+# Rename variables
 survey <- 
   survey %>% 
   select(
@@ -126,7 +113,7 @@ survey <-
     
     # well-being
     spane_ = starts_with("A1"), # general well-being in the two weeks
-    straightliner_spane = hA1Straight, # whether someone straightlined on spane
+    straightliner_spane = hA1Straight,
     
     # motivations
     played_with_others = NSat1, # filter question that determines whether relatedness items were shown
@@ -143,9 +130,10 @@ survey <-
     within_estimate = GT2,
     between_estimate = GT3,
     spane_game_ = starts_with("GT4")
-  ) %>% 
-  
-  # assign proper variable types  and factor levels
+  )
+
+# Assign proper variable types and factor levels
+survey <- survey %>%   
   mutate(
     across(
       c(
@@ -185,9 +173,12 @@ survey <-
       survey_language,
       "English" = "1",
       "French" = "2"
-    ),
-    
-    # reverse scored items
+    )
+  )
+
+# Reverse scored items
+survey <- survey %>% 
+  mutate(
     across(
       c(
         starts_with("spane"), # 1 was never
@@ -209,10 +200,10 @@ survey <- survey %>%
 Create mean indices for the scales.
 SPANE has positive affect, negative affect, and an affect balance score (subtract negative from positive).
 ```{r create-scales}
+# General SPANE
 survey <- 
   survey %>% 
   mutate(
-    # general spane
     spane_positive = rowMeans(
       select(
         .,
@@ -225,7 +216,6 @@ survey <-
       ),
       na.rm = TRUE
     ),
-    
     spane_negative = rowMeans(
       select(
         .,
@@ -238,17 +228,32 @@ survey <-
       ),
       na.rm = TRUE
     ),
-    
-    spane_balance = spane_positive - spane_negative,
-    
-    # motivations
-    autonomy = rowMeans(select(., starts_with("autonomy")), na.rm = TRUE),
-    competence = rowMeans(select(., starts_with("competence")), na.rm = TRUE),
-    relatedness = rowMeans(select(., starts_with("relatedness")), na.rm = TRUE),
-    enjoyment = rowMeans(select(., starts_with("enjoyment")), na.rm = TRUE),
-    extrinsic = rowMeans(select(., starts_with("extrinsic")), na.rm = TRUE),
-    
-    # spane because of playing game
+    spane_balance = spane_positive - spane_negative
+  )
+
+# Motivations
+survey <- survey %>% 
+  mutate(
+    autonomy = rowMeans(
+      select(., starts_with("autonomy")), na.rm = TRUE
+    ),
+    competence = rowMeans(
+      select(., starts_with("competence")), na.rm = TRUE
+    ),
+    relatedness = rowMeans(
+      select(., starts_with("relatedness")), na.rm = TRUE
+    ),
+    enjoyment = rowMeans(
+      select(., starts_with("enjoyment")), na.rm = TRUE
+    ),
+    extrinsic = rowMeans(
+      select(., starts_with("extrinsic")), na.rm = TRUE
+    )
+  )
+
+# SPANE because of playing game
+survey <- survey %>% 
+  mutate(
     spane_game_positive = rowMeans(
       select(
         .,
@@ -261,7 +266,6 @@ survey <-
       ),
       na.rm = TRUE
     ),
-    
     spane_game_negative = rowMeans(
       select(
         .,
@@ -274,28 +278,32 @@ survey <-
       ),
       na.rm = TRUE
     ),
-    
-    spane_game_balance = spane_game_positive - spane_game_negative,
-    
-    # hours of estimated play
+    spane_game_balance = spane_game_positive - spane_game_negative
+  )
+
+# Hours of estimated play
+survey <- survey %>% 
+  mutate(
     active_play = active_play_hours + (active_play_minutes / 60)
   )
 ```
 
 ### Game time
 
+Then we get to the telemetry files.
+
 The game time data are the most complicated. We work on it first because the times are needed for some of the other telemetry files.
 The data show us when a player started a session and how long that session lasted, plus whether they played the game in multiplayer or single player.
 The variables:
 
-* player_id = Unique identifier for a player.
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* game_start_time = Session start date time.
-* game_end_time = Session end date time.
-* game_mode = The game mode, primarily multiplayer or single player.
-* game_type = Notes if the game is offline/online and if it is splitscreen
-* game_level = The level's name where the session took place.
-* game_session = Unique identifier for a game session.
+* `player_id` = Unique identifier for a player.
+* `platform` = One of the major platforms, eg. PC, Playstation, Xbox.
+* `game_start_time` = Session start date time.
+* `game_end_time` = Session end date time.
+* `game_mode` = The game mode, primarily multiplayer or single player.
+* `game_type` = Notes if the game is offline/online and if it is splitscreen
+* `game_level` = The level's name where the session took place.
+* `game_session` = Unique identifier for a game session.
 
 ```{r cache = TRUE}
 game_time <- read_both_waves("OII_PVZ_Game_Time")
@@ -306,13 +314,14 @@ A game session starts when a player starts playing.
 That means, `game_session` records when a match starts, which includes going to the Hub World.
 Game sessions can be shared between players when they're playing multiplayer, but should be unique to a `player_id` when in single player.
 However, it's not easy to say when a session ends for technical reasons.
+Ideally, we'd have one game session per row.
+Because it's hard to determine when a session ends, there are instances where a given player has multiple rows with the same `game_session`.
+
 ```{r}
 counts <- game_time %>% 
   count(player_id, game_session, sort = T)
 ```
 
-Ideally, we'd have one game session per row.
-Because it's hard to determine when a session ends, there are instances where a given player has multiple rows with the same `game_session`.
 For example, the player below has `r counts %>% slice(1) %>% pull(n)` rows with identical `player_id` and `game_session`.
 Some of those rows have identical start and end times for the session, but the majority are in "chunks" with the same start times, but slightly different end times.
 This pattern shows the problems with determining the end of a session.
@@ -348,7 +357,6 @@ tmp <- tmp %>%
   ) %>% 
   slice(1) # distinct() didn't work when there were different levels within the same session
 last_plot() %+% mutate(tmp, rowid = 1:n())
-rm(tmp)
 ```
 
 Next, we apply this procedure to all players.
@@ -388,10 +396,10 @@ write_rds(game_time, here("data/ea/game_time.rds"))
 The authentifications data set logs events when a player (`player_id`) logs into the game.
 The variables are:
 
-* player_id = Unique identifier for a player.
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* date = Date of the login.
-* country = Country the login came from.
+* `player_id` = Unique identifier for a player.
+* `platform` = One of the major platforms, eg. PC, Playstation, Xbox.
+* `date` = Date of the login.
+* `country` = Country the login came from.
 
 ```{r cache = TRUE}
 authentications <- read_both_waves("OII_PVZ_Authentications")
@@ -416,20 +424,20 @@ authentications <- authentications %>%
 The characters data provides performance stats for a player while they play as a specific character in the game.
 The variables are:
 
-* player_id
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* game_session = Unique identifier for a game session.
-* game_mode = The game mode, primarily multiplayer or single player.
-* game_type = Notes if the game is offline/online and if it is splitscreen
-* game_level = The level's name where the session took place.
-* character_class = The character key noting the character used.
-* total_kill_count = Total kills earned by the player.
-* total_death_count = Total deaths suffered by the player.
-* score = Total score earned by the player.
-* damage_dealt = Total damage dealt by the player.
-* critical_hit_count = Number of critical hits earned by the player.
-* shots_fired = Number of shots fired by the player.
-* shots_hit = Number of shots by the player which successfully hit.
+* `player_id`
+* `platform` = One of the major platforms, eg. PC, Playstation, Xbox.
+* `game_session` = Unique identifier for a game session.
+* `game_mode` = The game mode, primarily multiplayer or single player.
+* `game_type` = Notes if the game is offline/online and if it is splitscreen
+* `game_level` = The level's name where the session took place.
+* `character_class` = The character key noting the character used.
+* `total_kill_count` = Total kills earned by the player.
+* `total_death_count` = Total deaths suffered by the player.
+* `score` = Total score earned by the player.
+* `damage_dealt` = Total damage dealt by the player.
+* `critical_hit_count` = Number of critical hits earned by the player.
+* `shots_fired` = Number of shots fired by the player.
+* `shots_hit` = Number of shots by the player which successfully hit.
 
 ```{r cache = TRUE}
 characters <- read_both_waves("OII_PVZ_Character")
@@ -459,14 +467,14 @@ characters <- characters %>%
 The friends data show when two players became friends and at what time (in PvZ, not on the platform?).
 The variables:
 
-* player_id = Unique identifier for a player.
-* friend_player_id = Unique identifier for a player, who is marked as a friend of the player_id.
-* date_time = The date time when the friend invite was accepted.
+* `player_id` = Unique identifier for a player.
+* `friend_player_id` = Unique identifier for a player, who is marked as a friend of the player_id.
+* `date_time` = The date time when the friend invite was accepted.
 
 ```{r cache = TRUE}
 friends <- read_both_waves("OII_PVZ_Friends")
-glimpse(friends)
 write_rds(friends, here("data/ea/friends.rds"))
+glimpse(friends)
 ```
 
 Then we count the number of friend connections made.
@@ -513,16 +521,16 @@ rm(a, b)
 The gesture data shows when a player used a gesture (gesture/emote/command) that can be seen by other players.
 The variables:
 
-* player_id = Unique identifier for a player.
-* gesture_key = Key name of the geature used.
-* gesture_type = Whether the gesture was a gesture, command or emote.
-* game_session = Unique identifier for a game session.
-* date_time = The date time when the gesture was used.
+* `player_id` = Unique identifier for a player.
+* `gesture_key` = Key name of the geature used.
+* `gesture_type` = Whether the gesture was a gesture, command or emote.
+* `game_session` = Unique identifier for a game session.
+* `date_time` = The date time when the gesture was used.
 
 ```{r cache = TRUE}
 gestures <- read_both_waves("OII_PVZ_Gesture")
-glimpse(gestures)
 write_rds(gestures, here("data/ea/gestures.rds"))
+glimpse(gestures)
 ```
 
 We first match only those sessions that were within the time frame, then count how many gestures a player used.
@@ -539,16 +547,16 @@ gestures <- gestures %>%
 This data set shows when a player went up a level with a character.
 The variables:
 
-* player_id = Unique identifier for a player.
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* level = The level earned for the character.
-* date_time = The date time when the level was earned.
-* character_class = The character key noting the character used.
+* `player_id` = Unique identifier for a player.
+* `platform` = One of the major platforms, eg. PC, Playstation, Xbox.
+* `level` = The level earned for the character.
+* `date_time` = The date time when the level was earned.
+* `character_class` = The character key noting the character used.
 
 ```{r cache = TRUE}
 leveling <- read_both_waves("OII_PVZ_Leveling")
-glimpse(leveling)
 write_rds(leveling, here("data/ea/leveling.rds"))
+glimpse(leveling)
 ```
 
 We only include those sessions that happened within the time frame, then we count how many times a player went up a level.
@@ -566,11 +574,11 @@ This data set show when a a player went up a prestige level with a character.
 Prestige levels are different from character levels.
 The variables:
 
-* player_id = Unique identifier for a player.
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* prestige_level = The prestige level for the character.
-* date_time = The date time the prestige level was earned.
-* character_class = The character key noting the character used.
+* `player_id` = Unique identifier for a player.
+* `platform` = One of the major platforms, eg. PC, Playstation, Xbox.
+* `prestige_level` = The prestige level for the character.
+* `date_time` = The date time the prestige level was earned.
+* `character_class` = The character key noting the character used.
 
 ```{r cache = TRUE}
 prestige <- read_both_waves("OII_PVZ_Presti")
@@ -591,10 +599,10 @@ Registrations only happen once per player and show when a player registered with
 Won't be needed later, but code is here for completeness.
 The variables:
 
-* player_id = Unique identifier for a player.
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* date = Date of the registration.
-* country = Country the login came from.
+* `player_id` = Unique identifier for a player.
+* `platform` = One of the major platforms, eg. PC, Playstation, Xbox.
+* `date` = Date of the registration.
+* `country` = Country the login came from.
 
 ```{r eval = FALSE}
 registrations <- read_both_waves("OII_PVZ_Registration")
@@ -605,12 +613,12 @@ registrations <- read_both_waves("OII_PVZ_Registration")
 This data set shows how many XP a player earned at what time and in what session.
 The variables:
 
-* player_id = Unique identifier for a player.
-* platform = One of the major platforms, eg. PC, Playstation, Xbox.
-* date_time = The date time when the xp was earned.
-* character_class = The character key noting the character used.
-* game_session = Unique identifier for a game session.
-* xp_earned = The xp amount earned.
+* `player_id` = Unique identifier for a player.
+* `platform` = One of the major platforms, eg. PC, Playstation, Xbox.
+* `date_time` = The date time when the xp was earned.
+* `character_class` = The character key noting the character used.
+* `game_session` = Unique identifier for a game session.
+* `xp_earned` = The xp amount earned.
 
 ```{r cache = TRUE}
 # Gotta process dates because they are different across the two files
