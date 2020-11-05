@@ -63,7 +63,7 @@ Join the two data sets.
 ```{r}
 ac <- ac %>% 
   select(
-    player_id, gender, created, age,
+    player_id, sex, created, age,
     spane_balance, spane_positive, spane_negative, 
     spane_game_balance, within_estimate, between_estimate,
     autonomy, 
@@ -72,7 +72,7 @@ ac <- ac %>%
   )
 pvz <- pvz %>% 
   select(
-    player_id, gender, created = date, age,
+    player_id, sex = gender, created = date, age,
     spane_balance, spane_positive, spane_negative,
     spane_game_balance, within_estimate, between_estimate,
     autonomy, 
@@ -168,10 +168,10 @@ dat %>%
     )
 ```
 
-Then let's look at the gender distribution.
+Then let's look at the sex distribution.
 ```{r}
-tabyl(pvz, gender) %>% adorn_pct_formatting()
-tabyl(ac, gender) %>% adorn_pct_formatting()
+tabyl(pvz, sex) %>% adorn_pct_formatting()
+tabyl(ac, sex) %>% adorn_pct_formatting()
 ```
 
 ## Survey dates
@@ -216,6 +216,7 @@ tmp <- dat %>%
   pivot_longer(c(`Affective_well-being`, autonomy:extrinsic)) %>% 
   mutate(name = str_to_title(name)) %>% 
   mutate(name = str_replace_all(name, "_", " "))
+
 filter(tmp, Study == "PvZ") %>%   
   ggplot(aes(value, col = Study, fill = Study)) +
   coord_cartesian(clip = "off", ylim = c(-1, 1)) +
@@ -227,7 +228,50 @@ filter(tmp, Study == "PvZ") %>%
   labs(y = "Normalized count") +
   facet_wrap("name", scales = "free")
 
+# adding vertical line
+filter(tmp, Study == "PvZ") %>%   
+  ggplot(aes(value, col = Study, fill = Study)) +
+  coord_cartesian(clip = "off", ylim = c(-1, 1)) +
+  scale_color_manual(values = colors, aesthetics = c("color", "fill")) +
+  geom_histogram(col=NA, aes(y = stat(ncount)), bins = 50) +
+  geom_histogram(data = filter(tmp, Study == "AC:NH"), aes(y = stat(ncount)*-1), col = NA, bins = 50) +
+  scale_x_continuous("", breaks = pretty_breaks()) +
+  geom_vline(data = group_by(tmp, Study, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(xintercept = value, color = Study), linetype = "dashed") +
+  geom_point(data = group_by(tmp, Study, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(y = -1.1)) +
+  labs(y = "Normalized count") +
+  facet_wrap("name", scales = "free")
 
+# colors per column, not row: black and white
+tmp <- dat %>%
+  pivot_longer(c(Hours, active_play)) %>% 
+  mutate(multiplier = ifelse(name=="Hours", -.1, .1)) %>% 
+  mutate(name = str_to_title(name)) %>% 
+  mutate(name = str_replace_all(name, "_", " "))
+
+filter(tmp, name == "Hours") %>%   
+  ggplot(aes(value, col = name, fill = name)) +
+  coord_cartesian(clip = "off", ylim = c(-1, 1)) +
+  scale_color_manual(values = c("black", "darkgrey"), aesthetics = c("color", "fill")) +
+  geom_histogram(col=NA, aes(y = stat(ncount)), bins = 50) +
+  geom_histogram(data = filter(tmp, name == "Active play"), aes(y = stat(ncount)*-1), col = NA, bins = 50) +
+  scale_x_continuous("", breaks = pretty_breaks()) +
+  geom_vline(data = group_by(tmp, Study, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(xintercept = value, color = name), linetype = "dashed") +
+  geom_point(data = group_by(tmp, Study, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(y = -1.1)) +
+  labs(y = "Normalized count") +
+  facet_wrap("Study")
+
+# in ea and noa colors: I clearly don't understand aesthetics, see dirt hack in geom_vline for colors
+filter(tmp, name == "Hours") %>%   
+  ggplot(aes(value, col = Study, fill = Study)) +
+  coord_cartesian(clip = "off", ylim = c(-1, 1)) +
+  scale_color_manual(values = colors, aesthetics = c("color", "fill")) +
+  geom_histogram(col=NA, aes(y = stat(ncount)), bins = 50) +
+  geom_histogram(data = filter(tmp, name == "Active play"), aes(y = stat(ncount)*-1), col = NA, bins = 50, alpha = 0.4) +
+  scale_x_continuous("", breaks = pretty_breaks()) +
+  geom_vline(data = group_by(tmp, Study, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(xintercept = value), linetype = "dashed", color = rep(colors, each = 2), alpha = c(0.4, 1, 0.4, 1)) +
+  geom_point(data = group_by(tmp, Study, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(y = -1.1, alpha = name)) +
+  labs(y = "Normalized count") +
+  facet_wrap("Study")
 ```
 
 ```{r}
