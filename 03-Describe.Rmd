@@ -18,7 +18,7 @@ Here, we get the descriptive info for both studies that we report in the Method 
 
 We used these packages:
 
-```{r, include = FALSE}
+```{r packages}
 library(pacman)
 p_load(
   knitr,
@@ -36,7 +36,7 @@ p_load(
 )
 ```
 
-```{r}
+```{r, echo = FALSE}
 theme_set(
   theme_classic(base_line_size = .25, base_rect_size = 0) +
     theme(
@@ -63,7 +63,7 @@ Join the two data sets.
 ```{r}
 ac <- ac %>% 
   select(
-    player_id, sex, created, age,
+    player_id, gender, created, age,
     spane_balance, spane_positive, spane_negative, 
     spane_game_balance, within_estimate, between_estimate,
     autonomy, 
@@ -72,7 +72,7 @@ ac <- ac %>%
   )
 pvz <- pvz %>% 
   select(
-    player_id, sex = gender, created = date, age,
+    player_id, gender, created = date, age,
     spane_balance, spane_positive, spane_negative,
     spane_game_balance, within_estimate, between_estimate,
     autonomy, 
@@ -83,9 +83,183 @@ dat <- bind_rows(pvz, ac, .id = "Study") %>%
   mutate(Study = factor(Study, labels = c("PvZ", "AC:NH")))
 ```
 
-Here's a function to draw quick bivariate figures, and another one for scatterplot matrices
+## Demographics
 
-```{r custom-functions}
+In total, `r length(unique(dat$player_id))` players responded to the survey.
+Their mean age was *M* = `r round(mean(dat$age, na.rm = T), digits = 0)` with a standard deviation of *SD* = `r round(sd(dat$age, na.rm = T), digits = 0)`.
+
+Ages by study:
+
+```{r}
+dat %>% 
+  group_by(Study) %>% 
+  summarise(
+    m_age = mean(age, na.rm = TRUE),
+    s_age = sd(age, na.rm = TRUE),
+    min_age = min(age, na.rm = TRUE),
+    max_age = max(age, na.rm = TRUE)
+    )
+```
+
+Then let's look at the sex distribution.
+```{r}
+tabyl(pvz, gender) %>% adorn_pct_formatting()
+tabyl(ac, gender) %>% adorn_pct_formatting()
+```
+
+## Survey dates
+
+```{r}
+dat %>% 
+  mutate(Date = as.Date(created)) %>% 
+  count(Study, Date) %>% 
+  kable()
+```
+
+## Response rates
+
+```{r}
+# PvZ wave 1
+p1 <- nrow(pvz_full %>% filter(date < ymd("2020-09-01")))
+# PvZ wave 2
+p2 <- nrow(pvz_full %>% filter(date > ymd("2020-09-01")))
+# AC:NH
+a1 <- nrow(ac)
+tibble(
+  Study = c("PvZ w1", "PvZ w2", "AC:NH"),
+  Invitations = c(50000, 200000, 342825),
+  Responses = c(p1, p2, a1),
+  Rate = percent(Responses/Invitations, .01)
+)
+```
+
+## Missingness
+
+```{r}
+vis_miss(pvz)
+vis_miss(ac)
+```
+
+## Univariate figures
+
+This figure shows the distribution of well-being and motivation scores for both studies
+
+```{r univariate-scales}
+tmp <- dat %>%
+  mutate(multiplier = ifelse(Study=="PvZ", -.1, .1)) %>% 
+  rename(`Affective_well-being` = spane_balance) %>% 
+  pivot_longer(c(`Affective_well-being`, autonomy:extrinsic)) %>% 
+  mutate(name = str_to_sentence(name)) %>% 
+  mutate(name = str_replace_all(name, "_", " "))
+tmp2 <- tmp %>% 
+  group_by(Study, multiplier, name) %>% 
+  summarise(value = mean(value, na.rm = TRUE))
+filter(tmp, Study == "PvZ") %>%   
+  ggplot(aes(value, col = Study, fill = Study)) +
+  coord_cartesian(ylim = c(-1, 1)) +
+  scale_color_manual(
+    values = rev(colors), aesthetics = c("color", "fill"),
+    guide = guide_legend(reverse = TRUE)
+    ) +
+  geom_histogram(
+    aes(y = stat(ncount)),
+    col = "white", bins = 20
+    ) +
+  geom_histogram(
+    data = filter(tmp, Study == "AC:NH"),
+    aes(y = stat(ncount)*-1), col = "white", bins = 20
+    ) +
+  scale_y_continuous(
+    breaks = c(-1, -.5, 0, .5, 1), labels = c(1, .5, 0, .5, 1)
+  ) +
+  scale_x_continuous("Value", breaks = pretty_breaks()) +
+  geom_point(
+    data = tmp2, aes(y = -1.01),
+    shape = 25, size = 2.25
+    ) +
+  labs(y = "Normalized count") +
+  facet_wrap("name", scales = "free") +
+  theme(axis.title.x = element_blank(), legend.position = "right")
+
+# With means as lines
+# last_plot() +
+#   geom_vline(
+#     data = tmp2, 
+#     aes(xintercept = value, color = Study), 
+#     alpha = .5, size = 2
+#   )
+```
+
+And then a summary figure of the times, subjective and objective
+
+```{r playtime-summary}
+tmp <- dat %>% 
+  group_by(Study) %>% 
+  summarise(
+    Hours_m = mean(Hours, na.rm = TRUE),
+    active_play_m = mean(active_play, na.rm = TRUE),
+    Hours_sd = sd(Hours, na.rm = TRUE),
+    active_play_sd = sd(active_play, na.rm = TRUE)
+  )
+dat %>%  
+  ggplot(aes(col = Study, fill = Study)) +
+  coord_cartesian(ylim = c(-1, 1)) +
+  scale_color_manual(values = colors, aesthetics = c("color", "fill")) +
+  scale_y_continuous(
+    breaks = c(-1, -.5, 0, .5, 1), labels = c(1, .5, 0, .5, 1),
+    expand = expansion(.015)
+  ) +
+  geom_histogram(
+    aes(x = Hours, y = stat(ncount)), 
+    bins = 30, col = "white"
+    ) +
+  geom_histogram(
+    aes(x = active_play, y = stat(ncount)*-1), 
+    bins = 30, alpha = 0.5, col = "white"
+  ) +
+  geom_point(
+    data = tmp, aes(x = Hours_m, y = -0.98),
+    shape = 25, size = 2.25
+  ) +
+  geom_point(
+    data = tmp, aes(x = active_play_m, y = -0.98),
+    shape = 25, size = 2.25, alpha = 0.5
+  ) +
+  labs(y = "Normalized count") +
+  facet_wrap("Study", scales = "free", nrow = 2) +
+  theme(strip.text = element_blank())
+
+last_plot() +
+  scale_x_log10(
+    breaks = c(.01, .1, 1, 10, 100),
+    labels = c(.01, .1, 1, 10, 100)
+  )
+
+tmp
+```
+
+## Correlation matrices
+
+```{r}
+cormat <- function(data, title) {
+  data %>% 
+    rename_all(str_to_title) %>% 
+    psych::cor.plot(
+      scale = FALSE, stars = TRUE, 
+      xlas = 2, show.legend = FALSE,
+      main = str_glue("{title} correlation matrix"),
+    )
+}
+
+select(pvz, where(is.numeric)) %>% 
+  cormat("PvZ")
+select(ac, where(is.numeric)) %>% 
+  cormat("AC:NH")
+```
+
+Then we will draw scatterplot matrices, with this custom function:
+
+```{r}
 lm_function <- 
   function(
     data, 
@@ -148,184 +322,6 @@ pair_plot <-
         strip.background = element_blank()
       )
   }
-```
-
-## Demographics
-
-In total, `r length(unique(dat$player_id))` players responded to the survey.
-Their mean age was *M* = `r round(mean(dat$age, na.rm = T), digits = 0)` with a standard deviation of *SD* = `r round(sd(dat$age, na.rm = T), digits = 0)`.
-
-Ages by study:
-
-```{r}
-dat %>% 
-  group_by(Study) %>% 
-  summarise(
-    m_age = mean(age, na.rm = TRUE),
-    s_age = sd(age, na.rm = TRUE),
-    min_age = min(age, na.rm = TRUE),
-    max_age = max(age, na.rm = TRUE)
-    )
-```
-
-Then let's look at the sex distribution.
-```{r}
-tabyl(pvz, sex) %>% adorn_pct_formatting()
-tabyl(ac, sex) %>% adorn_pct_formatting()
-```
-
-## Survey dates
-
-```{r}
-dat %>% 
-  mutate(Date = as.Date(created)) %>% 
-  count(Study, Date) %>% 
-  kable()
-```
-
-## Response rates
-
-```{r}
-# PvZ wave 1
-p1 <- nrow(pvz_full %>% filter(date < ymd("2020-09-01")))
-# PvZ wave 2
-p2 <- nrow(pvz_full %>% filter(date > ymd("2020-09-01")))
-# AC:NH
-a1 <- nrow(ac)
-tibble(
-  Study = c("PvZ w1", "PvZ w2", "AC:NH"),
-  Invitations = c(50000, 200000, 342825),
-  Responses = c(p1, p2, a1),
-  Rate = percent(Responses/Invitations, .01)
-)
-```
-
-## Missingness
-
-```{r}
-vis_miss(pvz)
-vis_miss(ac)
-```
-
-## Univariate figures
-
-```{r}
-tmp <- dat %>%
-  mutate(multiplier = ifelse(Study=="PvZ", -.1, .1)) %>% 
-  rename(`Affective_well-being` = spane_balance) %>% 
-  pivot_longer(c(`Affective_well-being`, autonomy:extrinsic)) %>% 
-  mutate(name = str_to_title(name)) %>% 
-  mutate(name = str_replace_all(name, "_", " "))
-
-filter(tmp, Study == "PvZ") %>%   
-  ggplot(aes(value, col = Study, fill = Study)) +
-  coord_cartesian(clip = "off", ylim = c(-1, 1)) +
-  scale_color_manual(values = colors, aesthetics = c("color", "fill")) +
-  geom_histogram(col=NA, aes(y = stat(ncount))) +
-  geom_histogram(data = filter(tmp, Study == "AC:NH"), aes(y = stat(ncount)*-1), col = NA) +
-  scale_x_continuous("Value", breaks = pretty_breaks()) +
-  geom_point(data = group_by(tmp, Study, multiplier, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(y = -1.1)) +
-  labs(y = "Normalized count") +
-  facet_wrap("name", scales = "free")
-
-# adding vertical line
-filter(tmp, Study == "PvZ") %>%   
-  ggplot(aes(value, col = Study, fill = Study)) +
-  coord_cartesian(clip = "off", ylim = c(-1, 1)) +
-  scale_color_manual(values = colors, aesthetics = c("color", "fill")) +
-  geom_histogram(col=NA, aes(y = stat(ncount)), bins = 50) +
-  geom_histogram(data = filter(tmp, Study == "AC:NH"), aes(y = stat(ncount)*-1), col = NA, bins = 50) +
-  scale_x_continuous("", breaks = pretty_breaks()) +
-  geom_vline(data = group_by(tmp, Study, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(xintercept = value, color = Study), linetype = "dashed") +
-  geom_point(data = group_by(tmp, Study, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(y = -1.1)) +
-  labs(y = "Normalized count") +
-  facet_wrap("name", scales = "free")
-
-# colors per column, not row: black and white
-tmp <- dat %>%
-  pivot_longer(c(Hours, active_play)) %>% 
-  mutate(multiplier = ifelse(name=="Hours", -.1, .1)) %>% 
-  mutate(name = str_to_title(name)) %>% 
-  mutate(name = str_replace_all(name, "_", " "))
-
-filter(tmp, name == "Hours") %>%   
-  ggplot(aes(value, col = name, fill = name)) +
-  coord_cartesian(clip = "off", ylim = c(-1, 1)) +
-  scale_color_manual(values = c("black", "darkgrey"), aesthetics = c("color", "fill")) +
-  geom_histogram(col=NA, aes(y = stat(ncount)), bins = 50) +
-  geom_histogram(data = filter(tmp, name == "Active play"), aes(y = stat(ncount)*-1), col = NA, bins = 50) +
-  scale_x_continuous("", breaks = pretty_breaks()) +
-  geom_vline(data = group_by(tmp, Study, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(xintercept = value, color = name), linetype = "dashed") +
-  geom_point(data = group_by(tmp, Study, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(y = -1.1)) +
-  labs(y = "Normalized count") +
-  facet_wrap("Study")
-
-# in ea and noa colors: I clearly don't understand aesthetics, see dirt hack in geom_vline for colors
-filter(tmp, name == "Hours") %>%   
-  ggplot(aes(value, col = Study, fill = Study)) +
-  coord_cartesian(clip = "off", ylim = c(-1, 1)) +
-  scale_color_manual(values = colors, aesthetics = c("color", "fill")) +
-  geom_histogram(col=NA, aes(y = stat(ncount)), bins = 50) +
-  geom_histogram(data = filter(tmp, name == "Active play"), aes(y = stat(ncount)*-1), col = NA, bins = 50, alpha = 0.4) +
-  scale_x_continuous("", breaks = pretty_breaks()) +
-  geom_vline(data = group_by(tmp, Study, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(xintercept = value), linetype = "dashed", color = rep(colors, each = 2), alpha = c(0.4, 1, 0.4, 1)) +
-  geom_point(data = group_by(tmp, Study, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(y = -1.1, alpha = name)) +
-  labs(y = "Normalized count") +
-  facet_wrap("Study")
-```
-
-```{r}
-dat %>% 
-  select(Study, active_play, Hours) %>% 
-  ggplot(aes(fill = Study)) +
-  scale_fill_manual(values = colors) + 
-  geom_histogram(
-    aes(active_play, y = stat(ncount)), binwidth = 1, alpha = .7
-    ) +
-  geom_histogram(
-    aes(Hours, y = stat(ncount)*-1), binwidth = 1
-    ) +
-  geom_hline(yintercept = 0, size = .25) +
-  scale_x_continuous("Hours", breaks = pretty_breaks()) +
-  labs(y = "Normalized count") +
-  facet_wrap("Study", scales = "free_x")
-```
-
-```{r}
-tmp <- dat %>%
-  mutate(multiplier = ifelse(Study=="PvZ", -.1, .1)) %>% 
-  pivot_longer(spane_balance:Hours) %>% 
-  mutate(name = str_to_title(name)) %>% 
-  mutate(name = str_replace_all(name, "_", " "))
-filter(tmp, Study == "PvZ") %>%   
-  ggplot(aes(value, col = Study, fill = Study)) +
-  coord_cartesian(clip = "off", ylim = c(-1, 1)) +
-  scale_color_manual(values = colors, aesthetics = c("color", "fill")) +
-  geom_histogram(col=NA, aes(y = stat(ncount))) +
-  geom_histogram(data = filter(tmp, Study == "AC:NH"), aes(y = stat(ncount)*-1), col = NA) +
-  scale_x_continuous("Value", breaks = pretty_breaks()) +
-  labs(y = "Normalized count") +
-  geom_point(data = group_by(tmp, Study, multiplier, name) %>% summarise(value = mean(value, na.rm = TRUE)), aes(y = -1.1)) +
-  facet_wrap("name", scales = "free")
-```
-
-## Correlation matrices
-
-```{r}
-cormat <- function(data, title) {
-  data %>% 
-    rename_all(str_to_title) %>% 
-    psych::cor.plot(
-      scale = FALSE, stars = TRUE, 
-      xlas = 2, show.legend = FALSE,
-      main = str_glue("{title} correlation matrix"),
-    )
-}
-
-select(pvz, where(is.numeric)) %>% 
-  cormat("PvZ")
-select(ac, where(is.numeric)) %>% 
-  cormat("AC:NH")
 ```
 
 ### Well-being & motivations correlations
@@ -787,7 +783,7 @@ summary_stats <- rename_and_relevel(summary_stats)
 ```
 
 And then the beeswarm plots.
-```{r beeswarm, message=F, warning=F}
+```{r beeswarm, message=F, warning=F, cache = TRUE}
 summary_stats <-
   summary_stats %>% 
   group_by(Variable) %>% 
