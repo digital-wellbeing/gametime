@@ -26,7 +26,8 @@ p_load(
   patchwork,
   cowplot,
   janitor,
-  ggbeeswarm
+  ggbeeswarm,
+  lemon
 )
 ```
 
@@ -532,13 +533,15 @@ beeswarm_plots <-
         ),
       aes(
         x = value,
-        y = 1
+        y = 1,
+        color = Study
       )
     ) +
       geom_quasirandom(
-        color = "grey30", 
-        size = 0.8, 
-        groupOnX = FALSE
+        size = 1, 
+        groupOnX = FALSE,
+        shape = 1,
+        alpha = 0.8
       ) +
       facet_grid(
         Study ~ Variable, 
@@ -551,7 +554,8 @@ beeswarm_plots <-
           x = x,
           y = mean_position,
           label = paste0("M = ", Mean)
-        )
+        ),
+        color = "black"
       ) +
       geom_text(
         data = summary_stats %>% 
@@ -560,26 +564,28 @@ beeswarm_plots <-
           x = x,
           y = sd_position,
           label = paste0("SD = ", SD)
-        )
+        ),
+        color = "black"
       ) +
+      facet_rep_grid(
+        Study ~ Variable, 
+        scales = "free_x"
+      ) +
+      scale_color_manual(values=c("navyblue", "#E60012")) +
       theme(
         axis.text.y = element_blank(),
         axis.title.x = element_blank(),
         axis.ticks.y = element_blank(),
         axis.title.y = element_blank(),
-        axis.line = element_blank(),
+        axis.line = element_line(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         panel.background = element_blank(),
         strip.background.x = element_blank(),
         strip.background.y = element_blank(),
-        panel.border = element_rect(
-          colour = "black", 
-          fill = NA, 
-          size = 1
-        ),
         strip.text.x = element_text(size = col_font_size),
-        strip.text.y = element_text(size = row_font_size)
+        strip.text.y = element_text(size = row_font_size),
+        legend.position = "none"
       ) -> p
     
     return(p)
@@ -601,7 +607,7 @@ p2 <-
     c("SPANE", "Objective play time", "Self-reported play time"),
     1.9,
     1.8,
-    16,
+    14,
     16
   )
 
