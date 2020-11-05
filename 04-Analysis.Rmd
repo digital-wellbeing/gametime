@@ -62,7 +62,7 @@ pvz <- pvz %>%
     extrinsic, active_play, Hours
   )
 dat <- bind_rows(pvz, ac, .id = "Study") %>% 
-  mutate(Study = factor(Study, labels = c("PVZ", "AC:NH")))
+  mutate(Study = factor(Study, labels = c("PvZ", "AC:NH")))
 ```
 
 Game time is in units of 10 hours to make the size of the coefficients bigger and thus easier to interpret e.g. when shown with 2 decimal points.
