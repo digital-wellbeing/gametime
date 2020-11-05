@@ -102,8 +102,13 @@ ac <- readRDS(here("data-raw/noa/formr.rds"))
 - assign proper variable types
 
 ```{r}
-# player id as in PvZ data set
-ac <- rename(ac, player_id = code)
+# Harmonize some names to PvZ names
+ac <- ac %>% 
+  rename(
+    gender = sex,
+    gender_other = sex_other,
+    player_id = code
+    )
 
 # Duration of survey
 ac <- ac %>% 
@@ -131,7 +136,7 @@ ac$straightliner_motivations <- ac$straightliner_motivations==0
 
 # These are needed as factors
 ac <- ac %>% 
-  mutate(across(c(sex, played), as_factor))
+  mutate(across(c(gender, played), as_factor))
 
 # Reverse scored items
 ac <- ac %>% 
