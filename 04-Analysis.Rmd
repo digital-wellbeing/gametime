@@ -33,10 +33,10 @@ theme_set(
     theme(
       strip.text = element_text(size = rel(1)),
       strip.background = element_blank(),
-      legend.position = "bottom"
+      legend.position = "right"
     )
 )
-colors <- c("navyblue", "#E60012")
+colors <- c("#155b97", "#88c9a1")
 ```
 
 ```{r}
@@ -104,8 +104,12 @@ Model fitted separately to both datasets
 
 ```{r}
 res <- function(model) {
-  out1 <- tidy(model, conf.int = TRUE) %>% select(-statistic)
-  out2 <- glance(model) %>% select(1,2, nobs)
+  out1 <- tidy(model, conf.int = TRUE) %>% 
+    select(-statistic) %>% 
+    rename(SE = std.error)
+  out2 <- glance(model) %>% 
+    select(1,2, nobs) %>% 
+    rename(r2 = r.squared, r2a = adj.r.squared)
   bind_cols(out1, out2)
 }
 dat %>% 
@@ -129,6 +133,32 @@ dat %>%
   kable(digits = c(0,2,2,1,3,2,2,2,2,1))
 ```
 
+```{r objective-time-figure}
+foo <- function(game, n) {
+  tmp <- dat %>% 
+    mutate(Game2 = factor(Game, labels = c("Plants vs. Zombies: Battle for Neighborville", "Animal Crossing: New Horizons"))) %>% 
+    filter(Game == game)
+  tmp %>% 
+    ggplot(aes(Hours, spane_balance)) +
+    geom_point(alpha = .5, size = 1.75, color = colors[n]) +
+    scale_y_continuous(
+      "Player wellbeing",
+      breaks = pretty_breaks()
+    ) +
+    scale_x_continuous(
+      str_glue("Hours played\n{unique(tmp$Game2)}"),
+      breaks = pretty_breaks()
+    ) +
+    geom_smooth(
+      method = "lm", size = .75, alpha = .2,
+      col = colors[n], fill = colors[n]
+    ) +
+    theme(aspect.ratio = 1, legend.position = "none", strip.text = element_blank()) +
+    facet_wrap("Game2", scales = "free", nrow = 1)
+}
+foo("PvZ", 1) | foo("AC:NH", 2)
+```
+
 ### Subjective time and SWB
 
 ```{r}
@@ -144,20 +174,21 @@ dat %>%
 
 ### Figure
 
-```{r rq1-figure, fig.height = 4.8}
+```{r rq1-figure, fig.height = 4}
 (p1 + 
    labs(x = "Hours played", y = "Estimated hours") +
    theme(legend.position = "none") | 
   p2 + 
    labs(x = "Hours played", y = "Well-being") +
-   theme(legend.position = "bottom") | 
+   theme(legend.position = "none") | 
   p3 + 
    labs(x = "Estimated hours", y = "Well-being") +
-   theme(legend.position = "none")
+   theme(legend.position = "right")
  ) &
   plot_annotation(tag_levels = "A") &
   theme(strip.text = element_blank())
 ```
+
 
 ## RQ2: Well-being and motivation
 
@@ -193,7 +224,7 @@ xs <- dat %>%
   )
 ```
 
-```{r rq2-figure, fig.height = 3.2}
+```{r rq2-figure, fig.height = 3.8}
 tmp <- xs %>% 
   pivot_longer(x:x5, names_to = "Model") %>% 
   mutate(Model = ifelse(Model=="x", 'Omnibus', 'Unique')) %>% 
@@ -218,14 +249,14 @@ p1 <- tmp %>%
   geom_vline(xintercept = 0, lty = 2, size = .2) +
   geom_pointrangeh(
     aes(xmin = conf.low, xmax = conf.high), 
-    size = .4, position = position_dodgev(.25)
+    size = .4, position = position_dodge2v(.4)
     ) +
-  theme(axis.title.y = element_blank(), strip.text = element_blank()) +
-  facet_wrap("Game", scales = "free")
+  theme(
+    axis.title.y = element_blank(), 
+    strip.text = element_blank()
+    )
 p1
-
-res(xs$x[[1]])
-res(xs$x[[2]])
+map(xs$x, res)
 ```
 
 We also compared the omnibus estimates to independent estimates
