@@ -82,7 +82,10 @@ file_dest <- here("data-raw/noa/noa.zip")
 # Download & extract file only if you haven't yet
 if (!file.exists(file_dest)) {
   download.file("https://osf.io/fev95/download", file_dest)
+}
+if (!file.exists(here("data-raw/noa/formr.rds"))) {
   unzip(file_dest, exdir = here("data-raw/noa/"))
+  
 }
 ```
 

@@ -39,6 +39,8 @@ file_dest <- here("data-raw/ea/ea.zip")
 # Download & extract file only if you haven't yet
 if (!file.exists(file_dest)) {
   download.file("https://osf.io/4gp3r/download", file_dest)
+}
+if (!file.exists(here("data-raw/ea/Oxford PvZ - Pilot Wave + Wave 1 Download.xlsx"))) {
   unzip(file_dest, exdir = here("data-raw/ea/"))
 }
 ```
