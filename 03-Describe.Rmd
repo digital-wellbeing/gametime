@@ -166,11 +166,11 @@ tmp <- tmp %>%
     name = factor(
       name, 
       levels = c(
-        "extrinsic", "enjoyment", "spane_balance",
+        "spane_balance", "extrinsic", "enjoyment", 
         "autonomy", "competence", "relatedness"
       ),
       labels = c(
-        "Extrinsic motivation", "Intrinsic motivation", "Player well-being",
+        "Player well-being", "Extrinsic motivation", "Intrinsic motivation", 
         "Player autonomy", "Player competence", "Player relatedness"
       )
     )
