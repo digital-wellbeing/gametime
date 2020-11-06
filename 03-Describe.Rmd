@@ -133,6 +133,18 @@ tibble(
 )
 ```
 
+How many individuals had telemetry
+
+```{r}
+foo <- function(data) {
+  data %>% 
+    transmute(has_telemetry = !is.na(Hours)) %>% 
+    tabyl(has_telemetry) %>% 
+    adorn_pct_formatting()
+}
+map(list(pvz=pvz_full, ac=ac_full), foo) %>% kable
+```
+
 ## Missingness
 
 ```{r}
