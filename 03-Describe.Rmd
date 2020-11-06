@@ -42,7 +42,7 @@ theme_set(
     theme(
       strip.text = element_text(size = rel(1)),
       strip.background = element_blank(),
-      legend.position = "none"
+      legend.position = "right"
     )
 )
 colors <- c("navyblue", "#E60012")
@@ -79,8 +79,8 @@ pvz <- pvz %>%
     competence, relatedness, enjoyment, 
     extrinsic, active_play, Hours
   )
-dat <- bind_rows(pvz, ac, .id = "Study") %>% 
-  mutate(Study = factor(Study, labels = c("PvZ", "AC:NH")))
+dat <- bind_rows(pvz, ac, .id = "Game") %>% 
+  mutate(Game = factor(Game, labels = c("PvZ", "AC:NH")))
 ```
 
 ## Demographics
@@ -92,7 +92,7 @@ Ages by study:
 
 ```{r}
 dat %>% 
-  group_by(Study) %>% 
+  group_by(Game) %>% 
   summarise(
     m_age = mean(age, na.rm = TRUE),
     s_age = sd(age, na.rm = TRUE),
@@ -112,7 +112,7 @@ tabyl(ac, gender) %>% adorn_pct_formatting()
 ```{r}
 dat %>% 
   mutate(Date = as.Date(created)) %>% 
-  count(Study, Date) %>% 
+  count(Game, Date) %>% 
   kable()
 ```
 
@@ -126,7 +126,7 @@ p2 <- nrow(pvz_full %>% filter(date > ymd("2020-09-01")))
 # AC:NH
 a1 <- nrow(ac)
 tibble(
-  Study = c("PvZ w1", "PvZ w2", "AC:NH"),
+  Game = c("PvZ w1", "PvZ w2", "AC:NH"),
   Invitations = c(50000, 200000, 342825),
   Responses = c(p1, p2, a1),
   Rate = percent(Responses/Invitations, .01)
@@ -146,16 +146,28 @@ This figure shows the distribution of well-being and motivation scores for both 
 
 ```{r univariate-scales}
 tmp <- dat %>%
-  mutate(multiplier = ifelse(Study=="PvZ", -.1, .1)) %>% 
-  rename(`Affective_well-being` = spane_balance) %>% 
-  pivot_longer(c(`Affective_well-being`, autonomy:extrinsic)) %>% 
-  mutate(name = str_to_sentence(name)) %>% 
-  mutate(name = str_replace_all(name, "_", " "))
+  mutate(multiplier = ifelse(Game=="PvZ", -.1, .1)) %>%
+  pivot_longer(c(spane_balance, autonomy:extrinsic))
+unique(tmp$name)
+tmp <- tmp %>% 
+  mutate(
+    name = factor(
+      name, 
+      levels = c(
+        "extrinsic", "enjoyment", "spane_balance",
+        "autonomy", "competence", "relatedness"
+      ),
+      labels = c(
+        "Extrinsic motivation", "Intrinsic motivation", "Player well-being",
+        "Player autonomy", "Player competence", "Player relatedness"
+      )
+    )
+  )
 tmp2 <- tmp %>% 
-  group_by(Study, multiplier, name) %>% 
+  group_by(Game, multiplier, name) %>% 
   summarise(value = mean(value, na.rm = TRUE))
-filter(tmp, Study == "PvZ") %>%   
-  ggplot(aes(value, col = Study, fill = Study)) +
+filter(tmp, Game == "PvZ") %>%  
+  ggplot(aes(value, col = Game, fill = Game)) +
   coord_cartesian(ylim = c(-1, 1)) +
   scale_color_manual(
     values = rev(colors), aesthetics = c("color", "fill"),
@@ -166,7 +178,7 @@ filter(tmp, Study == "PvZ") %>%
     col = "white", bins = 20
     ) +
   geom_histogram(
-    data = filter(tmp, Study == "AC:NH"),
+    data = filter(tmp, Game == "AC:NH"),
     aes(y = stat(ncount)*-1), col = "white", bins = 20
     ) +
   scale_y_continuous(
@@ -175,8 +187,10 @@ filter(tmp, Study == "PvZ") %>%
   scale_x_continuous("Value", breaks = pretty_breaks()) +
   geom_point(
     data = tmp2, aes(y = -1.01),
-    shape = 25, size = 2.25
+    shape = 25, size = 2.5
     ) +
+  # Make sure 1 is shown on all figures by drawing a blank geom
+  geom_blank(data = tibble(Game = "PvZ", value = 1)) +
   labs(y = "Normalized count") +
   facet_wrap("name", scales = "free") +
   theme(axis.title.x = element_blank(), legend.position = "right")
@@ -185,7 +199,7 @@ filter(tmp, Study == "PvZ") %>%
 # last_plot() +
 #   geom_vline(
 #     data = tmp2, 
-#     aes(xintercept = value, color = Study), 
+#     aes(xintercept = value, color = Game), 
 #     alpha = .5, size = 2
 #   )
 ```
@@ -194,48 +208,46 @@ And then a summary figure of the times, subjective and objective
 
 ```{r playtime-summary}
 tmp <- dat %>% 
-  group_by(Study) %>% 
+  group_by(Game) %>% 
   summarise(
-    Hours_m = mean(Hours, na.rm = TRUE),
-    active_play_m = mean(active_play, na.rm = TRUE),
-    Hours_sd = sd(Hours, na.rm = TRUE),
-    active_play_sd = sd(active_play, na.rm = TRUE)
+    across(
+      c(Hours, active_play), 
+      list(m = ~mean(., na.rm = TRUE), s = ~sd(., na.rm = TRUE))
+    )
   )
 dat %>%  
-  ggplot(aes(col = Study, fill = Study)) +
-  coord_cartesian(ylim = c(-1, 1)) +
+  ggplot(aes(col = Game, fill = Game)) +
+  coord_cartesian(ylim = c(-1, 1), xlim = c(0, 80)) +
   scale_color_manual(values = colors, aesthetics = c("color", "fill")) +
   scale_y_continuous(
     breaks = c(-1, -.5, 0, .5, 1), labels = c(1, .5, 0, .5, 1),
     expand = expansion(.015)
   ) +
+  scale_x_continuous(breaks = pretty_breaks(7)) +
   geom_histogram(
     aes(x = Hours, y = stat(ncount)), 
-    bins = 30, col = "white"
+    bins = 80, col = "white"
     ) +
   geom_histogram(
     aes(x = active_play, y = stat(ncount)*-1), 
-    bins = 30, alpha = 0.5, col = "white"
+    bins = 80, alpha = 0.5, col = "white"
   ) +
   geom_point(
-    data = tmp, aes(x = Hours_m, y = -0.98),
-    shape = 25, size = 2.25
+    data = tmp, aes(x = Hours_m, y = -0.97),
+    shape = 25, size = 2.5
   ) +
   geom_point(
-    data = tmp, aes(x = active_play_m, y = -0.98),
-    shape = 25, size = 2.25, alpha = 0.5
+    data = tmp, aes(x = active_play_m, y = -0.97),
+    shape = 25, size = 2.5, alpha = 0.5
   ) +
   labs(y = "Normalized count") +
-  facet_wrap("Study", scales = "free", nrow = 2) +
-  theme(strip.text = element_blank())
-
-last_plot() +
-  scale_x_log10(
-    breaks = c(.01, .1, 1, 10, 100),
-    labels = c(.01, .1, 1, 10, 100)
-  )
+  facet_rep_wrap("Game", scales = "fixed", nrow = 2) +
+  theme(strip.text = element_blank(), legend.position = "right")
 
 tmp
+dat %>% 
+  group_by(Game) %>% 
+  summarise(across(active_play:Hours, ~sum(.x>80, na.rm = TRUE)))
 ```
 
 ## Correlation matrices
@@ -705,7 +717,7 @@ get_summary <-
   ) {
     summary_stats <- 
       dat %>%
-      group_by(Study) %>% 
+      group_by(Game) %>% 
       summarise(
         across(
           spane_balance:Hours,
@@ -724,7 +736,7 @@ get_summary <-
       
       # get into long format
       pivot_longer(
-        -Study,
+        -Game,
         names_to = c("Variable", "Measure"),
         values_to = "Value",
         names_pattern = "(.*)_([^_]+$)" # match by last occurrence of underscore
@@ -732,7 +744,7 @@ get_summary <-
 
       # and back to wide format
       pivot_wider(
-        id_cols = c(Study, Variable),
+        id_cols = c(Game, Variable),
         names_from = Measure,
         values_from = Value
       )
@@ -813,7 +825,7 @@ beeswarm_plots <-
       aes(
         x = value,
         y = 1,
-        color = Study
+        color = Game
       )
     ) +
       geom_quasirandom(
@@ -823,7 +835,7 @@ beeswarm_plots <-
         alpha = 0.8
       ) +
       facet_grid(
-        Study ~ Variable, 
+        Game ~ Variable, 
         scales = "free_x"
       ) +
       geom_text(
@@ -849,7 +861,7 @@ beeswarm_plots <-
         size = 2.5
       ) +
       facet_rep_grid(
-        Study ~ Variable, 
+        Game ~ Variable, 
         scales = "free_x"
       ) +
       scale_color_manual(values=c("navyblue", "#E60012")) +
