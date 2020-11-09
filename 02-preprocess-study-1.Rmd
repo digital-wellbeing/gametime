@@ -51,7 +51,7 @@ These telemetry files contain info on PVZ play events from a long period of time
 
 ## Process raw files
 
-Because there were two of each telemetry files (waves), we create a function to read both waves' data into a single table:
+Because there were two of each telemetry file (waves), we create a function to read both waves' data into a single table:
 
 ```{r}
 read_both_waves <- function(stub = "OII_PVZ_Authentications", ...) {
