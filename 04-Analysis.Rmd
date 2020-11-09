@@ -302,4 +302,8 @@ dat %>%
   kable(digits = 1)
 ```
 
+## System information
 
+```{r}
+sessionInfo()
+```
