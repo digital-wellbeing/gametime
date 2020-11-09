@@ -158,9 +158,7 @@ This figure shows the distribution of well-being and motivation scores for both 
 
 ```{r univariate-scales}
 tmp <- dat %>%
-  mutate(multiplier = ifelse(Game=="PvZ", -.1, .1)) %>%
   pivot_longer(c(spane_balance, autonomy:extrinsic))
-unique(tmp$name)
 tmp <- tmp %>% 
   mutate(
     name = factor(
@@ -176,7 +174,7 @@ tmp <- tmp %>%
     )
   )
 tmp2 <- tmp %>% 
-  group_by(Game, multiplier, name) %>% 
+  group_by(Game, name) %>% 
   summarise(value = mean(value, na.rm = TRUE))
 filter(tmp, Game == "PvZ") %>%  
   ggplot(aes(value, col = Game, fill = Game)) +
