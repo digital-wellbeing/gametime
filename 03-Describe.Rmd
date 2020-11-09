@@ -7,9 +7,9 @@ knitr::opts_chunk$set(
   cache = FALSE,
   warning = FALSE,
   message = FALSE,
-  # Save png and pdf figures
-  dev = c("png", "pdf"),
-  fig.ext = c("png", "pdf"),
+  # Save more figure formats
+  dev = c("png", "pdf", "svg", "tiff"),
+  fig.ext = c("png", "pdf", "svg", "tiff"),
   fig.retina = 2
 )
 ```
