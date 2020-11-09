@@ -204,14 +204,6 @@ filter(tmp, Game == "PvZ") %>%
   labs(y = "Normalized count") +
   facet_wrap("name", scales = "free") +
   theme(axis.title.x = element_blank(), legend.position = "right")
-
-# With means as lines
-# last_plot() +
-#   geom_vline(
-#     data = tmp2, 
-#     aes(xintercept = value, color = Game), 
-#     alpha = .5, size = 2
-#   )
 ```
 
 And then a summary figure of the times, subjective and objective
