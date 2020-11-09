@@ -274,7 +274,7 @@ p1 %+%
 
 We also investigated potential nonlinear relations between game time and wellbeing. We did so by fitting a model with and without a smooth term, and using AIC to compare the models.
 
-```{r}
+```{r nonlinear-figure}
 dat %>%
   select(Game, Spane_balance, Hours10, Active_play10) %>% 
   pivot_longer(contains("10")) %>% 
