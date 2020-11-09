@@ -12,7 +12,7 @@ description: ""
 
 # Preface
 
-Data analyses related to "The association between objective video game play and subjective well-being: A collaboration with gaming companies" (Johannes, Vuorre, Przybylski, in prep)
+Data analyses related to "Video game play is positively correlated with well-being" (Johannes, Vuorre, Przybylski, in prep)
 
 Preprint: <>
 
