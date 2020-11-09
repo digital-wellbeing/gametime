@@ -133,6 +133,8 @@ dat %>%
   kable(digits = c(0,2,2,1,3,2,2,2,2,1))
 ```
 
+A separate figure of just this
+
 ```{r objective-time-figure}
 foo <- function(game, n) {
   tmp <- dat %>% 
