@@ -264,5 +264,40 @@ We also compared the omnibus estimates to independent estimates
 ```{r}
 p1 %+%
   drop_na(tmp) +
-  aes(col = Model)
+  aes(col = Model) +
+  facet_wrap("Game")
 ```
+
+## Nonlinear models
+
+We also investigated potential nonlinear relations between game time and wellbeing. We did so by fitting a model with and without a smooth term, and using AIC to compare the models.
+
+```{r}
+dat %>%
+  select(Game, Spane_balance, Hours10, Active_play10) %>% 
+  pivot_longer(contains("10")) %>% 
+  ggplot(aes(value, Spane_balance)) +
+  geom_point() +
+  geom_smooth(method = "lm", aes(col = "linear")) +
+  geom_smooth(method = "gam", aes(col = "GAM")) +
+  facet_grid(name~Game, scales = "free")
+```
+
+```{r}
+library(mgcv)
+dat %>% 
+  select(Game, Spane_balance, Hours10, Active_play10) %>% 
+  pivot_longer(contains("10"), names_to = "Variable") %>%
+  group_by(Game, Variable) %>% 
+  nest() %>% 
+  mutate(linear = map(data, ~gam(Spane_balance ~ value, data = .x))) %>% 
+  mutate(smooth = map(data, ~gam(Spane_balance ~ s(value), data = .x))) %>% 
+  pivot_longer(linear:smooth, names_to = "Model") %>% 
+  mutate(AIC = map_dbl(value, AIC)) %>% 
+  select(Game, Variable, Model, AIC) %>% 
+  pivot_wider(names_from = Model, values_from = AIC) %>% 
+  mutate(Difference = linear-smooth) %>% 
+  kable(digits = 1)
+```
+
+
