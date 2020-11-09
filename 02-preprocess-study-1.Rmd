@@ -45,7 +45,7 @@ if (!file.exists(here("data-raw/ea/Oxford PvZ - Pilot Wave + Wave 1 Download.xls
 }
 ```
 
-In total, there are nine telemetry files, each one recording a different aspect of play events in Plants vs. Zombies: Battle for Neighborville (the data were collected in two waves, so technically there are 18 telemetry files), and one file for the survey results.
+In total, there are 18 telemetry files, each one recording a different aspect of play events in Plants vs. Zombies: Battle for Neighborville (the data were collected in two waves, so there are 9 different kinds of telemetry), and one file for the survey results.
 
 These telemetry files contain info on PVZ play events from a long period of time, including for individuals who did not participate in the survey. We limit our analyses to the individuals who participated in the survey, and to the 2 weeks preceding the survey. However, the raw data files might be of interest to additional analyses.
 
