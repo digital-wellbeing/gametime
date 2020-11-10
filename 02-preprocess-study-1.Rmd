@@ -12,9 +12,9 @@ dir.create("data/ea/", FALSE, TRUE)
 dir.create("data-raw/ea/", FALSE, TRUE)
 ```
 
-Here, we process the Plants vs. Zombies: Battle for Neighborville (PVZ) survey and telemetry data files (gaming data that was captured by EA's servers).
+Here, we process the Plants vs. Zombies: Battle for Neighborville (PVZ) survey and telemetry data files (i.e., gaming data that was captured by EA's servers).
 
-We used the following R packages:
+We used the following R packages. Pacman is a package manager that install packages if you don't have them installed. We always show the package versions at the bottom of each section.
 
 ```{r packages}
 library(pacman)
@@ -45,9 +45,9 @@ if (!file.exists(here("data-raw/ea/Oxford PvZ - Pilot Wave + Wave 1 Download.xls
 }
 ```
 
-In total, there are 18 telemetry files, each one recording a different aspect of play events in Plants vs. Zombies: Battle for Neighborville (the data were collected in two waves, so there are 9 different kinds of telemetry), and one file for the survey results.
+EA sent out the survey in two waves: one in August of 2020, the second in September 2020. For each wave, there are 9 telemetry files, each one recording a different aspect of play events in Plants vs. Zombies: Battle for Neighborville and one file for the survey results.
 
-These telemetry files contain info on PVZ play events from a long period of time, including for individuals who did not participate in the survey. We limit our analyses to the individuals who participated in the survey, and to the 2 weeks preceding the survey. However, the raw data files might be of interest to additional analyses.
+These telemetry files contain info on PVZ play events from a long period of time, including for players who did not participate in the survey. We limit our analyses to the individuals who participated in the survey, and to the 2 weeks preceding the survey. However, the raw data files might be of interest for additional analyses.
 
 ## Process raw files
 
@@ -91,7 +91,7 @@ survey <- survey %>%
 
 #### Clean and transform
 
-Give some sensible variable names and assign proper variable types.
+Next, we give some sensible variable names and assign proper variable types for the survey.
 ```{r give-proper-variable-names}
 # Rename variables
 survey <- 
@@ -200,7 +200,7 @@ survey <- survey %>%
   mutate(across(contains("straightliner"), ~.x==1))
 ```
 
-Create mean indices for the scales.
+Then we create mean indices for the scales.
 SPANE has positive affect, negative affect, and an affect balance score (subtract negative from positive).
 ```{r create-scales}
 # General SPANE
@@ -296,6 +296,8 @@ survey <- survey %>%
 Then we get to the telemetry files.
 
 The game time data are the most complicated. We work on it first because the times are needed for some of the other telemetry files.
+Note: The raw excel files on the OSF (or downloaded as zip files above) have a detailed data map as the second tab of the file. 
+These serve as a codebook.
 The data show us when a player started a session and how long that session lasted, plus whether they played the game in multiplayer or single player.
 The variables:
 
@@ -314,7 +316,7 @@ glimpse(game_time)
 ```
 
 A game session starts when a player starts playing.
-That means, `game_session` records when a match starts, which includes going to the Hub World.
+That means `game_session` records when a match starts, which includes going to the Hub World (i.e., a world inside the game where players can decide what to do next).
 Game sessions can be shared between players when they're playing multiplayer, but should be unique to a `player_id` when in single player.
 However, it's not easy to say when a session ends for technical reasons.
 Ideally, we'd have one game session per row.
@@ -368,7 +370,6 @@ Whenever a `game_start_time` is missing, we'll set it to the end time of that se
 That creates game sessions with a duration of 0, which we'll set to `NA` again later.
 (Note: `game_end_time` doesn't have missing values, which is why we can use `coalesce`)
 ```{r}
-# Now we just apply that to all the data. Except it wont work because some start times are missing. We replace missing start times with the end time to create these sessions. Those sessions will have a duration of 0 and are thus easily identifiable.
 game_time <- game_time %>% 
   mutate(
     game_start_time = coalesce(
@@ -388,8 +389,7 @@ game_time <- game_time %>%
   ungroup()
 ```
 
-Save file
-
+Then we save the file.
 ```{r}
 write_rds(game_time, here("data/ea/game_time.rds"))
 ```
@@ -673,7 +673,7 @@ game_time <- game_time %>%
 Next, we add the person-level aggregated telemetry variables to the survey data.
 The resulting data set will not deal with session level data, but summarizes, for each participant, their engagement in the 2 week observation period.
 
-First put all the aggregated telemetry into one data frame
+First put all the aggregated telemetry into one data frame.
 
 ```{r}
 telemetry <- reduce(
@@ -682,7 +682,7 @@ telemetry <- reduce(
 )
 ```
 
-And then merge them to the survey
+And then merge them to the survey.
 ```{r}
 pvz <- survey %>% 
   left_join(telemetry, by = "player_id")
@@ -690,7 +690,7 @@ pvz <- survey %>%
 
 ## Exclusions
 
-First save a file with no exclusions
+First save a file with no exclusions.
 
 ```{r}
 write_rds(pvz, here("data/ea/pvz.rds"))
@@ -698,7 +698,7 @@ write_rds(pvz, here("data/ea/pvz.rds"))
 
 ### Straightliners
 
-We take out all individuals who straightlined (gave the same response to every item) through SPANE and motivations scales. (If only SPANE items existed, then we didn't exclude.)
+We take out all players who straightlined (gave the same response to every item) through SPANE and motivations scales. (If only SPANE items existed, then we didn't exclude.)
 
 ```{r}
 pvz <- pvz %>% 
@@ -721,7 +721,7 @@ pvz <- filter(pvz, !straightliner | is.na(straightliner))
 
 Potential outliers. We replace all values that are more than 6SD away from the variable's mean with NAs. As a consequence, individuals are excluded on an analysis-by-analysis case (so if has bad data relevant to that analysis or figure).
 
-This is only done for a subset of variables (relavant to analyses; see below)
+This is only done for a subset of variables (relavant to analyses; see below).
 
 ```{r}
 pvz <- pvz %>% 
@@ -761,3 +761,9 @@ pvz <- pvz %>%
 ```{r}
 write_rds(pvz, here("data/ea/pvz-excluded.rds"))
 ```
+
+## Session info
+```{r}
+sessionInfo()
+```
+

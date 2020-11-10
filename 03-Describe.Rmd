@@ -206,7 +206,7 @@ filter(tmp, Game == "PvZ") %>%
   theme(axis.title.x = element_blank(), legend.position = "right")
 ```
 
-And then a summary figure of the times, subjective and objective
+And then a summary figure of the times, subjective and objective.
 
 ```{r playtime-summary}
 tmp <- dat %>% 
@@ -385,7 +385,7 @@ pair_plot(
 
 ## Plot studies combined
 
-Then, let's plot and describe demographic information first.
+Then, let's plot and describe demographic information.
 The plots in this section will be for both studies combined.
 ```{r}
 # raincloud plot function from https://github.com/RainCloudPlots/RainCloudPlots/blob/master/tutorial_R/R_rainclouds.R
@@ -908,3 +908,9 @@ p2 <-
 
 p2 / p1
 ```
+
+## Session info
+```{r}
+sessionInfo()
+```
+
