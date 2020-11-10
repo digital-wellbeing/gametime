@@ -22,7 +22,7 @@ p_load(
 
 ## Raw data
 
-This script expects the raw data files to be in `data-raw/noa/`. The raw telemetry and survey files are in a zip compressed file on OSF: <https://osf.io/cjd6z/>. 
+This script expects the raw data files to be in `data-raw/noa/`. The raw telemetry and survey files are in a zip compressed file on OSF: <https://osf.io/cjd6z/>. Below, we provide code that downloads and unpacks these files.
 
 The raw survey data was edited to exclude test sessions, any data from individuals who did not consent / below 18, and some unnecessary variables, before uploading to OSF. The code to do that is shown below (but cannot be executed without our formr credentials)
 
@@ -68,7 +68,7 @@ write_rds(ac, here("data-raw/noa/formr.rds"))
 
 The file produced by the above code chunk was uploaded to OSF in a zip compressed archive with the telemetry file.
 
-Start by downloading that file and unpacking it to the target directory:
+Start by downloading that file and unpacking it to the target directory by running the code below:
 
 
 ```r
@@ -83,7 +83,7 @@ if (!file.exists(here("data-raw/noa/formr.rds"))) {
 }
 ```
 
-Load the survey data file
+Next, we load the survey data file.
 
 
 ```r
@@ -94,10 +94,13 @@ ac <- readRDS(here("data-raw/noa/formr.rds"))
 
 ### Clean survey data
 
-- Harmonize names to other data set
-- Create duration variable
-- give some sensible variable names
-- assign proper variable types
+Here, we clean the survey data.
+Specifically, we
+
+- Harmonize names so that they are the same as in the other data set (i.e., from PvZ)
+- Create duration variable for game time
+- Give some sensible variable names
+- Assign proper variable types
 
 
 ```r
@@ -151,7 +154,7 @@ ac <- ac %>%
   )
 ```
 
-Next, let's create mean indices for the scales.
+Next, let's create mean indices for the scales like we did before.
 SPANE has positive affect, negative affect, and an affect balance score (subtract negative from positive).
 
 ```r
@@ -251,7 +254,7 @@ ac <- ac %>%
 
 ### Checking
 
-Player IDs
+First, we check how many rows per player there are.
 
 
 ```r
@@ -280,7 +283,7 @@ There are two kinds of problems:
 1. No ID was captured
 2. An ID was used more than once
 
-For both cases, connecting to telemetry would be impossible (and wrong connections could be made in latter case), so we drop these cases
+For both cases, connecting to telemetry would be impossible (and wrong connections could be made in latter case), so we drop these cases.
 
 
 ```r
@@ -359,7 +362,7 @@ glimpse(gt)
 
 ### Clean
 
-We don't need to limit to IDs who took the survey as NOA has already done that--these data only contain folks who filled survey.
+We don't need to limit to IDs who took the survey as NOA has already done that--these data only contain folks who filled in the survey.
 
 We do need to limit the data to two weeks preceding the survey, and count session durations within that window. We therefore need to use the session start/end times to find out when the sessions happened.
 
@@ -436,7 +439,7 @@ gt <- gt %>%
   filter(session_end < created)
 ```
 
-We then summarize to total hours per person
+We then summarize to total hours per person.
 
 
 ```r
@@ -481,7 +484,7 @@ ac %>%
 
 ## Exclusions
 
-First save a file with no exclusions
+First save a file with no exclusions.
 
 
 ```r
@@ -599,3 +602,50 @@ ac <- ac %>%
 ```r
 write_rds(ac, here("data/noa/ac-excluded.rds"))
 ```
+
+## Session info
+
+```r
+sessionInfo()
+```
+
+```
+## R version 4.0.3 (2020-10-10)
+## Platform: x86_64-pc-linux-gnu (64-bit)
+## Running under: Ubuntu 20.04.1 LTS
+## 
+## Matrix products: default
+## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
+## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/liblapack.so.3
+## 
+## locale:
+##  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+##  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+##  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+## [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+##  [1] forcats_0.5.0   stringr_1.4.0   dplyr_1.0.2     purrr_0.3.4    
+##  [5] readr_1.4.0     tidyr_1.1.2     tibble_3.0.4    ggplot2_3.3.2  
+##  [9] tidyverse_1.3.0 janitor_2.0.1   scales_1.1.1    lubridate_1.7.9
+## [13] here_0.1        knitr_1.30      readxl_1.3.1    pacman_0.5.1   
+## 
+## loaded via a namespace (and not attached):
+##  [1] tidyselect_1.1.0 xfun_0.19        haven_2.3.1      snakecase_0.11.0
+##  [5] colorspace_1.4-1 vctrs_0.3.4      generics_0.1.0   htmltools_0.5.0 
+##  [9] yaml_2.2.1       utf8_1.1.4       rlang_0.4.8      pillar_1.4.6    
+## [13] withr_2.3.0      glue_1.4.2       DBI_1.1.0        dbplyr_2.0.0    
+## [17] modelr_0.1.8     lifecycle_0.2.0  munsell_0.5.0    gtable_0.3.0    
+## [21] cellranger_1.1.0 rvest_0.3.6      evaluate_0.14    parallel_4.0.3  
+## [25] fansi_0.4.1      broom_0.7.2      Rcpp_1.0.5       backports_1.2.0 
+## [29] jsonlite_1.7.1   fs_1.5.0         hms_0.5.3        digest_0.6.27   
+## [33] stringi_1.5.3    bookdown_0.21    rprojroot_1.3-2  grid_4.0.3      
+## [37] cli_2.1.0        tools_4.0.3      magrittr_1.5     crayon_1.3.4    
+## [41] pkgconfig_2.0.3  ellipsis_0.3.1   xml2_1.3.2       reprex_0.3.0    
+## [45] assertthat_0.2.1 rmarkdown_2.5.2  httr_1.4.2       rstudioapi_0.11 
+## [49] R6_2.5.0         compiler_4.0.3
+```
+

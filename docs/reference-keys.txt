@@ -21,6 +21,7 @@ exclusions
 straightliners
 outliers
 save-files
+session-info
 process-acnh-data
 raw-data-2
 process-raw-files-1
@@ -34,6 +35,7 @@ exclusions-1
 straightliners-1
 outliers-1
 save-files-1
+session-info-1
 describe-explore
 demographics
 survey-dates
@@ -45,6 +47,7 @@ well-being-motivations-correlations
 more-well-being-correlations
 plot-studies-combined
 create-summary-figure
+session-info-2
 analyses
 create-joint-dataset
 rq1-time-and-well-being

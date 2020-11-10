@@ -24,7 +24,7 @@
 <meta name="author" content="Niklas Johannes, Matti Vuorre, Andrew Przybylski" />
 
 
-<meta name="date" content="2020-11-09" />
+<meta name="date" content="2020-11-10" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -167,6 +167,7 @@ code span.wa { color: #bf0303; } /* Warning */
 <li class="chapter" data-level="2.4.2" data-path="process-pvz-data.html"><a href="process-pvz-data.html#outliers"><i class="fa fa-check"></i><b>2.4.2</b> Outliers</a></li>
 </ul></li>
 <li class="chapter" data-level="2.5" data-path="process-pvz-data.html"><a href="process-pvz-data.html#save-files"><i class="fa fa-check"></i><b>2.5</b> Save files</a></li>
+<li class="chapter" data-level="2.6" data-path="process-pvz-data.html"><a href="process-pvz-data.html#session-info"><i class="fa fa-check"></i><b>2.6</b> Session info</a></li>
 </ul></li>
 <li class="chapter" data-level="3" data-path="process-acnh-data.html"><a href="process-acnh-data.html"><i class="fa fa-check"></i><b>3</b> Process AC:NH data</a>
 <ul>
@@ -186,6 +187,7 @@ code span.wa { color: #bf0303; } /* Warning */
 <li class="chapter" data-level="3.3.2" data-path="process-acnh-data.html"><a href="process-acnh-data.html#outliers-1"><i class="fa fa-check"></i><b>3.3.2</b> Outliers</a></li>
 </ul></li>
 <li class="chapter" data-level="3.4" data-path="process-acnh-data.html"><a href="process-acnh-data.html#save-files-1"><i class="fa fa-check"></i><b>3.4</b> Save files</a></li>
+<li class="chapter" data-level="3.5" data-path="process-acnh-data.html"><a href="process-acnh-data.html#session-info-1"><i class="fa fa-check"></i><b>3.5</b> Session info</a></li>
 </ul></li>
 <li class="chapter" data-level="4" data-path="describe-explore.html"><a href="describe-explore.html"><i class="fa fa-check"></i><b>4</b> Describe &amp; explore</a>
 <ul>
@@ -201,6 +203,7 @@ code span.wa { color: #bf0303; } /* Warning */
 </ul></li>
 <li class="chapter" data-level="4.7" data-path="describe-explore.html"><a href="describe-explore.html#plot-studies-combined"><i class="fa fa-check"></i><b>4.7</b> Plot studies combined</a></li>
 <li class="chapter" data-level="4.8" data-path="describe-explore.html"><a href="describe-explore.html#create-summary-figure"><i class="fa fa-check"></i><b>4.8</b> Create summary figure</a></li>
+<li class="chapter" data-level="4.9" data-path="describe-explore.html"><a href="describe-explore.html#session-info-2"><i class="fa fa-check"></i><b>4.9</b> Session info</a></li>
 </ul></li>
 <li class="chapter" data-level="5" data-path="analyses.html"><a href="analyses.html"><i class="fa fa-check"></i><b>5</b> Analyses</a>
 <ul>
@@ -237,227 +240,229 @@ code span.wa { color: #bf0303; } /* Warning */
 <h1><span class="header-section-number">3</span> Process AC:NH data</h1>
 <p>Here, we process the AC:NH survey and telemetry files.</p>
 <p>We used the following R packages:</p>
-<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="process-acnh-data.html#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pacman)</span>
-<span id="cb52-2"><a href="process-acnh-data.html#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">p_load</span>(</span>
-<span id="cb52-3"><a href="process-acnh-data.html#cb52-3" aria-hidden="true" tabindex="-1"></a>  readxl,</span>
-<span id="cb52-4"><a href="process-acnh-data.html#cb52-4" aria-hidden="true" tabindex="-1"></a>  knitr,</span>
-<span id="cb52-5"><a href="process-acnh-data.html#cb52-5" aria-hidden="true" tabindex="-1"></a>  here,</span>
-<span id="cb52-6"><a href="process-acnh-data.html#cb52-6" aria-hidden="true" tabindex="-1"></a>  lubridate,</span>
-<span id="cb52-7"><a href="process-acnh-data.html#cb52-7" aria-hidden="true" tabindex="-1"></a>  scales,</span>
-<span id="cb52-8"><a href="process-acnh-data.html#cb52-8" aria-hidden="true" tabindex="-1"></a>  janitor,</span>
-<span id="cb52-9"><a href="process-acnh-data.html#cb52-9" aria-hidden="true" tabindex="-1"></a>  tidyverse</span>
-<span id="cb52-10"><a href="process-acnh-data.html#cb52-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="process-acnh-data.html#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pacman)</span>
+<span id="cb54-2"><a href="process-acnh-data.html#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="fu">p_load</span>(</span>
+<span id="cb54-3"><a href="process-acnh-data.html#cb54-3" aria-hidden="true" tabindex="-1"></a>  readxl,</span>
+<span id="cb54-4"><a href="process-acnh-data.html#cb54-4" aria-hidden="true" tabindex="-1"></a>  knitr,</span>
+<span id="cb54-5"><a href="process-acnh-data.html#cb54-5" aria-hidden="true" tabindex="-1"></a>  here,</span>
+<span id="cb54-6"><a href="process-acnh-data.html#cb54-6" aria-hidden="true" tabindex="-1"></a>  lubridate,</span>
+<span id="cb54-7"><a href="process-acnh-data.html#cb54-7" aria-hidden="true" tabindex="-1"></a>  scales,</span>
+<span id="cb54-8"><a href="process-acnh-data.html#cb54-8" aria-hidden="true" tabindex="-1"></a>  janitor,</span>
+<span id="cb54-9"><a href="process-acnh-data.html#cb54-9" aria-hidden="true" tabindex="-1"></a>  tidyverse</span>
+<span id="cb54-10"><a href="process-acnh-data.html#cb54-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 <div id="raw-data-2" class="section level2" number="3.1">
 <h2><span class="header-section-number">3.1</span> Raw data</h2>
-<p>This script expects the raw data files to be in <code>data-raw/noa/</code>. The raw telemetry and survey files are in a zip compressed file on OSF: <a href="https://osf.io/cjd6z/" class="uri">https://osf.io/cjd6z/</a>.</p>
+<p>This script expects the raw data files to be in <code>data-raw/noa/</code>. The raw telemetry and survey files are in a zip compressed file on OSF: <a href="https://osf.io/cjd6z/" class="uri">https://osf.io/cjd6z/</a>. Below, we provide code that downloads and unpacks these files.</p>
 <p>The raw survey data was edited to exclude test sessions, any data from individuals who did not consent / below 18, and some unnecessary variables, before uploading to OSF. The code to do that is shown below (but cannot be executed without our formr credentials)</p>
-<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="process-acnh-data.html#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Dont download if already downloaded</span></span>
-<span id="cb53-2"><a href="process-acnh-data.html#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="fu">here</span>(<span class="st">&quot;data-raw/noa/formr-raw.rds&quot;</span>))) {</span>
-<span id="cb53-3"><a href="process-acnh-data.html#cb53-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Connect to formr</span></span>
-<span id="cb53-4"><a href="process-acnh-data.html#cb53-4" aria-hidden="true" tabindex="-1"></a>  formr<span class="sc">::</span><span class="fu">formr_connect</span>()</span>
-<span id="cb53-5"><a href="process-acnh-data.html#cb53-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># These are the survey names on formr</span></span>
-<span id="cb53-6"><a href="process-acnh-data.html#cb53-6" aria-hidden="true" tabindex="-1"></a>  surveys <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;gaming_welcome&quot;</span>, <span class="fu">paste0</span>(<span class="st">&quot;gaming_block&quot;</span>, <span class="dv">2</span><span class="sc">:</span><span class="dv">5</span>))</span>
-<span id="cb53-7"><a href="process-acnh-data.html#cb53-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Download data into a list of data frames</span></span>
-<span id="cb53-8"><a href="process-acnh-data.html#cb53-8" aria-hidden="true" tabindex="-1"></a>  ac <span class="ot">&lt;-</span> <span class="fu">map</span>(surveys, <span class="sc">~</span>formr<span class="sc">::</span><span class="fu">formr_results</span>(.) <span class="sc">%&gt;%</span> as_tibble)</span>
-<span id="cb53-9"><a href="process-acnh-data.html#cb53-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveRDS</span>(ac, <span class="fu">here</span>(<span class="st">&quot;data-raw/noa/formr-raw.rds&quot;</span>))</span>
-<span id="cb53-10"><a href="process-acnh-data.html#cb53-10" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {ac <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">here</span>(<span class="st">&quot;data-raw/noa/formr-raw.rds&quot;</span>))}</span>
-<span id="cb53-11"><a href="process-acnh-data.html#cb53-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb53-12"><a href="process-acnh-data.html#cb53-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Take out all intermediate time variables</span></span>
-<span id="cb53-13"><a href="process-acnh-data.html#cb53-13" aria-hidden="true" tabindex="-1"></a>ac[[<span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="fu">select</span>(ac[[<span class="dv">1</span>]], <span class="sc">-</span><span class="fu">c</span>(modified<span class="sc">:</span>expired))</span>
-<span id="cb53-14"><a href="process-acnh-data.html#cb53-14" aria-hidden="true" tabindex="-1"></a>ac[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>] <span class="ot">&lt;-</span> <span class="fu">map</span>(ac[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>], <span class="sc">~</span><span class="fu">select</span>(., <span class="sc">-</span><span class="fu">c</span>(created<span class="sc">:</span>expired)))</span>
-<span id="cb53-15"><a href="process-acnh-data.html#cb53-15" aria-hidden="true" tabindex="-1"></a>ac[[<span class="dv">5</span>]] <span class="ot">&lt;-</span> <span class="fu">select</span>(ac[[<span class="dv">5</span>]], <span class="sc">-</span><span class="fu">c</span>(created, modified, expired))</span>
-<span id="cb53-16"><a href="process-acnh-data.html#cb53-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb53-17"><a href="process-acnh-data.html#cb53-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Transform to one data frame with one row per participant</span></span>
-<span id="cb53-18"><a href="process-acnh-data.html#cb53-18" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> <span class="fu">reduce</span>(left_join)</span>
-<span id="cb53-19"><a href="process-acnh-data.html#cb53-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb53-20"><a href="process-acnh-data.html#cb53-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Limit data to survey window to exclude our test sessions</span></span>
-<span id="cb53-21"><a href="process-acnh-data.html#cb53-21" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
-<span id="cb53-22"><a href="process-acnh-data.html#cb53-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(created <span class="sc">&gt;=</span> <span class="fu">ymd</span>(<span class="st">&quot;2020-10-27&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb53-23"><a href="process-acnh-data.html#cb53-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(created <span class="sc">&lt;=</span> <span class="fu">ymd</span>(<span class="st">&quot;2020-10-27&quot;</span>) <span class="sc">+</span> <span class="fu">days</span>(<span class="dv">7</span>))</span>
-<span id="cb53-24"><a href="process-acnh-data.html#cb53-24" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span>(ac<span class="sc">$</span>created)</span>
-<span id="cb53-25"><a href="process-acnh-data.html#cb53-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb53-26"><a href="process-acnh-data.html#cb53-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep only surveys whose code exists and consents check out</span></span>
-<span id="cb53-27"><a href="process-acnh-data.html#cb53-27" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> <span class="fu">filter</span>(</span>
-<span id="cb53-28"><a href="process-acnh-data.html#cb53-28" aria-hidden="true" tabindex="-1"></a>  ac, <span class="sc">!</span><span class="fu">is.na</span>(code), of_age<span class="sc">==</span><span class="dv">1</span>, consent_data<span class="sc">==</span><span class="dv">1</span>, consent<span class="sc">==</span><span class="dv">1</span></span>
-<span id="cb53-29"><a href="process-acnh-data.html#cb53-29" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb53-30"><a href="process-acnh-data.html#cb53-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb53-31"><a href="process-acnh-data.html#cb53-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Take out unnecessary variables</span></span>
-<span id="cb53-32"><a href="process-acnh-data.html#cb53-32" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
-<span id="cb53-33"><a href="process-acnh-data.html#cb53-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
-<span id="cb53-34"><a href="process-acnh-data.html#cb53-34" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span><span class="fu">c</span>(session, browser, last_outside_referrer, of_age<span class="sc">:</span>consent)</span>
-<span id="cb53-35"><a href="process-acnh-data.html#cb53-35" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb53-36"><a href="process-acnh-data.html#cb53-36" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(ac, <span class="fu">here</span>(<span class="st">&quot;data-raw/noa/formr.rds&quot;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="process-acnh-data.html#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Dont download if already downloaded</span></span>
+<span id="cb55-2"><a href="process-acnh-data.html#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="fu">here</span>(<span class="st">&quot;data-raw/noa/formr-raw.rds&quot;</span>))) {</span>
+<span id="cb55-3"><a href="process-acnh-data.html#cb55-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Connect to formr</span></span>
+<span id="cb55-4"><a href="process-acnh-data.html#cb55-4" aria-hidden="true" tabindex="-1"></a>  formr<span class="sc">::</span><span class="fu">formr_connect</span>()</span>
+<span id="cb55-5"><a href="process-acnh-data.html#cb55-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># These are the survey names on formr</span></span>
+<span id="cb55-6"><a href="process-acnh-data.html#cb55-6" aria-hidden="true" tabindex="-1"></a>  surveys <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;gaming_welcome&quot;</span>, <span class="fu">paste0</span>(<span class="st">&quot;gaming_block&quot;</span>, <span class="dv">2</span><span class="sc">:</span><span class="dv">5</span>))</span>
+<span id="cb55-7"><a href="process-acnh-data.html#cb55-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Download data into a list of data frames</span></span>
+<span id="cb55-8"><a href="process-acnh-data.html#cb55-8" aria-hidden="true" tabindex="-1"></a>  ac <span class="ot">&lt;-</span> <span class="fu">map</span>(surveys, <span class="sc">~</span>formr<span class="sc">::</span><span class="fu">formr_results</span>(.) <span class="sc">%&gt;%</span> as_tibble)</span>
+<span id="cb55-9"><a href="process-acnh-data.html#cb55-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveRDS</span>(ac, <span class="fu">here</span>(<span class="st">&quot;data-raw/noa/formr-raw.rds&quot;</span>))</span>
+<span id="cb55-10"><a href="process-acnh-data.html#cb55-10" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {ac <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">here</span>(<span class="st">&quot;data-raw/noa/formr-raw.rds&quot;</span>))}</span>
+<span id="cb55-11"><a href="process-acnh-data.html#cb55-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-12"><a href="process-acnh-data.html#cb55-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Take out all intermediate time variables</span></span>
+<span id="cb55-13"><a href="process-acnh-data.html#cb55-13" aria-hidden="true" tabindex="-1"></a>ac[[<span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="fu">select</span>(ac[[<span class="dv">1</span>]], <span class="sc">-</span><span class="fu">c</span>(modified<span class="sc">:</span>expired))</span>
+<span id="cb55-14"><a href="process-acnh-data.html#cb55-14" aria-hidden="true" tabindex="-1"></a>ac[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>] <span class="ot">&lt;-</span> <span class="fu">map</span>(ac[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>], <span class="sc">~</span><span class="fu">select</span>(., <span class="sc">-</span><span class="fu">c</span>(created<span class="sc">:</span>expired)))</span>
+<span id="cb55-15"><a href="process-acnh-data.html#cb55-15" aria-hidden="true" tabindex="-1"></a>ac[[<span class="dv">5</span>]] <span class="ot">&lt;-</span> <span class="fu">select</span>(ac[[<span class="dv">5</span>]], <span class="sc">-</span><span class="fu">c</span>(created, modified, expired))</span>
+<span id="cb55-16"><a href="process-acnh-data.html#cb55-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-17"><a href="process-acnh-data.html#cb55-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Transform to one data frame with one row per participant</span></span>
+<span id="cb55-18"><a href="process-acnh-data.html#cb55-18" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> <span class="fu">reduce</span>(left_join)</span>
+<span id="cb55-19"><a href="process-acnh-data.html#cb55-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-20"><a href="process-acnh-data.html#cb55-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Limit data to survey window to exclude our test sessions</span></span>
+<span id="cb55-21"><a href="process-acnh-data.html#cb55-21" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
+<span id="cb55-22"><a href="process-acnh-data.html#cb55-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(created <span class="sc">&gt;=</span> <span class="fu">ymd</span>(<span class="st">&quot;2020-10-27&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb55-23"><a href="process-acnh-data.html#cb55-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(created <span class="sc">&lt;=</span> <span class="fu">ymd</span>(<span class="st">&quot;2020-10-27&quot;</span>) <span class="sc">+</span> <span class="fu">days</span>(<span class="dv">7</span>))</span>
+<span id="cb55-24"><a href="process-acnh-data.html#cb55-24" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span>(ac<span class="sc">$</span>created)</span>
+<span id="cb55-25"><a href="process-acnh-data.html#cb55-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-26"><a href="process-acnh-data.html#cb55-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep only surveys whose code exists and consents check out</span></span>
+<span id="cb55-27"><a href="process-acnh-data.html#cb55-27" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> <span class="fu">filter</span>(</span>
+<span id="cb55-28"><a href="process-acnh-data.html#cb55-28" aria-hidden="true" tabindex="-1"></a>  ac, <span class="sc">!</span><span class="fu">is.na</span>(code), of_age<span class="sc">==</span><span class="dv">1</span>, consent_data<span class="sc">==</span><span class="dv">1</span>, consent<span class="sc">==</span><span class="dv">1</span></span>
+<span id="cb55-29"><a href="process-acnh-data.html#cb55-29" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb55-30"><a href="process-acnh-data.html#cb55-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-31"><a href="process-acnh-data.html#cb55-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Take out unnecessary variables</span></span>
+<span id="cb55-32"><a href="process-acnh-data.html#cb55-32" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
+<span id="cb55-33"><a href="process-acnh-data.html#cb55-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb55-34"><a href="process-acnh-data.html#cb55-34" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span><span class="fu">c</span>(session, browser, last_outside_referrer, of_age<span class="sc">:</span>consent)</span>
+<span id="cb55-35"><a href="process-acnh-data.html#cb55-35" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb55-36"><a href="process-acnh-data.html#cb55-36" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(ac, <span class="fu">here</span>(<span class="st">&quot;data-raw/noa/formr.rds&quot;</span>))</span></code></pre></div>
 <p>The file produced by the above code chunk was uploaded to OSF in a zip compressed archive with the telemetry file.</p>
-<p>Start by downloading that file and unpacking it to the target directory:</p>
-<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="process-acnh-data.html#cb54-1" aria-hidden="true" tabindex="-1"></a>file_dest <span class="ot">&lt;-</span> <span class="fu">here</span>(<span class="st">&quot;data-raw/noa/noa.zip&quot;</span>)</span>
-<span id="cb54-2"><a href="process-acnh-data.html#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Download &amp; extract file only if you haven&#39;t yet</span></span>
-<span id="cb54-3"><a href="process-acnh-data.html#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(file_dest)) {</span>
-<span id="cb54-4"><a href="process-acnh-data.html#cb54-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">download.file</span>(<span class="st">&quot;https://osf.io/fev95/download&quot;</span>, file_dest)</span>
-<span id="cb54-5"><a href="process-acnh-data.html#cb54-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb54-6"><a href="process-acnh-data.html#cb54-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="fu">here</span>(<span class="st">&quot;data-raw/noa/formr.rds&quot;</span>))) {</span>
-<span id="cb54-7"><a href="process-acnh-data.html#cb54-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unzip</span>(file_dest, <span class="at">exdir =</span> <span class="fu">here</span>(<span class="st">&quot;data-raw/noa/&quot;</span>))</span>
-<span id="cb54-8"><a href="process-acnh-data.html#cb54-8" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb54-9"><a href="process-acnh-data.html#cb54-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>Load the survey data file</p>
-<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="process-acnh-data.html#cb55-1" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">here</span>(<span class="st">&quot;data-raw/noa/formr.rds&quot;</span>))</span></code></pre></div>
+<p>Start by downloading that file and unpacking it to the target directory by running the code below:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="process-acnh-data.html#cb56-1" aria-hidden="true" tabindex="-1"></a>file_dest <span class="ot">&lt;-</span> <span class="fu">here</span>(<span class="st">&quot;data-raw/noa/noa.zip&quot;</span>)</span>
+<span id="cb56-2"><a href="process-acnh-data.html#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Download &amp; extract file only if you haven&#39;t yet</span></span>
+<span id="cb56-3"><a href="process-acnh-data.html#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(file_dest)) {</span>
+<span id="cb56-4"><a href="process-acnh-data.html#cb56-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">download.file</span>(<span class="st">&quot;https://osf.io/fev95/download&quot;</span>, file_dest)</span>
+<span id="cb56-5"><a href="process-acnh-data.html#cb56-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb56-6"><a href="process-acnh-data.html#cb56-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="fu">here</span>(<span class="st">&quot;data-raw/noa/formr.rds&quot;</span>))) {</span>
+<span id="cb56-7"><a href="process-acnh-data.html#cb56-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unzip</span>(file_dest, <span class="at">exdir =</span> <span class="fu">here</span>(<span class="st">&quot;data-raw/noa/&quot;</span>))</span>
+<span id="cb56-8"><a href="process-acnh-data.html#cb56-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb56-9"><a href="process-acnh-data.html#cb56-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Next, we load the survey data file.</p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="process-acnh-data.html#cb57-1" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">here</span>(<span class="st">&quot;data-raw/noa/formr.rds&quot;</span>))</span></code></pre></div>
 </div>
 <div id="process-raw-files-1" class="section level2" number="3.2">
 <h2><span class="header-section-number">3.2</span> Process raw files</h2>
 <div id="clean-survey-data" class="section level3" number="3.2.1">
 <h3><span class="header-section-number">3.2.1</span> Clean survey data</h3>
+<p>Here, we clean the survey data.
+Specifically, we</p>
 <ul>
-<li>Harmonize names to other data set</li>
-<li>Create duration variable</li>
-<li>give some sensible variable names</li>
-<li>assign proper variable types</li>
+<li>Harmonize names so that they are the same as in the other data set (i.e., from PvZ)</li>
+<li>Create duration variable for game time</li>
+<li>Give some sensible variable names</li>
+<li>Assign proper variable types</li>
 </ul>
-<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="process-acnh-data.html#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Harmonize some names to PvZ names</span></span>
-<span id="cb56-2"><a href="process-acnh-data.html#cb56-2" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
-<span id="cb56-3"><a href="process-acnh-data.html#cb56-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
-<span id="cb56-4"><a href="process-acnh-data.html#cb56-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">gender =</span> sex,</span>
-<span id="cb56-5"><a href="process-acnh-data.html#cb56-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">gender_other =</span> sex_other,</span>
-<span id="cb56-6"><a href="process-acnh-data.html#cb56-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">player_id =</span> code</span>
-<span id="cb56-7"><a href="process-acnh-data.html#cb56-7" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb56-8"><a href="process-acnh-data.html#cb56-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb56-9"><a href="process-acnh-data.html#cb56-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Duration of survey</span></span>
-<span id="cb56-10"><a href="process-acnh-data.html#cb56-10" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
-<span id="cb56-11"><a href="process-acnh-data.html#cb56-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb56-12"><a href="process-acnh-data.html#cb56-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">survey_duration =</span> ended<span class="sc">-</span>created</span>
-<span id="cb56-13"><a href="process-acnh-data.html#cb56-13" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb56-14"><a href="process-acnh-data.html#cb56-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Create variables for straightliners by checking if variance within a block of questions is zero</span></span>
-<span id="cb56-15"><a href="process-acnh-data.html#cb56-15" aria-hidden="true" tabindex="-1"></a>ac<span class="sc">$</span>straightliner_spane <span class="ot">&lt;-</span> <span class="fu">apply</span>(</span>
-<span id="cb56-16"><a href="process-acnh-data.html#cb56-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(ac, <span class="fu">starts_with</span>(<span class="st">&quot;spane_&quot;</span>) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">starts_with</span>(<span class="st">&quot;spane_acnh&quot;</span>)), </span>
-<span id="cb56-17"><a href="process-acnh-data.html#cb56-17" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1</span>, sd, <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
-<span id="cb56-18"><a href="process-acnh-data.html#cb56-18" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb56-19"><a href="process-acnh-data.html#cb56-19" aria-hidden="true" tabindex="-1"></a>ac<span class="sc">$</span>straightliner_spane <span class="ot">&lt;-</span> ac<span class="sc">$</span>straightliner_spane<span class="sc">==</span><span class="dv">0</span></span>
-<span id="cb56-20"><a href="process-acnh-data.html#cb56-20" aria-hidden="true" tabindex="-1"></a>ac<span class="sc">$</span>straightliner_motivations <span class="ot">&lt;-</span> <span class="fu">apply</span>(</span>
-<span id="cb56-21"><a href="process-acnh-data.html#cb56-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
-<span id="cb56-22"><a href="process-acnh-data.html#cb56-22" aria-hidden="true" tabindex="-1"></a>    ac, </span>
-<span id="cb56-23"><a href="process-acnh-data.html#cb56-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">starts_with</span>(<span class="st">&quot;autonomy_&quot;</span>), </span>
-<span id="cb56-24"><a href="process-acnh-data.html#cb56-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">starts_with</span>(<span class="st">&quot;competence_&quot;</span>), </span>
-<span id="cb56-25"><a href="process-acnh-data.html#cb56-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">starts_with</span>(<span class="st">&quot;related_&quot;</span>), </span>
-<span id="cb56-26"><a href="process-acnh-data.html#cb56-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">starts_with</span>(<span class="st">&quot;enjoymen_&quot;</span>), </span>
-<span id="cb56-27"><a href="process-acnh-data.html#cb56-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">starts_with</span>(<span class="st">&quot;extrinsic_&quot;</span>)</span>
-<span id="cb56-28"><a href="process-acnh-data.html#cb56-28" aria-hidden="true" tabindex="-1"></a>  ), </span>
-<span id="cb56-29"><a href="process-acnh-data.html#cb56-29" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1</span>, sd, <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
-<span id="cb56-30"><a href="process-acnh-data.html#cb56-30" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb56-31"><a href="process-acnh-data.html#cb56-31" aria-hidden="true" tabindex="-1"></a>ac<span class="sc">$</span>straightliner_motivations <span class="ot">&lt;-</span> ac<span class="sc">$</span>straightliner_motivations<span class="sc">==</span><span class="dv">0</span></span>
-<span id="cb56-32"><a href="process-acnh-data.html#cb56-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb56-33"><a href="process-acnh-data.html#cb56-33" aria-hidden="true" tabindex="-1"></a><span class="co"># These are needed as factors</span></span>
-<span id="cb56-34"><a href="process-acnh-data.html#cb56-34" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
-<span id="cb56-35"><a href="process-acnh-data.html#cb56-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(gender, played), as_factor))</span>
-<span id="cb56-36"><a href="process-acnh-data.html#cb56-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb56-37"><a href="process-acnh-data.html#cb56-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Reverse scored items</span></span>
-<span id="cb56-38"><a href="process-acnh-data.html#cb56-38" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
-<span id="cb56-39"><a href="process-acnh-data.html#cb56-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb56-40"><a href="process-acnh-data.html#cb56-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">across</span>(</span>
-<span id="cb56-41"><a href="process-acnh-data.html#cb56-41" aria-hidden="true" tabindex="-1"></a>      <span class="fu">c</span>(</span>
-<span id="cb56-42"><a href="process-acnh-data.html#cb56-42" aria-hidden="true" tabindex="-1"></a>        related_not_close,</span>
-<span id="cb56-43"><a href="process-acnh-data.html#cb56-43" aria-hidden="true" tabindex="-1"></a>        enjoyment_attention,</span>
-<span id="cb56-44"><a href="process-acnh-data.html#cb56-44" aria-hidden="true" tabindex="-1"></a>        enjoymen_boring</span>
-<span id="cb56-45"><a href="process-acnh-data.html#cb56-45" aria-hidden="true" tabindex="-1"></a>      ),</span>
-<span id="cb56-46"><a href="process-acnh-data.html#cb56-46" aria-hidden="true" tabindex="-1"></a>      <span class="sc">~</span> <span class="dv">8</span> <span class="sc">-</span> .x</span>
-<span id="cb56-47"><a href="process-acnh-data.html#cb56-47" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb56-48"><a href="process-acnh-data.html#cb56-48" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
-<p>Next, let’s create mean indices for the scales.
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="process-acnh-data.html#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Harmonize some names to PvZ names</span></span>
+<span id="cb58-2"><a href="process-acnh-data.html#cb58-2" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
+<span id="cb58-3"><a href="process-acnh-data.html#cb58-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb58-4"><a href="process-acnh-data.html#cb58-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">gender =</span> sex,</span>
+<span id="cb58-5"><a href="process-acnh-data.html#cb58-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">gender_other =</span> sex_other,</span>
+<span id="cb58-6"><a href="process-acnh-data.html#cb58-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">player_id =</span> code</span>
+<span id="cb58-7"><a href="process-acnh-data.html#cb58-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb58-8"><a href="process-acnh-data.html#cb58-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-9"><a href="process-acnh-data.html#cb58-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Duration of survey</span></span>
+<span id="cb58-10"><a href="process-acnh-data.html#cb58-10" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
+<span id="cb58-11"><a href="process-acnh-data.html#cb58-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb58-12"><a href="process-acnh-data.html#cb58-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">survey_duration =</span> ended<span class="sc">-</span>created</span>
+<span id="cb58-13"><a href="process-acnh-data.html#cb58-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb58-14"><a href="process-acnh-data.html#cb58-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Create variables for straightliners by checking if variance within a block of questions is zero</span></span>
+<span id="cb58-15"><a href="process-acnh-data.html#cb58-15" aria-hidden="true" tabindex="-1"></a>ac<span class="sc">$</span>straightliner_spane <span class="ot">&lt;-</span> <span class="fu">apply</span>(</span>
+<span id="cb58-16"><a href="process-acnh-data.html#cb58-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(ac, <span class="fu">starts_with</span>(<span class="st">&quot;spane_&quot;</span>) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">starts_with</span>(<span class="st">&quot;spane_acnh&quot;</span>)), </span>
+<span id="cb58-17"><a href="process-acnh-data.html#cb58-17" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1</span>, sd, <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb58-18"><a href="process-acnh-data.html#cb58-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb58-19"><a href="process-acnh-data.html#cb58-19" aria-hidden="true" tabindex="-1"></a>ac<span class="sc">$</span>straightliner_spane <span class="ot">&lt;-</span> ac<span class="sc">$</span>straightliner_spane<span class="sc">==</span><span class="dv">0</span></span>
+<span id="cb58-20"><a href="process-acnh-data.html#cb58-20" aria-hidden="true" tabindex="-1"></a>ac<span class="sc">$</span>straightliner_motivations <span class="ot">&lt;-</span> <span class="fu">apply</span>(</span>
+<span id="cb58-21"><a href="process-acnh-data.html#cb58-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb58-22"><a href="process-acnh-data.html#cb58-22" aria-hidden="true" tabindex="-1"></a>    ac, </span>
+<span id="cb58-23"><a href="process-acnh-data.html#cb58-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">starts_with</span>(<span class="st">&quot;autonomy_&quot;</span>), </span>
+<span id="cb58-24"><a href="process-acnh-data.html#cb58-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">starts_with</span>(<span class="st">&quot;competence_&quot;</span>), </span>
+<span id="cb58-25"><a href="process-acnh-data.html#cb58-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">starts_with</span>(<span class="st">&quot;related_&quot;</span>), </span>
+<span id="cb58-26"><a href="process-acnh-data.html#cb58-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">starts_with</span>(<span class="st">&quot;enjoymen_&quot;</span>), </span>
+<span id="cb58-27"><a href="process-acnh-data.html#cb58-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">starts_with</span>(<span class="st">&quot;extrinsic_&quot;</span>)</span>
+<span id="cb58-28"><a href="process-acnh-data.html#cb58-28" aria-hidden="true" tabindex="-1"></a>  ), </span>
+<span id="cb58-29"><a href="process-acnh-data.html#cb58-29" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1</span>, sd, <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb58-30"><a href="process-acnh-data.html#cb58-30" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb58-31"><a href="process-acnh-data.html#cb58-31" aria-hidden="true" tabindex="-1"></a>ac<span class="sc">$</span>straightliner_motivations <span class="ot">&lt;-</span> ac<span class="sc">$</span>straightliner_motivations<span class="sc">==</span><span class="dv">0</span></span>
+<span id="cb58-32"><a href="process-acnh-data.html#cb58-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-33"><a href="process-acnh-data.html#cb58-33" aria-hidden="true" tabindex="-1"></a><span class="co"># These are needed as factors</span></span>
+<span id="cb58-34"><a href="process-acnh-data.html#cb58-34" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
+<span id="cb58-35"><a href="process-acnh-data.html#cb58-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(gender, played), as_factor))</span>
+<span id="cb58-36"><a href="process-acnh-data.html#cb58-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-37"><a href="process-acnh-data.html#cb58-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Reverse scored items</span></span>
+<span id="cb58-38"><a href="process-acnh-data.html#cb58-38" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
+<span id="cb58-39"><a href="process-acnh-data.html#cb58-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb58-40"><a href="process-acnh-data.html#cb58-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">across</span>(</span>
+<span id="cb58-41"><a href="process-acnh-data.html#cb58-41" aria-hidden="true" tabindex="-1"></a>      <span class="fu">c</span>(</span>
+<span id="cb58-42"><a href="process-acnh-data.html#cb58-42" aria-hidden="true" tabindex="-1"></a>        related_not_close,</span>
+<span id="cb58-43"><a href="process-acnh-data.html#cb58-43" aria-hidden="true" tabindex="-1"></a>        enjoyment_attention,</span>
+<span id="cb58-44"><a href="process-acnh-data.html#cb58-44" aria-hidden="true" tabindex="-1"></a>        enjoymen_boring</span>
+<span id="cb58-45"><a href="process-acnh-data.html#cb58-45" aria-hidden="true" tabindex="-1"></a>      ),</span>
+<span id="cb58-46"><a href="process-acnh-data.html#cb58-46" aria-hidden="true" tabindex="-1"></a>      <span class="sc">~</span> <span class="dv">8</span> <span class="sc">-</span> .x</span>
+<span id="cb58-47"><a href="process-acnh-data.html#cb58-47" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb58-48"><a href="process-acnh-data.html#cb58-48" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
+<p>Next, let’s create mean indices for the scales like we did before.
 SPANE has positive affect, negative affect, and an affect balance score (subtract negative from positive).</p>
-<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="process-acnh-data.html#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Need to rename SPANE item so it doesnt become confused with scale score name</span></span>
-<span id="cb57-2"><a href="process-acnh-data.html#cb57-2" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> <span class="fu">rename</span>(</span>
-<span id="cb57-3"><a href="process-acnh-data.html#cb57-3" aria-hidden="true" tabindex="-1"></a>  ac, </span>
-<span id="cb57-4"><a href="process-acnh-data.html#cb57-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">spane_positiveItem =</span> spane_positive,</span>
-<span id="cb57-5"><a href="process-acnh-data.html#cb57-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">spane_negativeItem =</span> spane_negative</span>
-<span id="cb57-6"><a href="process-acnh-data.html#cb57-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb57-7"><a href="process-acnh-data.html#cb57-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb57-8"><a href="process-acnh-data.html#cb57-8" aria-hidden="true" tabindex="-1"></a><span class="co"># General SPANE</span></span>
-<span id="cb57-9"><a href="process-acnh-data.html#cb57-9" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
-<span id="cb57-10"><a href="process-acnh-data.html#cb57-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb57-11"><a href="process-acnh-data.html#cb57-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">spane_positive =</span> <span class="fu">rowMeans</span>(</span>
-<span id="cb57-12"><a href="process-acnh-data.html#cb57-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(</span>
-<span id="cb57-13"><a href="process-acnh-data.html#cb57-13" aria-hidden="true" tabindex="-1"></a>        .,</span>
-<span id="cb57-14"><a href="process-acnh-data.html#cb57-14" aria-hidden="true" tabindex="-1"></a>        spane_positiveItem,</span>
-<span id="cb57-15"><a href="process-acnh-data.html#cb57-15" aria-hidden="true" tabindex="-1"></a>        spane_good,</span>
-<span id="cb57-16"><a href="process-acnh-data.html#cb57-16" aria-hidden="true" tabindex="-1"></a>        spane_pleasant,</span>
-<span id="cb57-17"><a href="process-acnh-data.html#cb57-17" aria-hidden="true" tabindex="-1"></a>        spane_happy,</span>
-<span id="cb57-18"><a href="process-acnh-data.html#cb57-18" aria-hidden="true" tabindex="-1"></a>        spane_joyful,</span>
-<span id="cb57-19"><a href="process-acnh-data.html#cb57-19" aria-hidden="true" tabindex="-1"></a>        spane_contented</span>
-<span id="cb57-20"><a href="process-acnh-data.html#cb57-20" aria-hidden="true" tabindex="-1"></a>      ),</span>
-<span id="cb57-21"><a href="process-acnh-data.html#cb57-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
-<span id="cb57-22"><a href="process-acnh-data.html#cb57-22" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb57-23"><a href="process-acnh-data.html#cb57-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">spane_negative =</span> <span class="fu">rowMeans</span>(</span>
-<span id="cb57-24"><a href="process-acnh-data.html#cb57-24" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(</span>
-<span id="cb57-25"><a href="process-acnh-data.html#cb57-25" aria-hidden="true" tabindex="-1"></a>        .,</span>
-<span id="cb57-26"><a href="process-acnh-data.html#cb57-26" aria-hidden="true" tabindex="-1"></a>        spane_negativeItem,</span>
-<span id="cb57-27"><a href="process-acnh-data.html#cb57-27" aria-hidden="true" tabindex="-1"></a>        spane_bad,</span>
-<span id="cb57-28"><a href="process-acnh-data.html#cb57-28" aria-hidden="true" tabindex="-1"></a>        spane_unpleasant,</span>
-<span id="cb57-29"><a href="process-acnh-data.html#cb57-29" aria-hidden="true" tabindex="-1"></a>        spane_sad,</span>
-<span id="cb57-30"><a href="process-acnh-data.html#cb57-30" aria-hidden="true" tabindex="-1"></a>        spane_afraid,</span>
-<span id="cb57-31"><a href="process-acnh-data.html#cb57-31" aria-hidden="true" tabindex="-1"></a>        spane_angry</span>
-<span id="cb57-32"><a href="process-acnh-data.html#cb57-32" aria-hidden="true" tabindex="-1"></a>      ),</span>
-<span id="cb57-33"><a href="process-acnh-data.html#cb57-33" aria-hidden="true" tabindex="-1"></a>      <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
-<span id="cb57-34"><a href="process-acnh-data.html#cb57-34" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb57-35"><a href="process-acnh-data.html#cb57-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">spane_balance =</span> spane_positive <span class="sc">-</span> spane_negative</span>
-<span id="cb57-36"><a href="process-acnh-data.html#cb57-36" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb57-37"><a href="process-acnh-data.html#cb57-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb57-38"><a href="process-acnh-data.html#cb57-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Motivations</span></span>
-<span id="cb57-39"><a href="process-acnh-data.html#cb57-39" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
-<span id="cb57-40"><a href="process-acnh-data.html#cb57-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb57-41"><a href="process-acnh-data.html#cb57-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">autonomy =</span> <span class="fu">rowMeans</span>(</span>
-<span id="cb57-42"><a href="process-acnh-data.html#cb57-42" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(., <span class="fu">starts_with</span>(<span class="st">&quot;autonomy&quot;</span>)), <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
-<span id="cb57-43"><a href="process-acnh-data.html#cb57-43" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb57-44"><a href="process-acnh-data.html#cb57-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">competence =</span> <span class="fu">rowMeans</span>(</span>
-<span id="cb57-45"><a href="process-acnh-data.html#cb57-45" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(., <span class="fu">starts_with</span>(<span class="st">&quot;competence&quot;</span>)), <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
-<span id="cb57-46"><a href="process-acnh-data.html#cb57-46" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb57-47"><a href="process-acnh-data.html#cb57-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">relatedness =</span> <span class="fu">rowMeans</span>(</span>
-<span id="cb57-48"><a href="process-acnh-data.html#cb57-48" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(., <span class="fu">starts_with</span>(<span class="st">&quot;related&quot;</span>)), <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
-<span id="cb57-49"><a href="process-acnh-data.html#cb57-49" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb57-50"><a href="process-acnh-data.html#cb57-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">enjoyment =</span> <span class="fu">rowMeans</span>(</span>
-<span id="cb57-51"><a href="process-acnh-data.html#cb57-51" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(., <span class="fu">starts_with</span>(<span class="st">&quot;enjoymen&quot;</span>)), <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
-<span id="cb57-52"><a href="process-acnh-data.html#cb57-52" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb57-53"><a href="process-acnh-data.html#cb57-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">extrinsic =</span> <span class="fu">rowMeans</span>(</span>
-<span id="cb57-54"><a href="process-acnh-data.html#cb57-54" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(., <span class="fu">starts_with</span>(<span class="st">&quot;extrinsic&quot;</span>)), <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
-<span id="cb57-55"><a href="process-acnh-data.html#cb57-55" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb57-56"><a href="process-acnh-data.html#cb57-56" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb57-57"><a href="process-acnh-data.html#cb57-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb57-58"><a href="process-acnh-data.html#cb57-58" aria-hidden="true" tabindex="-1"></a><span class="co"># SPANE because of playing AC:NH</span></span>
-<span id="cb57-59"><a href="process-acnh-data.html#cb57-59" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
-<span id="cb57-60"><a href="process-acnh-data.html#cb57-60" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb57-61"><a href="process-acnh-data.html#cb57-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">spane_game_positive =</span> <span class="fu">rowMeans</span>(</span>
-<span id="cb57-62"><a href="process-acnh-data.html#cb57-62" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(</span>
-<span id="cb57-63"><a href="process-acnh-data.html#cb57-63" aria-hidden="true" tabindex="-1"></a>        .,</span>
-<span id="cb57-64"><a href="process-acnh-data.html#cb57-64" aria-hidden="true" tabindex="-1"></a>        spane_acnh_positive,</span>
-<span id="cb57-65"><a href="process-acnh-data.html#cb57-65" aria-hidden="true" tabindex="-1"></a>        spane_acnh_good,</span>
-<span id="cb57-66"><a href="process-acnh-data.html#cb57-66" aria-hidden="true" tabindex="-1"></a>        spane_acnh_pleasant,</span>
-<span id="cb57-67"><a href="process-acnh-data.html#cb57-67" aria-hidden="true" tabindex="-1"></a>        spane_acnh_happy,</span>
-<span id="cb57-68"><a href="process-acnh-data.html#cb57-68" aria-hidden="true" tabindex="-1"></a>        spane_acnh_joyful,</span>
-<span id="cb57-69"><a href="process-acnh-data.html#cb57-69" aria-hidden="true" tabindex="-1"></a>        spane_acnh_contented</span>
-<span id="cb57-70"><a href="process-acnh-data.html#cb57-70" aria-hidden="true" tabindex="-1"></a>      ),</span>
-<span id="cb57-71"><a href="process-acnh-data.html#cb57-71" aria-hidden="true" tabindex="-1"></a>      <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
-<span id="cb57-72"><a href="process-acnh-data.html#cb57-72" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb57-73"><a href="process-acnh-data.html#cb57-73" aria-hidden="true" tabindex="-1"></a>    <span class="at">spane_game_negative =</span> <span class="fu">rowMeans</span>(</span>
-<span id="cb57-74"><a href="process-acnh-data.html#cb57-74" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(</span>
-<span id="cb57-75"><a href="process-acnh-data.html#cb57-75" aria-hidden="true" tabindex="-1"></a>        .,</span>
-<span id="cb57-76"><a href="process-acnh-data.html#cb57-76" aria-hidden="true" tabindex="-1"></a>        spane_acnh_negative,</span>
-<span id="cb57-77"><a href="process-acnh-data.html#cb57-77" aria-hidden="true" tabindex="-1"></a>        spane_acnh_bad,</span>
-<span id="cb57-78"><a href="process-acnh-data.html#cb57-78" aria-hidden="true" tabindex="-1"></a>        spane_acnh_unpleasant,</span>
-<span id="cb57-79"><a href="process-acnh-data.html#cb57-79" aria-hidden="true" tabindex="-1"></a>        spane_acnh_sad,</span>
-<span id="cb57-80"><a href="process-acnh-data.html#cb57-80" aria-hidden="true" tabindex="-1"></a>        spane_acnh_afraid,</span>
-<span id="cb57-81"><a href="process-acnh-data.html#cb57-81" aria-hidden="true" tabindex="-1"></a>        spane_acnh_angry</span>
-<span id="cb57-82"><a href="process-acnh-data.html#cb57-82" aria-hidden="true" tabindex="-1"></a>      ),</span>
-<span id="cb57-83"><a href="process-acnh-data.html#cb57-83" aria-hidden="true" tabindex="-1"></a>      <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
-<span id="cb57-84"><a href="process-acnh-data.html#cb57-84" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb57-85"><a href="process-acnh-data.html#cb57-85" aria-hidden="true" tabindex="-1"></a>    <span class="at">spane_game_balance =</span> spane_game_positive <span class="sc">-</span> spane_game_negative</span>
-<span id="cb57-86"><a href="process-acnh-data.html#cb57-86" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb57-87"><a href="process-acnh-data.html#cb57-87" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb57-88"><a href="process-acnh-data.html#cb57-88" aria-hidden="true" tabindex="-1"></a><span class="co"># Hours of estimated play</span></span>
-<span id="cb57-89"><a href="process-acnh-data.html#cb57-89" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
-<span id="cb57-90"><a href="process-acnh-data.html#cb57-90" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb57-91"><a href="process-acnh-data.html#cb57-91" aria-hidden="true" tabindex="-1"></a>    <span class="at">active_play =</span> active_play_hours <span class="sc">+</span> (active_play_minutes <span class="sc">/</span> <span class="dv">60</span>)</span>
-<span id="cb57-92"><a href="process-acnh-data.html#cb57-92" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
+<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="process-acnh-data.html#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Need to rename SPANE item so it doesnt become confused with scale score name</span></span>
+<span id="cb59-2"><a href="process-acnh-data.html#cb59-2" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> <span class="fu">rename</span>(</span>
+<span id="cb59-3"><a href="process-acnh-data.html#cb59-3" aria-hidden="true" tabindex="-1"></a>  ac, </span>
+<span id="cb59-4"><a href="process-acnh-data.html#cb59-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">spane_positiveItem =</span> spane_positive,</span>
+<span id="cb59-5"><a href="process-acnh-data.html#cb59-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">spane_negativeItem =</span> spane_negative</span>
+<span id="cb59-6"><a href="process-acnh-data.html#cb59-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb59-7"><a href="process-acnh-data.html#cb59-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-8"><a href="process-acnh-data.html#cb59-8" aria-hidden="true" tabindex="-1"></a><span class="co"># General SPANE</span></span>
+<span id="cb59-9"><a href="process-acnh-data.html#cb59-9" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
+<span id="cb59-10"><a href="process-acnh-data.html#cb59-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb59-11"><a href="process-acnh-data.html#cb59-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">spane_positive =</span> <span class="fu">rowMeans</span>(</span>
+<span id="cb59-12"><a href="process-acnh-data.html#cb59-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(</span>
+<span id="cb59-13"><a href="process-acnh-data.html#cb59-13" aria-hidden="true" tabindex="-1"></a>        .,</span>
+<span id="cb59-14"><a href="process-acnh-data.html#cb59-14" aria-hidden="true" tabindex="-1"></a>        spane_positiveItem,</span>
+<span id="cb59-15"><a href="process-acnh-data.html#cb59-15" aria-hidden="true" tabindex="-1"></a>        spane_good,</span>
+<span id="cb59-16"><a href="process-acnh-data.html#cb59-16" aria-hidden="true" tabindex="-1"></a>        spane_pleasant,</span>
+<span id="cb59-17"><a href="process-acnh-data.html#cb59-17" aria-hidden="true" tabindex="-1"></a>        spane_happy,</span>
+<span id="cb59-18"><a href="process-acnh-data.html#cb59-18" aria-hidden="true" tabindex="-1"></a>        spane_joyful,</span>
+<span id="cb59-19"><a href="process-acnh-data.html#cb59-19" aria-hidden="true" tabindex="-1"></a>        spane_contented</span>
+<span id="cb59-20"><a href="process-acnh-data.html#cb59-20" aria-hidden="true" tabindex="-1"></a>      ),</span>
+<span id="cb59-21"><a href="process-acnh-data.html#cb59-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb59-22"><a href="process-acnh-data.html#cb59-22" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb59-23"><a href="process-acnh-data.html#cb59-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">spane_negative =</span> <span class="fu">rowMeans</span>(</span>
+<span id="cb59-24"><a href="process-acnh-data.html#cb59-24" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(</span>
+<span id="cb59-25"><a href="process-acnh-data.html#cb59-25" aria-hidden="true" tabindex="-1"></a>        .,</span>
+<span id="cb59-26"><a href="process-acnh-data.html#cb59-26" aria-hidden="true" tabindex="-1"></a>        spane_negativeItem,</span>
+<span id="cb59-27"><a href="process-acnh-data.html#cb59-27" aria-hidden="true" tabindex="-1"></a>        spane_bad,</span>
+<span id="cb59-28"><a href="process-acnh-data.html#cb59-28" aria-hidden="true" tabindex="-1"></a>        spane_unpleasant,</span>
+<span id="cb59-29"><a href="process-acnh-data.html#cb59-29" aria-hidden="true" tabindex="-1"></a>        spane_sad,</span>
+<span id="cb59-30"><a href="process-acnh-data.html#cb59-30" aria-hidden="true" tabindex="-1"></a>        spane_afraid,</span>
+<span id="cb59-31"><a href="process-acnh-data.html#cb59-31" aria-hidden="true" tabindex="-1"></a>        spane_angry</span>
+<span id="cb59-32"><a href="process-acnh-data.html#cb59-32" aria-hidden="true" tabindex="-1"></a>      ),</span>
+<span id="cb59-33"><a href="process-acnh-data.html#cb59-33" aria-hidden="true" tabindex="-1"></a>      <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb59-34"><a href="process-acnh-data.html#cb59-34" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb59-35"><a href="process-acnh-data.html#cb59-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">spane_balance =</span> spane_positive <span class="sc">-</span> spane_negative</span>
+<span id="cb59-36"><a href="process-acnh-data.html#cb59-36" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb59-37"><a href="process-acnh-data.html#cb59-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-38"><a href="process-acnh-data.html#cb59-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Motivations</span></span>
+<span id="cb59-39"><a href="process-acnh-data.html#cb59-39" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
+<span id="cb59-40"><a href="process-acnh-data.html#cb59-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb59-41"><a href="process-acnh-data.html#cb59-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">autonomy =</span> <span class="fu">rowMeans</span>(</span>
+<span id="cb59-42"><a href="process-acnh-data.html#cb59-42" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(., <span class="fu">starts_with</span>(<span class="st">&quot;autonomy&quot;</span>)), <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb59-43"><a href="process-acnh-data.html#cb59-43" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb59-44"><a href="process-acnh-data.html#cb59-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">competence =</span> <span class="fu">rowMeans</span>(</span>
+<span id="cb59-45"><a href="process-acnh-data.html#cb59-45" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(., <span class="fu">starts_with</span>(<span class="st">&quot;competence&quot;</span>)), <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb59-46"><a href="process-acnh-data.html#cb59-46" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb59-47"><a href="process-acnh-data.html#cb59-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">relatedness =</span> <span class="fu">rowMeans</span>(</span>
+<span id="cb59-48"><a href="process-acnh-data.html#cb59-48" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(., <span class="fu">starts_with</span>(<span class="st">&quot;related&quot;</span>)), <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb59-49"><a href="process-acnh-data.html#cb59-49" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb59-50"><a href="process-acnh-data.html#cb59-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">enjoyment =</span> <span class="fu">rowMeans</span>(</span>
+<span id="cb59-51"><a href="process-acnh-data.html#cb59-51" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(., <span class="fu">starts_with</span>(<span class="st">&quot;enjoymen&quot;</span>)), <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb59-52"><a href="process-acnh-data.html#cb59-52" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb59-53"><a href="process-acnh-data.html#cb59-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">extrinsic =</span> <span class="fu">rowMeans</span>(</span>
+<span id="cb59-54"><a href="process-acnh-data.html#cb59-54" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(., <span class="fu">starts_with</span>(<span class="st">&quot;extrinsic&quot;</span>)), <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb59-55"><a href="process-acnh-data.html#cb59-55" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb59-56"><a href="process-acnh-data.html#cb59-56" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb59-57"><a href="process-acnh-data.html#cb59-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-58"><a href="process-acnh-data.html#cb59-58" aria-hidden="true" tabindex="-1"></a><span class="co"># SPANE because of playing AC:NH</span></span>
+<span id="cb59-59"><a href="process-acnh-data.html#cb59-59" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
+<span id="cb59-60"><a href="process-acnh-data.html#cb59-60" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb59-61"><a href="process-acnh-data.html#cb59-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">spane_game_positive =</span> <span class="fu">rowMeans</span>(</span>
+<span id="cb59-62"><a href="process-acnh-data.html#cb59-62" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(</span>
+<span id="cb59-63"><a href="process-acnh-data.html#cb59-63" aria-hidden="true" tabindex="-1"></a>        .,</span>
+<span id="cb59-64"><a href="process-acnh-data.html#cb59-64" aria-hidden="true" tabindex="-1"></a>        spane_acnh_positive,</span>
+<span id="cb59-65"><a href="process-acnh-data.html#cb59-65" aria-hidden="true" tabindex="-1"></a>        spane_acnh_good,</span>
+<span id="cb59-66"><a href="process-acnh-data.html#cb59-66" aria-hidden="true" tabindex="-1"></a>        spane_acnh_pleasant,</span>
+<span id="cb59-67"><a href="process-acnh-data.html#cb59-67" aria-hidden="true" tabindex="-1"></a>        spane_acnh_happy,</span>
+<span id="cb59-68"><a href="process-acnh-data.html#cb59-68" aria-hidden="true" tabindex="-1"></a>        spane_acnh_joyful,</span>
+<span id="cb59-69"><a href="process-acnh-data.html#cb59-69" aria-hidden="true" tabindex="-1"></a>        spane_acnh_contented</span>
+<span id="cb59-70"><a href="process-acnh-data.html#cb59-70" aria-hidden="true" tabindex="-1"></a>      ),</span>
+<span id="cb59-71"><a href="process-acnh-data.html#cb59-71" aria-hidden="true" tabindex="-1"></a>      <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb59-72"><a href="process-acnh-data.html#cb59-72" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb59-73"><a href="process-acnh-data.html#cb59-73" aria-hidden="true" tabindex="-1"></a>    <span class="at">spane_game_negative =</span> <span class="fu">rowMeans</span>(</span>
+<span id="cb59-74"><a href="process-acnh-data.html#cb59-74" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(</span>
+<span id="cb59-75"><a href="process-acnh-data.html#cb59-75" aria-hidden="true" tabindex="-1"></a>        .,</span>
+<span id="cb59-76"><a href="process-acnh-data.html#cb59-76" aria-hidden="true" tabindex="-1"></a>        spane_acnh_negative,</span>
+<span id="cb59-77"><a href="process-acnh-data.html#cb59-77" aria-hidden="true" tabindex="-1"></a>        spane_acnh_bad,</span>
+<span id="cb59-78"><a href="process-acnh-data.html#cb59-78" aria-hidden="true" tabindex="-1"></a>        spane_acnh_unpleasant,</span>
+<span id="cb59-79"><a href="process-acnh-data.html#cb59-79" aria-hidden="true" tabindex="-1"></a>        spane_acnh_sad,</span>
+<span id="cb59-80"><a href="process-acnh-data.html#cb59-80" aria-hidden="true" tabindex="-1"></a>        spane_acnh_afraid,</span>
+<span id="cb59-81"><a href="process-acnh-data.html#cb59-81" aria-hidden="true" tabindex="-1"></a>        spane_acnh_angry</span>
+<span id="cb59-82"><a href="process-acnh-data.html#cb59-82" aria-hidden="true" tabindex="-1"></a>      ),</span>
+<span id="cb59-83"><a href="process-acnh-data.html#cb59-83" aria-hidden="true" tabindex="-1"></a>      <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb59-84"><a href="process-acnh-data.html#cb59-84" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb59-85"><a href="process-acnh-data.html#cb59-85" aria-hidden="true" tabindex="-1"></a>    <span class="at">spane_game_balance =</span> spane_game_positive <span class="sc">-</span> spane_game_negative</span>
+<span id="cb59-86"><a href="process-acnh-data.html#cb59-86" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb59-87"><a href="process-acnh-data.html#cb59-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-88"><a href="process-acnh-data.html#cb59-88" aria-hidden="true" tabindex="-1"></a><span class="co"># Hours of estimated play</span></span>
+<span id="cb59-89"><a href="process-acnh-data.html#cb59-89" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
+<span id="cb59-90"><a href="process-acnh-data.html#cb59-90" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb59-91"><a href="process-acnh-data.html#cb59-91" aria-hidden="true" tabindex="-1"></a>    <span class="at">active_play =</span> active_play_hours <span class="sc">+</span> (active_play_minutes <span class="sc">/</span> <span class="dv">60</span>)</span>
+<span id="cb59-92"><a href="process-acnh-data.html#cb59-92" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
 </div>
 <div id="checking" class="section level3" number="3.2.2">
 <h3><span class="header-section-number">3.2.2</span> Checking</h3>
-<p>Player IDs</p>
-<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="process-acnh-data.html#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">count</span>(ac, player_id, <span class="at">sort =</span> T)</span></code></pre></div>
+<p>First, we check how many rows per player there are.</p>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="process-acnh-data.html#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">count</span>(ac, player_id, <span class="at">sort =</span> T)</span></code></pre></div>
 <pre><code>## # A tibble: 5,987 x 2
 ##    player_id              n
 ##    &lt;chr&gt;              &lt;int&gt;
@@ -477,15 +482,15 @@ SPANE has positive affect, negative affect, and an affect balance score (subtrac
 <li>No ID was captured</li>
 <li>An ID was used more than once</li>
 </ol>
-<p>For both cases, connecting to telemetry would be impossible (and wrong connections could be made in latter case), so we drop these cases</p>
-<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="process-acnh-data.html#cb60-1" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> <span class="fu">add_count</span>(ac, player_id) <span class="sc">%&gt;%</span> </span>
-<span id="cb60-2"><a href="process-acnh-data.html#cb60-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(n <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb60-3"><a href="process-acnh-data.html#cb60-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>n)</span></code></pre></div>
+<p>For both cases, connecting to telemetry would be impossible (and wrong connections could be made in latter case), so we drop these cases.</p>
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="process-acnh-data.html#cb62-1" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> <span class="fu">add_count</span>(ac, player_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb62-2"><a href="process-acnh-data.html#cb62-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(n <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb62-3"><a href="process-acnh-data.html#cb62-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>n)</span></code></pre></div>
 </div>
 <div id="telemetry" class="section level3" number="3.2.3">
 <h3><span class="header-section-number">3.2.3</span> Telemetry</h3>
 <p>This file is in the ZIP archive.</p>
-<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="process-acnh-data.html#cb61-1" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="fu">here</span>(<span class="st">&quot;data-raw/noa/telem_data (since Sep 2020).txt&quot;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="process-acnh-data.html#cb63-1" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="fu">here</span>(<span class="st">&quot;data-raw/noa/telem_data (since Sep 2020).txt&quot;</span>))</span></code></pre></div>
 <p>Column definitions:</p>
 <ul>
 <li><code>lc_recorded_at</code> = Session start date/time</li>
@@ -498,24 +503,24 @@ SPANE has positive affect, negative affect, and an affect balance score (subtrac
 <li><code>application_id_hex</code> = Game’s hashed ID</li>
 </ul>
 <p>We drop some unnecessary variables</p>
-<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="process-acnh-data.html#cb62-1" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> <span class="fu">select</span>(</span>
-<span id="cb62-2"><a href="process-acnh-data.html#cb62-2" aria-hidden="true" tabindex="-1"></a>  gt,</span>
-<span id="cb62-3"><a href="process-acnh-data.html#cb62-3" aria-hidden="true" tabindex="-1"></a>  hashed_id, </span>
-<span id="cb62-4"><a href="process-acnh-data.html#cb62-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">contains</span>(<span class="st">&quot;recorded&quot;</span>),</span>
-<span id="cb62-5"><a href="process-acnh-data.html#cb62-5" aria-hidden="true" tabindex="-1"></a>  duration</span>
-<span id="cb62-6"><a href="process-acnh-data.html#cb62-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="process-acnh-data.html#cb64-1" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> <span class="fu">select</span>(</span>
+<span id="cb64-2"><a href="process-acnh-data.html#cb64-2" aria-hidden="true" tabindex="-1"></a>  gt,</span>
+<span id="cb64-3"><a href="process-acnh-data.html#cb64-3" aria-hidden="true" tabindex="-1"></a>  hashed_id, </span>
+<span id="cb64-4"><a href="process-acnh-data.html#cb64-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">contains</span>(<span class="st">&quot;recorded&quot;</span>),</span>
+<span id="cb64-5"><a href="process-acnh-data.html#cb64-5" aria-hidden="true" tabindex="-1"></a>  duration</span>
+<span id="cb64-6"><a href="process-acnh-data.html#cb64-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 <p>Then rename</p>
-<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="process-acnh-data.html#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(gt) <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb63-2"><a href="process-acnh-data.html#cb63-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;player_id&quot;</span>, <span class="st">&quot;session_start&quot;</span>, <span class="st">&quot;session_end&quot;</span>, <span class="st">&quot;Hours&quot;</span></span>
-<span id="cb63-3"><a href="process-acnh-data.html#cb63-3" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb65"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb65-1"><a href="process-acnh-data.html#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(gt) <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb65-2"><a href="process-acnh-data.html#cb65-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;player_id&quot;</span>, <span class="st">&quot;session_start&quot;</span>, <span class="st">&quot;session_end&quot;</span>, <span class="st">&quot;Hours&quot;</span></span>
+<span id="cb65-3"><a href="process-acnh-data.html#cb65-3" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 <p>And turn duration into hours</p>
-<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="process-acnh-data.html#cb64-1" aria-hidden="true" tabindex="-1"></a>gt<span class="sc">$</span>Hours <span class="ot">&lt;-</span> gt<span class="sc">$</span>Hours<span class="sc">/</span><span class="dv">60</span><span class="sc">/</span><span class="dv">60</span></span></code></pre></div>
+<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb66-1"><a href="process-acnh-data.html#cb66-1" aria-hidden="true" tabindex="-1"></a>gt<span class="sc">$</span>Hours <span class="ot">&lt;-</span> gt<span class="sc">$</span>Hours<span class="sc">/</span><span class="dv">60</span><span class="sc">/</span><span class="dv">60</span></span></code></pre></div>
 <p>Assume that timestamps are US Pacific as this was used to report data collection dates &amp; times.</p>
-<div class="sourceCode" id="cb65"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb65-1"><a href="process-acnh-data.html#cb65-1" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> gt <span class="sc">%&gt;%</span> </span>
-<span id="cb65-2"><a href="process-acnh-data.html#cb65-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb65-3"><a href="process-acnh-data.html#cb65-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">across</span>(<span class="fu">contains</span>(<span class="st">&quot;session&quot;</span>), <span class="sc">~</span><span class="fu">mdy_hm</span>(.x, <span class="at">tz =</span> <span class="st">&quot;US/Pacific&quot;</span>))</span>
-<span id="cb65-4"><a href="process-acnh-data.html#cb65-4" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb65-5"><a href="process-acnh-data.html#cb65-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(gt)</span></code></pre></div>
+<div class="sourceCode" id="cb67"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb67-1"><a href="process-acnh-data.html#cb67-1" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> gt <span class="sc">%&gt;%</span> </span>
+<span id="cb67-2"><a href="process-acnh-data.html#cb67-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb67-3"><a href="process-acnh-data.html#cb67-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">across</span>(<span class="fu">contains</span>(<span class="st">&quot;session&quot;</span>), <span class="sc">~</span><span class="fu">mdy_hm</span>(.x, <span class="at">tz =</span> <span class="st">&quot;US/Pacific&quot;</span>))</span>
+<span id="cb67-4"><a href="process-acnh-data.html#cb67-4" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb67-5"><a href="process-acnh-data.html#cb67-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(gt)</span></code></pre></div>
 <pre><code>## Rows: 191,498
 ## Columns: 4
 ## $ player_id     &lt;chr&gt; &quot;be080cb5754884b3&quot;, &quot;35a6c680bcf65615&quot;, &quot;35a6c680bcf656…
@@ -525,74 +530,74 @@ SPANE has positive affect, negative affect, and an affect balance score (subtrac
 </div>
 <div id="clean" class="section level3" number="3.2.4">
 <h3><span class="header-section-number">3.2.4</span> Clean</h3>
-<p>We don’t need to limit to IDs who took the survey as NOA has already done that–these data only contain folks who filled survey.</p>
+<p>We don’t need to limit to IDs who took the survey as NOA has already done that–these data only contain folks who filled in the survey.</p>
 <p>We do need to limit the data to two weeks preceding the survey, and count session durations within that window. We therefore need to use the session start/end times to find out when the sessions happened.</p>
 <p>Some processing is required to do that as the times can have noise due to e.g. players’ system times being incorrectly set. Thus, many start times are the same (or even later) than the end time:</p>
-<div class="sourceCode" id="cb67"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb67-1"><a href="process-acnh-data.html#cb67-1" aria-hidden="true" tabindex="-1"></a>gt <span class="sc">%&gt;%</span> </span>
-<span id="cb67-2"><a href="process-acnh-data.html#cb67-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb67-3"><a href="process-acnh-data.html#cb67-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">later_or_same_start =</span> session_start <span class="sc">&gt;=</span> session_end</span>
-<span id="cb67-4"><a href="process-acnh-data.html#cb67-4" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb67-5"><a href="process-acnh-data.html#cb67-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tabyl</span>(later_or_same_start) <span class="sc">%&gt;%</span> </span>
-<span id="cb67-6"><a href="process-acnh-data.html#cb67-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">adorn_pct_formatting</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb69-1"><a href="process-acnh-data.html#cb69-1" aria-hidden="true" tabindex="-1"></a>gt <span class="sc">%&gt;%</span> </span>
+<span id="cb69-2"><a href="process-acnh-data.html#cb69-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb69-3"><a href="process-acnh-data.html#cb69-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">later_or_same_start =</span> session_start <span class="sc">&gt;=</span> session_end</span>
+<span id="cb69-4"><a href="process-acnh-data.html#cb69-4" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb69-5"><a href="process-acnh-data.html#cb69-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tabyl</span>(later_or_same_start) <span class="sc">%&gt;%</span> </span>
+<span id="cb69-6"><a href="process-acnh-data.html#cb69-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">adorn_pct_formatting</span>()</span></code></pre></div>
 <pre><code>##  later_or_same_start      n percent
 ##                FALSE  13112    6.8%
 ##                 TRUE 178386   93.2%</code></pre>
 <p>However, session durations are not based on the device time (session times):</p>
-<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb69-1"><a href="process-acnh-data.html#cb69-1" aria-hidden="true" tabindex="-1"></a>gt <span class="sc">%&gt;%</span> </span>
-<span id="cb69-2"><a href="process-acnh-data.html#cb69-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb69-3"><a href="process-acnh-data.html#cb69-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">duration =</span> <span class="fu">as.numeric</span>(session_end <span class="sc">-</span> session_start)<span class="sc">/</span><span class="dv">60</span><span class="sc">/</span><span class="dv">60</span></span>
-<span id="cb69-4"><a href="process-acnh-data.html#cb69-4" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb69-5"><a href="process-acnh-data.html#cb69-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">match =</span> duration<span class="sc">/</span><span class="dv">60</span><span class="sc">/</span><span class="dv">60</span><span class="sc">==</span>Hours) <span class="sc">%&gt;%</span> </span>
-<span id="cb69-6"><a href="process-acnh-data.html#cb69-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tabyl</span>(match) <span class="sc">%&gt;%</span> </span>
-<span id="cb69-7"><a href="process-acnh-data.html#cb69-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">adorn_pct_formatting</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb71-1"><a href="process-acnh-data.html#cb71-1" aria-hidden="true" tabindex="-1"></a>gt <span class="sc">%&gt;%</span> </span>
+<span id="cb71-2"><a href="process-acnh-data.html#cb71-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb71-3"><a href="process-acnh-data.html#cb71-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">duration =</span> <span class="fu">as.numeric</span>(session_end <span class="sc">-</span> session_start)<span class="sc">/</span><span class="dv">60</span><span class="sc">/</span><span class="dv">60</span></span>
+<span id="cb71-4"><a href="process-acnh-data.html#cb71-4" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb71-5"><a href="process-acnh-data.html#cb71-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">match =</span> duration<span class="sc">/</span><span class="dv">60</span><span class="sc">/</span><span class="dv">60</span><span class="sc">==</span>Hours) <span class="sc">%&gt;%</span> </span>
+<span id="cb71-6"><a href="process-acnh-data.html#cb71-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tabyl</span>(match) <span class="sc">%&gt;%</span> </span>
+<span id="cb71-7"><a href="process-acnh-data.html#cb71-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">adorn_pct_formatting</span>()</span></code></pre></div>
 <pre><code>##  match      n percent
 ##  FALSE 191494  100.0%
 ##   TRUE      4    0.0%</code></pre>
 <p>And end and start times should be within a window.</p>
-<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb71-1"><a href="process-acnh-data.html#cb71-1" aria-hidden="true" tabindex="-1"></a>tmp <span class="ot">&lt;-</span> gt <span class="sc">%&gt;%</span> </span>
-<span id="cb71-2"><a href="process-acnh-data.html#cb71-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
-<span id="cb71-3"><a href="process-acnh-data.html#cb71-3" aria-hidden="true" tabindex="-1"></a>    session_start <span class="sc">&lt;</span> <span class="fu">ymd</span>(<span class="st">&quot;2020-09-01&quot;</span>) <span class="sc">|</span></span>
-<span id="cb71-4"><a href="process-acnh-data.html#cb71-4" aria-hidden="true" tabindex="-1"></a>      session_end <span class="sc">&lt;</span> <span class="fu">ymd</span>(<span class="st">&quot;2020-09-01&quot;</span>) <span class="sc">|</span></span>
-<span id="cb71-5"><a href="process-acnh-data.html#cb71-5" aria-hidden="true" tabindex="-1"></a>      session_start <span class="sc">&gt;</span> <span class="fu">ymd</span>(<span class="st">&quot;2020-11-03&quot;</span>) <span class="sc">|</span></span>
-<span id="cb71-6"><a href="process-acnh-data.html#cb71-6" aria-hidden="true" tabindex="-1"></a>      session_end <span class="sc">&gt;</span> <span class="fu">ymd</span>(<span class="st">&quot;2020-11-03&quot;</span>) </span>
-<span id="cb71-7"><a href="process-acnh-data.html#cb71-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb71-8"><a href="process-acnh-data.html#cb71-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(session_start) <span class="sc">%&gt;%</span> </span>
-<span id="cb71-9"><a href="process-acnh-data.html#cb71-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">player_id =</span> <span class="fu">fct_inorder</span>(player_id))</span>
-<span id="cb71-10"><a href="process-acnh-data.html#cb71-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Proportion of these bad dates</span></span>
-<span id="cb71-11"><a href="process-acnh-data.html#cb71-11" aria-hidden="true" tabindex="-1"></a><span class="fu">percent</span>(<span class="fu">nrow</span>(tmp) <span class="sc">/</span> <span class="fu">nrow</span>(gt), .<span class="dv">1</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="process-acnh-data.html#cb73-1" aria-hidden="true" tabindex="-1"></a>tmp <span class="ot">&lt;-</span> gt <span class="sc">%&gt;%</span> </span>
+<span id="cb73-2"><a href="process-acnh-data.html#cb73-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
+<span id="cb73-3"><a href="process-acnh-data.html#cb73-3" aria-hidden="true" tabindex="-1"></a>    session_start <span class="sc">&lt;</span> <span class="fu">ymd</span>(<span class="st">&quot;2020-09-01&quot;</span>) <span class="sc">|</span></span>
+<span id="cb73-4"><a href="process-acnh-data.html#cb73-4" aria-hidden="true" tabindex="-1"></a>      session_end <span class="sc">&lt;</span> <span class="fu">ymd</span>(<span class="st">&quot;2020-09-01&quot;</span>) <span class="sc">|</span></span>
+<span id="cb73-5"><a href="process-acnh-data.html#cb73-5" aria-hidden="true" tabindex="-1"></a>      session_start <span class="sc">&gt;</span> <span class="fu">ymd</span>(<span class="st">&quot;2020-11-03&quot;</span>) <span class="sc">|</span></span>
+<span id="cb73-6"><a href="process-acnh-data.html#cb73-6" aria-hidden="true" tabindex="-1"></a>      session_end <span class="sc">&gt;</span> <span class="fu">ymd</span>(<span class="st">&quot;2020-11-03&quot;</span>) </span>
+<span id="cb73-7"><a href="process-acnh-data.html#cb73-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb73-8"><a href="process-acnh-data.html#cb73-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(session_start) <span class="sc">%&gt;%</span> </span>
+<span id="cb73-9"><a href="process-acnh-data.html#cb73-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">player_id =</span> <span class="fu">fct_inorder</span>(player_id))</span>
+<span id="cb73-10"><a href="process-acnh-data.html#cb73-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Proportion of these bad dates</span></span>
+<span id="cb73-11"><a href="process-acnh-data.html#cb73-11" aria-hidden="true" tabindex="-1"></a><span class="fu">percent</span>(<span class="fu">nrow</span>(tmp) <span class="sc">/</span> <span class="fu">nrow</span>(gt), .<span class="dv">1</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;3.1%&quot;</code></pre>
 <p>We filter out sessions that aren’t in the two weeks preceding each player’s survey. Note not all survey respondents have telemetry so the resulting table will be longer</p>
-<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="process-acnh-data.html#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get survey times from survey table</span></span>
-<span id="cb73-2"><a href="process-acnh-data.html#cb73-2" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> <span class="fu">select</span>(ac, player_id, created) <span class="sc">%&gt;%</span> </span>
-<span id="cb73-3"><a href="process-acnh-data.html#cb73-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(gt) </span>
-<span id="cb73-4"><a href="process-acnh-data.html#cb73-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb73-5"><a href="process-acnh-data.html#cb73-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Limit telemetry sessions to appropriate time window</span></span>
-<span id="cb73-6"><a href="process-acnh-data.html#cb73-6" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> gt <span class="sc">%&gt;%</span>   </span>
-<span id="cb73-7"><a href="process-acnh-data.html#cb73-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(session_start <span class="sc">&gt;=</span> (created <span class="sc">-</span> <span class="fu">days</span>(<span class="dv">14</span>))) <span class="sc">%&gt;%</span> </span>
-<span id="cb73-8"><a href="process-acnh-data.html#cb73-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(session_start <span class="sc">&lt;</span> created) <span class="sc">%&gt;%</span> </span>
-<span id="cb73-9"><a href="process-acnh-data.html#cb73-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(session_end <span class="sc">&lt;</span> created)</span></code></pre></div>
-<p>We then summarize to total hours per person</p>
-<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb74-1"><a href="process-acnh-data.html#cb74-1" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> gt <span class="sc">%&gt;%</span> </span>
-<span id="cb74-2"><a href="process-acnh-data.html#cb74-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(player_id) <span class="sc">%&gt;%</span> </span>
-<span id="cb74-3"><a href="process-acnh-data.html#cb74-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb74-4"><a href="process-acnh-data.html#cb74-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Hours =</span> <span class="fu">sum</span>(Hours), </span>
-<span id="cb74-5"><a href="process-acnh-data.html#cb74-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_sessions =</span> <span class="fu">n</span>()</span>
-<span id="cb74-6"><a href="process-acnh-data.html#cb74-6" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
+<div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb75-1"><a href="process-acnh-data.html#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get survey times from survey table</span></span>
+<span id="cb75-2"><a href="process-acnh-data.html#cb75-2" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> <span class="fu">select</span>(ac, player_id, created) <span class="sc">%&gt;%</span> </span>
+<span id="cb75-3"><a href="process-acnh-data.html#cb75-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(gt) </span>
+<span id="cb75-4"><a href="process-acnh-data.html#cb75-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-5"><a href="process-acnh-data.html#cb75-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Limit telemetry sessions to appropriate time window</span></span>
+<span id="cb75-6"><a href="process-acnh-data.html#cb75-6" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> gt <span class="sc">%&gt;%</span>   </span>
+<span id="cb75-7"><a href="process-acnh-data.html#cb75-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(session_start <span class="sc">&gt;=</span> (created <span class="sc">-</span> <span class="fu">days</span>(<span class="dv">14</span>))) <span class="sc">%&gt;%</span> </span>
+<span id="cb75-8"><a href="process-acnh-data.html#cb75-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(session_start <span class="sc">&lt;</span> created) <span class="sc">%&gt;%</span> </span>
+<span id="cb75-9"><a href="process-acnh-data.html#cb75-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(session_end <span class="sc">&lt;</span> created)</span></code></pre></div>
+<p>We then summarize to total hours per person.</p>
+<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb76-1"><a href="process-acnh-data.html#cb76-1" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> gt <span class="sc">%&gt;%</span> </span>
+<span id="cb76-2"><a href="process-acnh-data.html#cb76-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(player_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb76-3"><a href="process-acnh-data.html#cb76-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb76-4"><a href="process-acnh-data.html#cb76-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Hours =</span> <span class="fu">sum</span>(Hours), </span>
+<span id="cb76-5"><a href="process-acnh-data.html#cb76-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_sessions =</span> <span class="fu">n</span>()</span>
+<span id="cb76-6"><a href="process-acnh-data.html#cb76-6" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
 </div>
 <div id="join-survey-and-telemetry" class="section level3" number="3.2.5">
 <h3><span class="header-section-number">3.2.5</span> Join survey and telemetry</h3>
-<div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb75-1"><a href="process-acnh-data.html#cb75-1" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> <span class="fu">left_join</span>(ac, gt)</span></code></pre></div>
+<div class="sourceCode" id="cb77"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb77-1"><a href="process-acnh-data.html#cb77-1" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> <span class="fu">left_join</span>(ac, gt)</span></code></pre></div>
 </div>
 <div id="checking-1" class="section level3" number="3.2.6">
 <h3><span class="header-section-number">3.2.6</span> Checking</h3>
 <p>People reported if they played AC:NH in the past 14 days. Lets summarise the players, number of players with telemetry, and mean hours, for these two groups</p>
-<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb76-1"><a href="process-acnh-data.html#cb76-1" aria-hidden="true" tabindex="-1"></a>ac <span class="sc">%&gt;%</span> </span>
-<span id="cb76-2"><a href="process-acnh-data.html#cb76-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(played) <span class="sc">%&gt;%</span> </span>
-<span id="cb76-3"><a href="process-acnh-data.html#cb76-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb76-4"><a href="process-acnh-data.html#cb76-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Players =</span> <span class="fu">n</span>(),</span>
-<span id="cb76-5"><a href="process-acnh-data.html#cb76-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Missing_Hours =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(Hours)),</span>
-<span id="cb76-6"><a href="process-acnh-data.html#cb76-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">Mean_Hours =</span> <span class="fu">mean</span>(Hours, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb76-7"><a href="process-acnh-data.html#cb76-7" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
+<div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb78-1"><a href="process-acnh-data.html#cb78-1" aria-hidden="true" tabindex="-1"></a>ac <span class="sc">%&gt;%</span> </span>
+<span id="cb78-2"><a href="process-acnh-data.html#cb78-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(played) <span class="sc">%&gt;%</span> </span>
+<span id="cb78-3"><a href="process-acnh-data.html#cb78-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb78-4"><a href="process-acnh-data.html#cb78-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Players =</span> <span class="fu">n</span>(),</span>
+<span id="cb78-5"><a href="process-acnh-data.html#cb78-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Missing_Hours =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(Hours)),</span>
+<span id="cb78-6"><a href="process-acnh-data.html#cb78-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">Mean_Hours =</span> <span class="fu">mean</span>(Hours, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb78-7"><a href="process-acnh-data.html#cb78-7" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
 <pre><code>## # A tibble: 3 x 4
 ##   played                                        Players Missing_Hours Mean_Hours
 ##   &lt;fct&gt;                                           &lt;int&gt;         &lt;int&gt;      &lt;dbl&gt;
@@ -603,20 +608,20 @@ SPANE has positive affect, negative affect, and an affect balance score (subtrac
 </div>
 <div id="exclusions-1" class="section level2" number="3.3">
 <h2><span class="header-section-number">3.3</span> Exclusions</h2>
-<p>First save a file with no exclusions</p>
-<div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb78-1"><a href="process-acnh-data.html#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(ac, <span class="fu">here</span>(<span class="st">&quot;data/noa/ac.rds&quot;</span>))</span></code></pre></div>
+<p>First save a file with no exclusions.</p>
+<div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb80-1"><a href="process-acnh-data.html#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(ac, <span class="fu">here</span>(<span class="st">&quot;data/noa/ac.rds&quot;</span>))</span></code></pre></div>
 <div id="straightliners-1" class="section level3" number="3.3.1">
 <h3><span class="header-section-number">3.3.1</span> Straightliners</h3>
 <p>We take out all individuals who straightlined (gave the same response to every item) through SPANE and motivations scales. (If only SPANE items existed, then we didn’t exclude.)</p>
-<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb79-1"><a href="process-acnh-data.html#cb79-1" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
-<span id="cb79-2"><a href="process-acnh-data.html#cb79-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb79-3"><a href="process-acnh-data.html#cb79-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">straightliner =</span> </span>
-<span id="cb79-4"><a href="process-acnh-data.html#cb79-4" aria-hidden="true" tabindex="-1"></a>      straightliner_spane <span class="sc">&amp;</span> straightliner_motivations</span>
-<span id="cb79-5"><a href="process-acnh-data.html#cb79-5" aria-hidden="true" tabindex="-1"></a>  ) </span>
-<span id="cb79-6"><a href="process-acnh-data.html#cb79-6" aria-hidden="true" tabindex="-1"></a>ac <span class="sc">%&gt;%</span>   </span>
-<span id="cb79-7"><a href="process-acnh-data.html#cb79-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">contains</span>(<span class="st">&quot;straight&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb79-8"><a href="process-acnh-data.html#cb79-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by_all</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb79-9"><a href="process-acnh-data.html#cb79-9" aria-hidden="true" tabindex="-1"></a>  count</span></code></pre></div>
+<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="process-acnh-data.html#cb81-1" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
+<span id="cb81-2"><a href="process-acnh-data.html#cb81-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb81-3"><a href="process-acnh-data.html#cb81-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">straightliner =</span> </span>
+<span id="cb81-4"><a href="process-acnh-data.html#cb81-4" aria-hidden="true" tabindex="-1"></a>      straightliner_spane <span class="sc">&amp;</span> straightliner_motivations</span>
+<span id="cb81-5"><a href="process-acnh-data.html#cb81-5" aria-hidden="true" tabindex="-1"></a>  ) </span>
+<span id="cb81-6"><a href="process-acnh-data.html#cb81-6" aria-hidden="true" tabindex="-1"></a>ac <span class="sc">%&gt;%</span>   </span>
+<span id="cb81-7"><a href="process-acnh-data.html#cb81-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">contains</span>(<span class="st">&quot;straight&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb81-8"><a href="process-acnh-data.html#cb81-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by_all</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb81-9"><a href="process-acnh-data.html#cb81-9" aria-hidden="true" tabindex="-1"></a>  count</span></code></pre></div>
 <pre><code>## # A tibble: 7 x 4
 ## # Groups:   straightliner_spane, straightliner_motivations, straightliner [7]
 ##   straightliner_spane straightliner_motivations straightliner     n
@@ -628,39 +633,39 @@ SPANE has positive affect, negative affect, and an affect balance score (subtrac
 ## 5 TRUE                TRUE                      TRUE              8
 ## 6 TRUE                NA                        NA               19
 ## 7 NA                  NA                        NA              440</code></pre>
-<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="process-acnh-data.html#cb81-1" aria-hidden="true" tabindex="-1"></a>ac <span class="sc">%&gt;%</span>   </span>
-<span id="cb81-2"><a href="process-acnh-data.html#cb81-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tabyl</span>(straightliner) <span class="sc">%&gt;%</span> </span>
-<span id="cb81-3"><a href="process-acnh-data.html#cb81-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">adorn_pct_formatting</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb83"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb83-1"><a href="process-acnh-data.html#cb83-1" aria-hidden="true" tabindex="-1"></a>ac <span class="sc">%&gt;%</span>   </span>
+<span id="cb83-2"><a href="process-acnh-data.html#cb83-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tabyl</span>(straightliner) <span class="sc">%&gt;%</span> </span>
+<span id="cb83-3"><a href="process-acnh-data.html#cb83-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">adorn_pct_formatting</span>()</span></code></pre></div>
 <pre><code>##  straightliner    n percent valid_percent
 ##          FALSE 5508   92.2%         99.9%
 ##           TRUE    8    0.1%          0.1%
 ##             NA  459    7.7%             -</code></pre>
-<div class="sourceCode" id="cb83"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb83-1"><a href="process-acnh-data.html#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="co"># filter() would also exclude NAs</span></span>
-<span id="cb83-2"><a href="process-acnh-data.html#cb83-2" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> <span class="fu">filter</span>(ac, <span class="sc">!</span>straightliner <span class="sc">|</span> <span class="fu">is.na</span>(straightliner))</span></code></pre></div>
+<div class="sourceCode" id="cb85"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb85-1"><a href="process-acnh-data.html#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="co"># filter() would also exclude NAs</span></span>
+<span id="cb85-2"><a href="process-acnh-data.html#cb85-2" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> <span class="fu">filter</span>(ac, <span class="sc">!</span>straightliner <span class="sc">|</span> <span class="fu">is.na</span>(straightliner))</span></code></pre></div>
 </div>
 <div id="outliers-1" class="section level3" number="3.3.2">
 <h3><span class="header-section-number">3.3.2</span> Outliers</h3>
 <p>Potential outliers. We replace all values that are more than 6SD away from the variable’s mean with NAs. As a consequence, individuals are excluded on an analysis-by-analysis case (so if has bad data relevant to that analysis or figure).</p>
 <p>This is only done for a subset of variables (relavant to analyses; see below)</p>
-<div class="sourceCode" id="cb84"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb84-1"><a href="process-acnh-data.html#cb84-1" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
-<span id="cb84-2"><a href="process-acnh-data.html#cb84-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># These variables will be affected</span></span>
-<span id="cb84-3"><a href="process-acnh-data.html#cb84-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
-<span id="cb84-4"><a href="process-acnh-data.html#cb84-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(</span>
-<span id="cb84-5"><a href="process-acnh-data.html#cb84-5" aria-hidden="true" tabindex="-1"></a>      spane_positiveItem<span class="sc">:</span>Hours, </span>
-<span id="cb84-6"><a href="process-acnh-data.html#cb84-6" aria-hidden="true" tabindex="-1"></a>      <span class="sc">-</span>played_with_others, <span class="sc">-</span>ended, <span class="sc">-</span>survey_duration,</span>
-<span id="cb84-7"><a href="process-acnh-data.html#cb84-7" aria-hidden="true" tabindex="-1"></a>      <span class="sc">-</span><span class="fu">contains</span>(<span class="st">&quot;straightliner&quot;</span>)</span>
-<span id="cb84-8"><a href="process-acnh-data.html#cb84-8" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb84-9"><a href="process-acnh-data.html#cb84-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb84-10"><a href="process-acnh-data.html#cb84-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(name) <span class="sc">%&gt;%</span> </span>
-<span id="cb84-11"><a href="process-acnh-data.html#cb84-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">z_value =</span> <span class="fu">as.numeric</span>(<span class="fu">scale</span>(value))) </span></code></pre></div>
+<div class="sourceCode" id="cb86"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb86-1"><a href="process-acnh-data.html#cb86-1" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span> </span>
+<span id="cb86-2"><a href="process-acnh-data.html#cb86-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># These variables will be affected</span></span>
+<span id="cb86-3"><a href="process-acnh-data.html#cb86-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb86-4"><a href="process-acnh-data.html#cb86-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb86-5"><a href="process-acnh-data.html#cb86-5" aria-hidden="true" tabindex="-1"></a>      spane_positiveItem<span class="sc">:</span>Hours, </span>
+<span id="cb86-6"><a href="process-acnh-data.html#cb86-6" aria-hidden="true" tabindex="-1"></a>      <span class="sc">-</span>played_with_others, <span class="sc">-</span>ended, <span class="sc">-</span>survey_duration,</span>
+<span id="cb86-7"><a href="process-acnh-data.html#cb86-7" aria-hidden="true" tabindex="-1"></a>      <span class="sc">-</span><span class="fu">contains</span>(<span class="st">&quot;straightliner&quot;</span>)</span>
+<span id="cb86-8"><a href="process-acnh-data.html#cb86-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb86-9"><a href="process-acnh-data.html#cb86-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb86-10"><a href="process-acnh-data.html#cb86-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(name) <span class="sc">%&gt;%</span> </span>
+<span id="cb86-11"><a href="process-acnh-data.html#cb86-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">z_value =</span> <span class="fu">as.numeric</span>(<span class="fu">scale</span>(value))) </span></code></pre></div>
 <p>These are the numbers of people taken out of each variable (only variables that were affected are shown):</p>
-<div class="sourceCode" id="cb85"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb85-1"><a href="process-acnh-data.html#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This is what are taken out</span></span>
-<span id="cb85-2"><a href="process-acnh-data.html#cb85-2" aria-hidden="true" tabindex="-1"></a>ac <span class="sc">%&gt;%</span> </span>
-<span id="cb85-3"><a href="process-acnh-data.html#cb85-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb85-4"><a href="process-acnh-data.html#cb85-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Extremes =</span> <span class="fu">sum</span>(<span class="fu">abs</span>(z_value<span class="sc">&gt;=</span><span class="dv">6</span>), <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb85-5"><a href="process-acnh-data.html#cb85-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Extremes_p =</span> <span class="fu">percent</span>(Extremes<span class="sc">/</span><span class="fu">n</span>(), <span class="at">accuracy =</span> .<span class="dv">01</span>)</span>
-<span id="cb85-6"><a href="process-acnh-data.html#cb85-6" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb85-7"><a href="process-acnh-data.html#cb85-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Extremes <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb87"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb87-1"><a href="process-acnh-data.html#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This is what are taken out</span></span>
+<span id="cb87-2"><a href="process-acnh-data.html#cb87-2" aria-hidden="true" tabindex="-1"></a>ac <span class="sc">%&gt;%</span> </span>
+<span id="cb87-3"><a href="process-acnh-data.html#cb87-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb87-4"><a href="process-acnh-data.html#cb87-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Extremes =</span> <span class="fu">sum</span>(<span class="fu">abs</span>(z_value<span class="sc">&gt;=</span><span class="dv">6</span>), <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb87-5"><a href="process-acnh-data.html#cb87-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Extremes_p =</span> <span class="fu">percent</span>(Extremes<span class="sc">/</span><span class="fu">n</span>(), <span class="at">accuracy =</span> .<span class="dv">01</span>)</span>
+<span id="cb87-6"><a href="process-acnh-data.html#cb87-6" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb87-7"><a href="process-acnh-data.html#cb87-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Extremes <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code></pre></div>
 <pre><code>## # A tibble: 5 x 3
 ##   name                Extremes Extremes_p
 ##   &lt;chr&gt;                  &lt;int&gt; &lt;chr&gt;     
@@ -670,16 +675,57 @@ SPANE has positive affect, negative affect, and an affect balance score (subtrac
 ## 4 spane_acnh_afraid         25 0.42%     
 ## 5 spane_game_negative        4 0.07%</code></pre>
 <p>Code to do it:</p>
-<div class="sourceCode" id="cb87"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb87-1"><a href="process-acnh-data.html#cb87-1" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span></span>
-<span id="cb87-2"><a href="process-acnh-data.html#cb87-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">value =</span> <span class="fu">ifelse</span>(<span class="fu">abs</span>(z_value <span class="sc">&gt;=</span> <span class="dv">6</span>), <span class="cn">NA</span>, value)) <span class="sc">%&gt;%</span> </span>
-<span id="cb87-3"><a href="process-acnh-data.html#cb87-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>z_value) <span class="sc">%&gt;%</span> </span>
-<span id="cb87-4"><a href="process-acnh-data.html#cb87-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> <span class="st">&quot;name&quot;</span>, <span class="at">values_from =</span> <span class="st">&quot;value&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb87-5"><a href="process-acnh-data.html#cb87-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb89"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb89-1"><a href="process-acnh-data.html#cb89-1" aria-hidden="true" tabindex="-1"></a>ac <span class="ot">&lt;-</span> ac <span class="sc">%&gt;%</span></span>
+<span id="cb89-2"><a href="process-acnh-data.html#cb89-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">value =</span> <span class="fu">ifelse</span>(<span class="fu">abs</span>(z_value <span class="sc">&gt;=</span> <span class="dv">6</span>), <span class="cn">NA</span>, value)) <span class="sc">%&gt;%</span> </span>
+<span id="cb89-3"><a href="process-acnh-data.html#cb89-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>z_value) <span class="sc">%&gt;%</span> </span>
+<span id="cb89-4"><a href="process-acnh-data.html#cb89-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> <span class="st">&quot;name&quot;</span>, <span class="at">values_from =</span> <span class="st">&quot;value&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb89-5"><a href="process-acnh-data.html#cb89-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span></code></pre></div>
 </div>
 </div>
 <div id="save-files-1" class="section level2" number="3.4">
 <h2><span class="header-section-number">3.4</span> Save files</h2>
-<div class="sourceCode" id="cb88"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb88-1"><a href="process-acnh-data.html#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(ac, <span class="fu">here</span>(<span class="st">&quot;data/noa/ac-excluded.rds&quot;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb90"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb90-1"><a href="process-acnh-data.html#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(ac, <span class="fu">here</span>(<span class="st">&quot;data/noa/ac-excluded.rds&quot;</span>))</span></code></pre></div>
+</div>
+<div id="session-info-1" class="section level2" number="3.5">
+<h2><span class="header-section-number">3.5</span> Session info</h2>
+<div class="sourceCode" id="cb91"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb91-1"><a href="process-acnh-data.html#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<pre><code>## R version 4.0.3 (2020-10-10)
+## Platform: x86_64-pc-linux-gnu (64-bit)
+## Running under: Ubuntu 20.04.1 LTS
+## 
+## Matrix products: default
+## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
+## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/liblapack.so.3
+## 
+## locale:
+##  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+##  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+##  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+## [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+##  [1] forcats_0.5.0   stringr_1.4.0   dplyr_1.0.2     purrr_0.3.4    
+##  [5] readr_1.4.0     tidyr_1.1.2     tibble_3.0.4    ggplot2_3.3.2  
+##  [9] tidyverse_1.3.0 janitor_2.0.1   scales_1.1.1    lubridate_1.7.9
+## [13] here_0.1        knitr_1.30      readxl_1.3.1    pacman_0.5.1   
+## 
+## loaded via a namespace (and not attached):
+##  [1] tidyselect_1.1.0 xfun_0.19        haven_2.3.1      snakecase_0.11.0
+##  [5] colorspace_1.4-1 vctrs_0.3.4      generics_0.1.0   htmltools_0.5.0 
+##  [9] yaml_2.2.1       utf8_1.1.4       rlang_0.4.8      pillar_1.4.6    
+## [13] withr_2.3.0      glue_1.4.2       DBI_1.1.0        dbplyr_2.0.0    
+## [17] modelr_0.1.8     lifecycle_0.2.0  munsell_0.5.0    gtable_0.3.0    
+## [21] cellranger_1.1.0 rvest_0.3.6      evaluate_0.14    parallel_4.0.3  
+## [25] fansi_0.4.1      broom_0.7.2      Rcpp_1.0.5       backports_1.2.0 
+## [29] jsonlite_1.7.1   fs_1.5.0         hms_0.5.3        digest_0.6.27   
+## [33] stringi_1.5.3    bookdown_0.21    rprojroot_1.3-2  grid_4.0.3      
+## [37] cli_2.1.0        tools_4.0.3      magrittr_1.5     crayon_1.3.4    
+## [41] pkgconfig_2.0.3  ellipsis_0.3.1   xml2_1.3.2       reprex_0.3.0    
+## [45] assertthat_0.2.1 rmarkdown_2.5.2  httr_1.4.2       rstudioapi_0.11 
+## [49] R6_2.5.0         compiler_4.0.3</code></pre>
 
 </div>
 </div>

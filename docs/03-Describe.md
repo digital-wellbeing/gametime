@@ -280,7 +280,7 @@ filter(tmp, Game == "PvZ") %>%
 
 <img src="03-Describe_files/figure-html/univariate-scales-1.png" width="672" />
 
-And then a summary figure of the times, subjective and objective
+And then a summary figure of the times, subjective and objective.
 
 
 ```r
@@ -493,7 +493,7 @@ pair_plot(
 
 ## Plot studies combined
 
-Then, let's plot and describe demographic information first.
+Then, let's plot and describe demographic information.
 The plots in this section will be for both studies combined.
 
 ```r
@@ -1027,3 +1027,58 @@ p2 / p1
 ```
 
 <img src="03-Describe_files/figure-html/beeswarm-1.png" width="672" />
+
+## Session info
+
+```r
+sessionInfo()
+#> R version 4.0.3 (2020-10-10)
+#> Platform: x86_64-pc-linux-gnu (64-bit)
+#> Running under: Ubuntu 20.04.1 LTS
+#> 
+#> Matrix products: default
+#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/liblapack.so.3
+#> 
+#> locale:
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+#> 
+#> attached base packages:
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> other attached packages:
+#>  [1] forcats_0.5.0    stringr_1.4.0    dplyr_1.0.2      purrr_0.3.4     
+#>  [5] readr_1.4.0      tidyr_1.1.2      tibble_3.0.4     tidyverse_1.3.0 
+#>  [9] lubridate_1.7.9  lemon_0.4.5      ggbeeswarm_0.6.0 ggplot2_3.3.2   
+#> [13] janitor_2.0.1    cowplot_1.1.0    sjPlot_2.8.6     patchwork_1.1.0 
+#> [17] scales_1.1.1     visdat_0.5.3     here_0.1         knitr_1.30      
+#> [21] pacman_0.5.1    
+#> 
+#> loaded via a namespace (and not attached):
+#>  [1] nlme_3.1-150      fs_1.5.0          insight_0.10.0    httr_1.4.2       
+#>  [5] rprojroot_1.3-2   tools_4.0.3       backports_1.2.0   utf8_1.1.4       
+#>  [9] R6_2.5.0          sjlabelled_1.1.7  vipor_0.4.5       DBI_1.1.0        
+#> [13] colorspace_1.4-1  withr_2.3.0       mnormt_2.0.2      tidyselect_1.1.0 
+#> [17] gridExtra_2.3     emmeans_1.5.2-1   compiler_4.0.3    performance_0.5.1
+#> [21] cli_2.1.0         rvest_0.3.6       xml2_1.3.2        labeling_0.4.2   
+#> [25] bookdown_0.21     bayestestR_0.7.5  psych_2.0.9       mvtnorm_1.1-1    
+#> [29] digest_0.6.27     minqa_1.2.4       rmarkdown_2.5.2   pkgconfig_2.0.3  
+#> [33] htmltools_0.5.0   lme4_1.1-25       highr_0.8         dbplyr_2.0.0     
+#> [37] Rmisc_1.5         rlang_0.4.8       readxl_1.3.1      rstudioapi_0.11  
+#> [41] farver_2.0.3      generics_0.1.0    jsonlite_1.7.1    magrittr_1.5     
+#> [45] parameters_0.9.0  Matrix_1.2-18     fansi_0.4.1       Rcpp_1.0.5       
+#> [49] munsell_0.5.0     lifecycle_0.2.0   stringi_1.5.3     yaml_2.2.1       
+#> [53] snakecase_0.11.0  MASS_7.3-53       plyr_1.8.6        grid_4.0.3       
+#> [57] parallel_4.0.3    sjmisc_2.8.5      crayon_1.3.4      lattice_0.20-41  
+#> [61] ggeffects_0.16.0  haven_2.3.1       splines_4.0.3     sjstats_0.18.0   
+#> [65] hms_0.5.3         tmvnsim_1.0-2     pillar_1.4.6      boot_1.3-25      
+#> [69] estimability_1.3  effectsize_0.4.0  reprex_0.3.0      glue_1.4.2       
+#> [73] evaluate_0.14     modelr_0.1.8      vctrs_0.3.4       nloptr_1.2.2.2   
+#> [77] cellranger_1.1.0  gtable_0.3.0      assertthat_0.2.1  xfun_0.19        
+#> [81] xtable_1.8-4      broom_0.7.2       coda_0.19-4       beeswarm_0.2.3   
+#> [85] statmod_1.4.35    ellipsis_0.3.1
+```
+

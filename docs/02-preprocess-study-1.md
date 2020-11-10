@@ -2,9 +2,9 @@
 
 
 
-Here, we process the Plants vs. Zombies: Battle for Neighborville (PVZ) survey and telemetry data files (gaming data that was captured by EA's servers).
+Here, we process the Plants vs. Zombies: Battle for Neighborville (PVZ) survey and telemetry data files (i.e., gaming data that was captured by EA's servers).
 
-We used the following R packages:
+We used the following R packages. Pacman is a package manager that install packages if you don't have them installed. We always show the package versions at the bottom of each section.
 
 
 ```r
@@ -37,9 +37,9 @@ if (!file.exists(here("data-raw/ea/Oxford PvZ - Pilot Wave + Wave 1 Download.xls
 }
 ```
 
-In total, there are 18 telemetry files, each one recording a different aspect of play events in Plants vs. Zombies: Battle for Neighborville (the data were collected in two waves, so there are 9 different kinds of telemetry), and one file for the survey results.
+EA sent out the survey in two waves: one in August of 2020, the second in September 2020. For each wave, there are 9 telemetry files, each one recording a different aspect of play events in Plants vs. Zombies: Battle for Neighborville and one file for the survey results.
 
-These telemetry files contain info on PVZ play events from a long period of time, including for individuals who did not participate in the survey. We limit our analyses to the individuals who participated in the survey, and to the 2 weeks preceding the survey. However, the raw data files might be of interest to additional analyses.
+These telemetry files contain info on PVZ play events from a long period of time, including for players who did not participate in the survey. We limit our analyses to the individuals who participated in the survey, and to the 2 weeks preceding the survey. However, the raw data files might be of interest for additional analyses.
 
 ## Process raw files
 
@@ -85,7 +85,7 @@ survey <- survey %>%
 
 #### Clean and transform
 
-Give some sensible variable names and assign proper variable types.
+Next, we give some sensible variable names and assign proper variable types for the survey.
 
 ```r
 # Rename variables
@@ -195,7 +195,7 @@ survey <- survey %>%
   mutate(across(contains("straightliner"), ~.x==1))
 ```
 
-Create mean indices for the scales.
+Then we create mean indices for the scales.
 SPANE has positive affect, negative affect, and an affect balance score (subtract negative from positive).
 
 ```r
@@ -292,6 +292,8 @@ survey <- survey %>%
 Then we get to the telemetry files.
 
 The game time data are the most complicated. We work on it first because the times are needed for some of the other telemetry files.
+Note: The raw excel files on the OSF (or downloaded as zip files above) have a detailed data map as the second tab of the file. 
+These serve as a codebook.
 The data show us when a player started a session and how long that session lasted, plus whether they played the game in multiplayer or single player.
 The variables:
 
@@ -327,7 +329,7 @@ glimpse(game_time)
 ```
 
 A game session starts when a player starts playing.
-That means, `game_session` records when a match starts, which includes going to the Hub World.
+That means `game_session` records when a match starts, which includes going to the Hub World (i.e., a world inside the game where players can decide what to do next).
 Game sessions can be shared between players when they're playing multiplayer, but should be unique to a `player_id` when in single player.
 However, it's not easy to say when a session ends for technical reasons.
 Ideally, we'd have one game session per row.
@@ -389,7 +391,6 @@ That creates game sessions with a duration of 0, which we'll set to `NA` again l
 (Note: `game_end_time` doesn't have missing values, which is why we can use `coalesce`)
 
 ```r
-# Now we just apply that to all the data. Except it wont work because some start times are missing. We replace missing start times with the end time to create these sessions. Those sessions will have a duration of 0 and are thus easily identifiable.
 game_time <- game_time %>% 
   mutate(
     game_start_time = coalesce(
@@ -409,8 +410,7 @@ game_time <- game_time %>%
   ungroup()
 ```
 
-Save file
-
+Then we save the file.
 
 ```r
 write_rds(game_time, here("data/ea/game_time.rds"))
@@ -804,7 +804,7 @@ game_time <- game_time %>%
 Next, we add the person-level aggregated telemetry variables to the survey data.
 The resulting data set will not deal with session level data, but summarizes, for each participant, their engagement in the 2 week observation period.
 
-First put all the aggregated telemetry into one data frame
+First put all the aggregated telemetry into one data frame.
 
 
 ```r
@@ -814,7 +814,7 @@ telemetry <- reduce(
 )
 ```
 
-And then merge them to the survey
+And then merge them to the survey.
 
 ```r
 pvz <- survey %>% 
@@ -823,7 +823,7 @@ pvz <- survey %>%
 
 ## Exclusions
 
-First save a file with no exclusions
+First save a file with no exclusions.
 
 
 ```r
@@ -832,7 +832,7 @@ write_rds(pvz, here("data/ea/pvz.rds"))
 
 ### Straightliners
 
-We take out all individuals who straightlined (gave the same response to every item) through SPANE and motivations scales. (If only SPANE items existed, then we didn't exclude.)
+We take out all players who straightlined (gave the same response to every item) through SPANE and motivations scales. (If only SPANE items existed, then we didn't exclude.)
 
 
 ```r
@@ -879,7 +879,7 @@ pvz <- filter(pvz, !straightliner | is.na(straightliner))
 
 Potential outliers. We replace all values that are more than 6SD away from the variable's mean with NAs. As a consequence, individuals are excluded on an analysis-by-analysis case (so if has bad data relevant to that analysis or figure).
 
-This is only done for a subset of variables (relavant to analyses; see below)
+This is only done for a subset of variables (relavant to analyses; see below).
 
 
 ```r
@@ -941,3 +941,51 @@ pvz <- pvz %>%
 ```r
 write_rds(pvz, here("data/ea/pvz-excluded.rds"))
 ```
+
+## Session info
+
+```r
+sessionInfo()
+```
+
+```
+## R version 4.0.3 (2020-10-10)
+## Platform: x86_64-pc-linux-gnu (64-bit)
+## Running under: Ubuntu 20.04.1 LTS
+## 
+## Matrix products: default
+## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
+## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/liblapack.so.3
+## 
+## locale:
+##  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+##  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+##  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+## [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+##  [1] forcats_0.5.0   stringr_1.4.0   dplyr_1.0.2     purrr_0.3.4    
+##  [5] readr_1.4.0     tidyr_1.1.2     tibble_3.0.4    ggplot2_3.3.2  
+##  [9] tidyverse_1.3.0 anytime_0.3.9   janitor_2.0.1   scales_1.1.1   
+## [13] lubridate_1.7.9 here_0.1        knitr_1.30      readxl_1.3.1   
+## [17] pacman_0.5.1   
+## 
+## loaded via a namespace (and not attached):
+##  [1] tidyselect_1.1.0 xfun_0.19        haven_2.3.1      snakecase_0.11.0
+##  [5] colorspace_1.4-1 vctrs_0.3.4      generics_0.1.0   htmltools_0.5.0 
+##  [9] yaml_2.2.1       utf8_1.1.4       rlang_0.4.8      pillar_1.4.6    
+## [13] withr_2.3.0      glue_1.4.2       DBI_1.1.0        dbplyr_2.0.0    
+## [17] modelr_0.1.8     lifecycle_0.2.0  munsell_0.5.0    gtable_0.3.0    
+## [21] cellranger_1.1.0 rvest_0.3.6      evaluate_0.14    labeling_0.4.2  
+## [25] parallel_4.0.3   fansi_0.4.1      broom_0.7.2      Rcpp_1.0.5      
+## [29] backports_1.2.0  jsonlite_1.7.1   farver_2.0.3     fs_1.5.0        
+## [33] hms_0.5.3        digest_0.6.27    stringi_1.5.3    bookdown_0.21   
+## [37] rprojroot_1.3-2  grid_4.0.3       cli_2.1.0        tools_4.0.3     
+## [41] magrittr_1.5     crayon_1.3.4     pkgconfig_2.0.3  ellipsis_0.3.1  
+## [45] xml2_1.3.2       reprex_0.3.0     assertthat_0.2.1 rmarkdown_2.5.2 
+## [49] httr_1.4.2       rstudioapi_0.11  R6_2.5.0         compiler_4.0.3
+```
+
