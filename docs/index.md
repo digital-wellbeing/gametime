@@ -1,7 +1,7 @@
 --- 
 title: "OII Gaming Study"
 author: "Niklas Johannes, Matti Vuorre, Andrew Przybylski"
-date: "2020-11-10"
+date: "2020-11-15"
 site: bookdown::bookdown_site
 documentclass: book
 bibliography: []
@@ -14,7 +14,7 @@ description: ""
 
 Data analyses related to "Video game play is positively correlated with well-being" (Johannes, Vuorre, Przybylski, in prep)
 
-Preprint: <>
+Preprint: <https://psyarxiv.com/qrjza>
 
 ## Raw data
 
