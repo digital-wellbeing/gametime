@@ -249,10 +249,9 @@ ac <- ac %>%
   )
 
 # Hours of estimated play
-ac <- ac %>% 
-  mutate(
-    active_play = active_play_hours + (active_play_minutes / 60)
-  )
+ac <- ac %>%
+  mutate(active_play_minutes = active_play_minutes / 60) %>% 
+  mutate(active_play = rowSums(select(., starts_with("active_play")), na.rm = T))
 ```
 
 ### Checking

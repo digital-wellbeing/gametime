@@ -285,10 +285,9 @@ survey <- survey %>%
   )
 
 # Hours of estimated play
-survey <- survey %>% 
-  mutate(
-    active_play = active_play_hours + (active_play_minutes / 60)
-  )
+survey <- survey %>%
+  mutate(active_play_minutes = active_play_minutes / 60) %>% 
+  mutate(active_play = rowSums(select(., starts_with("active_play")), na.rm = T))
 ```
 
 ### Game time
