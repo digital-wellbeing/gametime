@@ -36,7 +36,7 @@ theme_set(
       legend.position = "right"
     )
 )
-colors <- c("#155b97", "#88c9a1")
+colors <- c("navyblue", "#E60012")
 ```
 
 ```{r}
@@ -78,6 +78,20 @@ dat$active_play10 <- dat$active_play / 10
 ## RQ1: Time and well-being
 
 ### Objective vs subjective game time
+
+Describe subjective and objective time difference. These numbers are a bit confusing because the means include everyone, but difference only those who had both values (so cannot compute differences from means)
+
+```{r}
+dat %>% 
+  group_by(Game) %>%
+  mutate(difference = active_play-Hours) %>% 
+  summarise(
+    across(
+      c(Hours, active_play, difference), 
+      list(m = ~mean(.x, na.rm = T), s = ~sd(.x, na.rm = T))
+      )
+    )
+```
 
 ```{r}
 p0 <- dat %>% 

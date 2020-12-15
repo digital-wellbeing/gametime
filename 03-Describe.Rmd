@@ -206,17 +206,25 @@ filter(tmp, Game == "PvZ") %>%
   theme(axis.title.x = element_blank(), legend.position = "right")
 ```
 
-And then a summary figure of the times, subjective and objective.
+And then a summary figure of the times, subjective and objective. Means indicate means over participants who had both measures.
 
 ```{r playtime-summary}
+# Histograms show all participants
 tmp <- dat %>% 
   select(Game, Hours, active_play) %>% 
   pivot_longer(-Game) %>% 
   mutate(name = ifelse(name=="Hours", "Hours", "Estimated")) %>% 
   mutate(Game2 = str_glue("{Game} ({name})"))
-tmp2 <- tmp %>% 
+
+# Summaries over people who had both metrics
+tmp2 <- dat %>% 
+  select(Game, Hours, active_play) %>% 
+  drop_na(active_play, Hours) %>% 
+  pivot_longer(-Game) %>% 
+  mutate(name = ifelse(name=="Hours", "Hours", "Estimated")) %>% 
+  mutate(Game2 = str_glue("{Game} ({name})")) %>% 
   group_by(Game, Game2, name) %>% 
-  summarise(m = mean(value, na.rm = TRUE))
+  summarise(m = mean(value, na.rm = TRUE), n = n())
 # This is really complicated because of the legend
 tmp %>% 
   ggplot(aes(fill = Game2, alpha = Game2)) +
@@ -236,7 +244,7 @@ tmp %>%
   ) +
   scale_x_continuous(breaks = pretty_breaks(7)) +
   coord_cartesian(ylim = c(-1, 1), xlim = c(0, 80)) +
-  labs(y = "Normalized count") +
+  labs(x = "Hours", y = "Normalized count") +
   # Use different geoms to pick appropriate variables
   geom_histogram(
     data = filter(tmp, name=="Hours"),
