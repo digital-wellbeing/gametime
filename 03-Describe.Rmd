@@ -210,46 +210,82 @@ And then a summary figure of the times, subjective and objective.
 
 ```{r playtime-summary}
 tmp <- dat %>% 
-  group_by(Game) %>% 
-  summarise(
-    across(
-      c(Hours, active_play), 
-      list(m = ~mean(., na.rm = TRUE), s = ~sd(., na.rm = TRUE))
-    )
-  )
-dat %>%  
-  ggplot(aes(col = Game, fill = Game)) +
-  coord_cartesian(ylim = c(-1, 1), xlim = c(0, 80)) +
-  scale_color_manual(values = colors, aesthetics = c("color", "fill")) +
+  select(Game, Hours, active_play) %>% 
+  pivot_longer(-Game) %>% 
+  mutate(name = ifelse(name=="Hours", "Hours", "Estimated")) %>% 
+  mutate(Game2 = str_glue("{Game} ({name})"))
+tmp2 <- tmp %>% 
+  group_by(Game, Game2, name) %>% 
+  summarise(m = mean(value, na.rm = TRUE))
+# This is really complicated because of the legend
+tmp %>% 
+  ggplot(aes(fill = Game2, alpha = Game2)) +
+  # Use two variables to control facets and colors/alpha
+  # Such that legend is constructed appropriately
+  scale_fill_manual(
+    values = rep(rev(colors), each = 2),
+    guide = guide_legend(reverse = TRUE)
+  ) +
+  scale_alpha_manual(
+    values = c(.4, 1, .4, 1), 
+    guide = guide_legend(reverse = TRUE)
+  ) +
   scale_y_continuous(
     breaks = c(-1, -.5, 0, .5, 1), labels = c(1, .5, 0, .5, 1),
     expand = expansion(.015)
   ) +
   scale_x_continuous(breaks = pretty_breaks(7)) +
-  geom_histogram(
-    aes(x = Hours, y = stat(ncount)), 
-    bins = 80, col = "white"
-    ) +
-  geom_histogram(
-    aes(x = active_play, y = stat(ncount)*-1), 
-    bins = 80, alpha = 0.5, col = "white"
-  ) +
-  geom_point(
-    data = tmp, aes(x = Hours_m, y = -0.97),
-    shape = 25, size = 2.5
-  ) +
-  geom_point(
-    data = tmp, aes(x = active_play_m, y = -0.97),
-    shape = 25, size = 2.5, alpha = 0.5
-  ) +
+  coord_cartesian(ylim = c(-1, 1), xlim = c(0, 80)) +
   labs(y = "Normalized count") +
+  # Use different geoms to pick appropriate variables
+  geom_histogram(
+    data = filter(tmp, name=="Hours"),
+    aes(x = value, y = stat(ncount)),
+    bins = 80, col = "white"
+  ) +
+  geom_histogram(
+    data = filter(tmp, name=="Estimated"),
+    aes(x = value, y = stat(ncount) * -1),
+    bins = 80, col = "white"
+  ) +
+  geom_point(
+    data = filter(tmp2, name=="Hours"), aes(x = m, y = -0.97),
+    shape = 25, size = 2.5, show.legend = FALSE,
+    col = "white"
+  ) +
+  geom_point(
+    data = filter(tmp2, name=="Estimated"), aes(x = m, y = -0.97),
+    shape = 25, size = 2.5, alpha = 0.5, show.legend = FALSE,
+    col = "white"
+  ) +
   facet_rep_wrap("Game", scales = "fixed", nrow = 2) +
-  theme(strip.text = element_blank(), legend.position = "right")
+  theme(
+    strip.text = element_blank(), 
+    legend.position = "right",
+    legend.title = element_blank()
+  )
 
-tmp
+# Summary of values truncated from graph
 dat %>% 
   group_by(Game) %>% 
-  summarise(across(active_play:Hours, ~sum(.x>80, na.rm = TRUE)))
+  summarise(
+    across(
+      active_play:Hours, 
+      list(
+        n = ~sum(!is.na(.x)),
+        x = ~sum(.x>80, na.rm = TRUE),
+        p = ~percent(sum(.x>80, na.rm = TRUE) / sum(!is.na(.x)), .01)
+      )
+    )
+  )
+dat %>% 
+  group_by(Game) %>% 
+  summarise(
+    across(
+      active_play:Hours,
+      ~max(.x, na.rm = T)
+    )
+  )
 ```
 
 ## Correlation matrices
