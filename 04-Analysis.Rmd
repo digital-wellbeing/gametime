@@ -277,7 +277,7 @@ map(xs$x, res)
 
 We also compared the omnibus estimates to independent estimates
 
-```{r}
+```{r rq2-figure-2}
 p1 %+%
   drop_na(tmp) +
   aes(col = Model) +
