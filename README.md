@@ -2,7 +2,7 @@
 
 Here, we report the data processing and analyses related to the paper "Video game play is positively correlated with well-being" (Johannes, Vuorre, & Przybylski, in prep). We explain all steps we took from raw data processing to final analysis and plots.
 
-Preprint: <>
+Preprint: <https://psyarxiv.com/qrjza>
 
 ## Raw data
 

@@ -1,7 +1,11 @@
 --- 
 title: "Video game play is positively correlated with well-being"
 author: "Niklas Johannes, Matti Vuorre, Andrew Przybylski"
+<<<<<<< HEAD
 date: "2020-12-16"
+=======
+date: "2020-11-15"
+>>>>>>> f449c935d496bcb159c5533847257a56a9918a85
 site: bookdown::bookdown_site
 documentclass: book
 bibliography: []
@@ -14,7 +18,11 @@ description: ""
 
 Data analyses related to "Video game play is positively correlated with well-being" (Johannes, Vuorre, Przybylski, in prep)
 
+<<<<<<< HEAD
 Preprint: <https://psyarxiv.com/qrjza/>
+=======
+Preprint: <https://psyarxiv.com/qrjza>
+>>>>>>> f449c935d496bcb159c5533847257a56a9918a85
 
 ## Raw data
 
