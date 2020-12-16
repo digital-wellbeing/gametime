@@ -281,10 +281,9 @@ survey <- survey %>%
   )
 
 # Hours of estimated play
-survey <- survey %>% 
-  mutate(
-    active_play = active_play_hours + (active_play_minutes / 60)
-  )
+survey <- survey %>%
+  mutate(active_play_minutes = active_play_minutes / 60) %>% 
+  mutate(active_play = rowSums(select(., starts_with("active_play")), na.rm = T))
 ```
 
 ### Game time
@@ -967,25 +966,25 @@ sessionInfo()
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-##  [1] forcats_0.5.0   stringr_1.4.0   dplyr_1.0.2     purrr_0.3.4    
-##  [5] readr_1.4.0     tidyr_1.1.2     tibble_3.0.4    ggplot2_3.3.2  
-##  [9] tidyverse_1.3.0 anytime_0.3.9   janitor_2.0.1   scales_1.1.1   
-## [13] lubridate_1.7.9 here_0.1        knitr_1.30      readxl_1.3.1   
-## [17] pacman_0.5.1   
+##  [1] forcats_0.5.0     stringr_1.4.0     dplyr_1.0.2       purrr_0.3.4      
+##  [5] readr_1.4.0       tidyr_1.1.2       tibble_3.0.4      ggplot2_3.3.2    
+##  [9] tidyverse_1.3.0   anytime_0.3.9     janitor_2.0.1     scales_1.1.1     
+## [13] lubridate_1.7.9.2 here_1.0.1        knitr_1.30        readxl_1.3.1     
+## [17] pacman_0.5.1     
 ## 
 ## loaded via a namespace (and not attached):
 ##  [1] tidyselect_1.1.0 xfun_0.19        haven_2.3.1      snakecase_0.11.0
-##  [5] colorspace_1.4-1 vctrs_0.3.4      generics_0.1.0   htmltools_0.5.0 
-##  [9] yaml_2.2.1       utf8_1.1.4       rlang_0.4.8      pillar_1.4.6    
+##  [5] colorspace_2.0-0 vctrs_0.3.5      generics_0.1.0   htmltools_0.5.0 
+##  [9] yaml_2.2.1       utf8_1.1.4       rlang_0.4.9      pillar_1.4.7    
 ## [13] withr_2.3.0      glue_1.4.2       DBI_1.1.0        dbplyr_2.0.0    
 ## [17] modelr_0.1.8     lifecycle_0.2.0  munsell_0.5.0    gtable_0.3.0    
 ## [21] cellranger_1.1.0 rvest_0.3.6      evaluate_0.14    labeling_0.4.2  
 ## [25] parallel_4.0.3   fansi_0.4.1      broom_0.7.2      Rcpp_1.0.5      
-## [29] backports_1.2.0  jsonlite_1.7.1   farver_2.0.3     fs_1.5.0        
+## [29] backports_1.2.1  jsonlite_1.7.2   farver_2.0.3     fs_1.5.0        
 ## [33] hms_0.5.3        digest_0.6.27    stringi_1.5.3    bookdown_0.21   
-## [37] rprojroot_1.3-2  grid_4.0.3       cli_2.1.0        tools_4.0.3     
-## [41] magrittr_1.5     crayon_1.3.4     pkgconfig_2.0.3  ellipsis_0.3.1  
-## [45] xml2_1.3.2       reprex_0.3.0     assertthat_0.2.1 rmarkdown_2.5.2 
-## [49] httr_1.4.2       rstudioapi_0.11  R6_2.5.0         compiler_4.0.3
+## [37] rprojroot_2.0.2  grid_4.0.3       cli_2.2.0        tools_4.0.3     
+## [41] magrittr_2.0.1   crayon_1.3.4     pkgconfig_2.0.3  ellipsis_0.3.1  
+## [45] xml2_1.3.2       reprex_0.3.0     rstudioapi_0.13  assertthat_0.2.1
+## [49] rmarkdown_2.6    httr_1.4.2       R6_2.5.0         compiler_4.0.3
 ```
 

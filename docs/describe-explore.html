@@ -24,7 +24,7 @@
 <meta name="author" content="Niklas Johannes, Matti Vuorre, Andrew Przybylski" />
 
 
-<meta name="date" content="2020-11-10" />
+<meta name="date" content="2020-12-16" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -33,7 +33,7 @@
   
 <link rel="prev" href="process-acnh-data.html"/>
 <link rel="next" href="analyses.html"/>
-<script src="libs/header-attrs-2.5.2/header-attrs.js"></script>
+<script src="libs/header-attrs-2.6/header-attrs.js"></script>
 <script src="libs/jquery-2.2.3/jquery.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
@@ -51,8 +51,6 @@
 
 
 
-<link href="libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
-<script src="libs/anchor-sections-1.0/anchor-sections.js"></script>
 
 
 <style type="text/css">
@@ -593,59 +591,103 @@ Their mean age was <em>M</em> = 31 with a standard deviation of <em>SD</em> = 10
 <span id="cb103-46"><a href="describe-explore.html#cb103-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="st">&quot;name&quot;</span>, <span class="at">scales =</span> <span class="st">&quot;free&quot;</span>) <span class="sc">+</span></span>
 <span id="cb103-47"><a href="describe-explore.html#cb103-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.title.x =</span> <span class="fu">element_blank</span>(), <span class="at">legend.position =</span> <span class="st">&quot;right&quot;</span>)</span></code></pre></div>
 <p><img src="03-Describe_files/figure-html/univariate-scales-1.png" width="672" /></p>
-<p>And then a summary figure of the times, subjective and objective.</p>
-<div class="sourceCode" id="cb104"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb104-1"><a href="describe-explore.html#cb104-1" aria-hidden="true" tabindex="-1"></a>tmp <span class="ot">&lt;-</span> dat <span class="sc">%&gt;%</span> </span>
-<span id="cb104-2"><a href="describe-explore.html#cb104-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Game) <span class="sc">%&gt;%</span> </span>
-<span id="cb104-3"><a href="describe-explore.html#cb104-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb104-4"><a href="describe-explore.html#cb104-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">across</span>(</span>
-<span id="cb104-5"><a href="describe-explore.html#cb104-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">c</span>(Hours, active_play), </span>
-<span id="cb104-6"><a href="describe-explore.html#cb104-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">list</span>(<span class="at">m =</span> <span class="sc">~</span><span class="fu">mean</span>(., <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">s =</span> <span class="sc">~</span><span class="fu">sd</span>(., <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
-<span id="cb104-7"><a href="describe-explore.html#cb104-7" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb104-8"><a href="describe-explore.html#cb104-8" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb104-9"><a href="describe-explore.html#cb104-9" aria-hidden="true" tabindex="-1"></a>dat <span class="sc">%&gt;%</span>  </span>
-<span id="cb104-10"><a href="describe-explore.html#cb104-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">col =</span> Game, <span class="at">fill =</span> Game)) <span class="sc">+</span></span>
-<span id="cb104-11"><a href="describe-explore.html#cb104-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">ylim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>), <span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">80</span>)) <span class="sc">+</span></span>
-<span id="cb104-12"><a href="describe-explore.html#cb104-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> colors, <span class="at">aesthetics =</span> <span class="fu">c</span>(<span class="st">&quot;color&quot;</span>, <span class="st">&quot;fill&quot;</span>)) <span class="sc">+</span></span>
-<span id="cb104-13"><a href="describe-explore.html#cb104-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(</span>
-<span id="cb104-14"><a href="describe-explore.html#cb104-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="sc">-</span>.<span class="dv">5</span>, <span class="dv">0</span>, .<span class="dv">5</span>, <span class="dv">1</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="dv">1</span>, .<span class="dv">5</span>, <span class="dv">0</span>, .<span class="dv">5</span>, <span class="dv">1</span>),</span>
-<span id="cb104-15"><a href="describe-explore.html#cb104-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">expand =</span> <span class="fu">expansion</span>(.<span class="dv">015</span>)</span>
-<span id="cb104-16"><a href="describe-explore.html#cb104-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb104-17"><a href="describe-explore.html#cb104-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">pretty_breaks</span>(<span class="dv">7</span>)) <span class="sc">+</span></span>
-<span id="cb104-18"><a href="describe-explore.html#cb104-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(</span>
-<span id="cb104-19"><a href="describe-explore.html#cb104-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> Hours, <span class="at">y =</span> <span class="fu">stat</span>(ncount)), </span>
-<span id="cb104-20"><a href="describe-explore.html#cb104-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">bins =</span> <span class="dv">80</span>, <span class="at">col =</span> <span class="st">&quot;white&quot;</span></span>
-<span id="cb104-21"><a href="describe-explore.html#cb104-21" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
-<span id="cb104-22"><a href="describe-explore.html#cb104-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(</span>
-<span id="cb104-23"><a href="describe-explore.html#cb104-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> active_play, <span class="at">y =</span> <span class="fu">stat</span>(ncount)<span class="sc">*-</span><span class="dv">1</span>), </span>
-<span id="cb104-24"><a href="describe-explore.html#cb104-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">bins =</span> <span class="dv">80</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">col =</span> <span class="st">&quot;white&quot;</span></span>
+<p>And then a summary figure of the times, subjective and objective. Means indicate means over participants who had both measures.</p>
+<div class="sourceCode" id="cb104"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb104-1"><a href="describe-explore.html#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Histograms show all participants</span></span>
+<span id="cb104-2"><a href="describe-explore.html#cb104-2" aria-hidden="true" tabindex="-1"></a>tmp <span class="ot">&lt;-</span> dat <span class="sc">%&gt;%</span> </span>
+<span id="cb104-3"><a href="describe-explore.html#cb104-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Game, Hours, active_play) <span class="sc">%&gt;%</span> </span>
+<span id="cb104-4"><a href="describe-explore.html#cb104-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="sc">-</span>Game) <span class="sc">%&gt;%</span> </span>
+<span id="cb104-5"><a href="describe-explore.html#cb104-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name =</span> <span class="fu">ifelse</span>(name<span class="sc">==</span><span class="st">&quot;Hours&quot;</span>, <span class="st">&quot;Hours&quot;</span>, <span class="st">&quot;Estimated&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb104-6"><a href="describe-explore.html#cb104-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Game2 =</span> <span class="fu">str_glue</span>(<span class="st">&quot;{Game} ({name})&quot;</span>))</span>
+<span id="cb104-7"><a href="describe-explore.html#cb104-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb104-8"><a href="describe-explore.html#cb104-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Summaries over people who had both metrics</span></span>
+<span id="cb104-9"><a href="describe-explore.html#cb104-9" aria-hidden="true" tabindex="-1"></a>tmp2 <span class="ot">&lt;-</span> dat <span class="sc">%&gt;%</span> </span>
+<span id="cb104-10"><a href="describe-explore.html#cb104-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Game, Hours, active_play) <span class="sc">%&gt;%</span> </span>
+<span id="cb104-11"><a href="describe-explore.html#cb104-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(active_play, Hours) <span class="sc">%&gt;%</span> </span>
+<span id="cb104-12"><a href="describe-explore.html#cb104-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="sc">-</span>Game) <span class="sc">%&gt;%</span> </span>
+<span id="cb104-13"><a href="describe-explore.html#cb104-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name =</span> <span class="fu">ifelse</span>(name<span class="sc">==</span><span class="st">&quot;Hours&quot;</span>, <span class="st">&quot;Hours&quot;</span>, <span class="st">&quot;Estimated&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb104-14"><a href="describe-explore.html#cb104-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Game2 =</span> <span class="fu">str_glue</span>(<span class="st">&quot;{Game} ({name})&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb104-15"><a href="describe-explore.html#cb104-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Game, Game2, name) <span class="sc">%&gt;%</span> </span>
+<span id="cb104-16"><a href="describe-explore.html#cb104-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">m =</span> <span class="fu">mean</span>(value, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">n =</span> <span class="fu">n</span>())</span>
+<span id="cb104-17"><a href="describe-explore.html#cb104-17" aria-hidden="true" tabindex="-1"></a><span class="co"># This is really complicated because of the legend</span></span>
+<span id="cb104-18"><a href="describe-explore.html#cb104-18" aria-hidden="true" tabindex="-1"></a>tmp <span class="sc">%&gt;%</span> </span>
+<span id="cb104-19"><a href="describe-explore.html#cb104-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">fill =</span> Game2, <span class="at">alpha =</span> Game2)) <span class="sc">+</span></span>
+<span id="cb104-20"><a href="describe-explore.html#cb104-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Use two variables to control facets and colors/alpha</span></span>
+<span id="cb104-21"><a href="describe-explore.html#cb104-21" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Such that legend is constructed appropriately</span></span>
+<span id="cb104-22"><a href="describe-explore.html#cb104-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(</span>
+<span id="cb104-23"><a href="describe-explore.html#cb104-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> <span class="fu">rep</span>(<span class="fu">rev</span>(colors), <span class="at">each =</span> <span class="dv">2</span>),</span>
+<span id="cb104-24"><a href="describe-explore.html#cb104-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">guide =</span> <span class="fu">guide_legend</span>(<span class="at">reverse =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb104-25"><a href="describe-explore.html#cb104-25" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb104-26"><a href="describe-explore.html#cb104-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
-<span id="cb104-27"><a href="describe-explore.html#cb104-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> tmp, <span class="fu">aes</span>(<span class="at">x =</span> Hours_m, <span class="at">y =</span> <span class="sc">-</span><span class="fl">0.97</span>),</span>
-<span id="cb104-28"><a href="describe-explore.html#cb104-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">shape =</span> <span class="dv">25</span>, <span class="at">size =</span> <span class="fl">2.5</span></span>
+<span id="cb104-26"><a href="describe-explore.html#cb104-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_alpha_manual</span>(</span>
+<span id="cb104-27"><a href="describe-explore.html#cb104-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> <span class="fu">c</span>(.<span class="dv">4</span>, <span class="dv">1</span>, .<span class="dv">4</span>, <span class="dv">1</span>), </span>
+<span id="cb104-28"><a href="describe-explore.html#cb104-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">guide =</span> <span class="fu">guide_legend</span>(<span class="at">reverse =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb104-29"><a href="describe-explore.html#cb104-29" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb104-30"><a href="describe-explore.html#cb104-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
-<span id="cb104-31"><a href="describe-explore.html#cb104-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> tmp, <span class="fu">aes</span>(<span class="at">x =</span> active_play_m, <span class="at">y =</span> <span class="sc">-</span><span class="fl">0.97</span>),</span>
-<span id="cb104-32"><a href="describe-explore.html#cb104-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">shape =</span> <span class="dv">25</span>, <span class="at">size =</span> <span class="fl">2.5</span>, <span class="at">alpha =</span> <span class="fl">0.5</span></span>
+<span id="cb104-30"><a href="describe-explore.html#cb104-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(</span>
+<span id="cb104-31"><a href="describe-explore.html#cb104-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="sc">-</span>.<span class="dv">5</span>, <span class="dv">0</span>, .<span class="dv">5</span>, <span class="dv">1</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="dv">1</span>, .<span class="dv">5</span>, <span class="dv">0</span>, .<span class="dv">5</span>, <span class="dv">1</span>),</span>
+<span id="cb104-32"><a href="describe-explore.html#cb104-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">expand =</span> <span class="fu">expansion</span>(.<span class="dv">015</span>)</span>
 <span id="cb104-33"><a href="describe-explore.html#cb104-33" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb104-34"><a href="describe-explore.html#cb104-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">&quot;Normalized count&quot;</span>) <span class="sc">+</span></span>
-<span id="cb104-35"><a href="describe-explore.html#cb104-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_rep_wrap</span>(<span class="st">&quot;Game&quot;</span>, <span class="at">scales =</span> <span class="st">&quot;fixed&quot;</span>, <span class="at">nrow =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
-<span id="cb104-36"><a href="describe-explore.html#cb104-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">strip.text =</span> <span class="fu">element_blank</span>(), <span class="at">legend.position =</span> <span class="st">&quot;right&quot;</span>)</span></code></pre></div>
+<span id="cb104-34"><a href="describe-explore.html#cb104-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">pretty_breaks</span>(<span class="dv">7</span>)) <span class="sc">+</span></span>
+<span id="cb104-35"><a href="describe-explore.html#cb104-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">ylim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>), <span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">80</span>)) <span class="sc">+</span></span>
+<span id="cb104-36"><a href="describe-explore.html#cb104-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Hours&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Normalized count&quot;</span>) <span class="sc">+</span></span>
+<span id="cb104-37"><a href="describe-explore.html#cb104-37" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Use different geoms to pick appropriate variables</span></span>
+<span id="cb104-38"><a href="describe-explore.html#cb104-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(</span>
+<span id="cb104-39"><a href="describe-explore.html#cb104-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">filter</span>(tmp, name<span class="sc">==</span><span class="st">&quot;Hours&quot;</span>),</span>
+<span id="cb104-40"><a href="describe-explore.html#cb104-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> <span class="fu">stat</span>(ncount)),</span>
+<span id="cb104-41"><a href="describe-explore.html#cb104-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">bins =</span> <span class="dv">80</span>, <span class="at">col =</span> <span class="st">&quot;white&quot;</span></span>
+<span id="cb104-42"><a href="describe-explore.html#cb104-42" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb104-43"><a href="describe-explore.html#cb104-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(</span>
+<span id="cb104-44"><a href="describe-explore.html#cb104-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">filter</span>(tmp, name<span class="sc">==</span><span class="st">&quot;Estimated&quot;</span>),</span>
+<span id="cb104-45"><a href="describe-explore.html#cb104-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> <span class="fu">stat</span>(ncount) <span class="sc">*</span> <span class="sc">-</span><span class="dv">1</span>),</span>
+<span id="cb104-46"><a href="describe-explore.html#cb104-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">bins =</span> <span class="dv">80</span>, <span class="at">col =</span> <span class="st">&quot;white&quot;</span></span>
+<span id="cb104-47"><a href="describe-explore.html#cb104-47" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb104-48"><a href="describe-explore.html#cb104-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
+<span id="cb104-49"><a href="describe-explore.html#cb104-49" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">filter</span>(tmp2, name<span class="sc">==</span><span class="st">&quot;Hours&quot;</span>), <span class="fu">aes</span>(<span class="at">x =</span> m, <span class="at">y =</span> <span class="sc">-</span><span class="fl">0.97</span>),</span>
+<span id="cb104-50"><a href="describe-explore.html#cb104-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">shape =</span> <span class="dv">25</span>, <span class="at">size =</span> <span class="fl">2.5</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb104-51"><a href="describe-explore.html#cb104-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">col =</span> <span class="st">&quot;white&quot;</span></span>
+<span id="cb104-52"><a href="describe-explore.html#cb104-52" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb104-53"><a href="describe-explore.html#cb104-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
+<span id="cb104-54"><a href="describe-explore.html#cb104-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">filter</span>(tmp2, name<span class="sc">==</span><span class="st">&quot;Estimated&quot;</span>), <span class="fu">aes</span>(<span class="at">x =</span> m, <span class="at">y =</span> <span class="sc">-</span><span class="fl">0.97</span>),</span>
+<span id="cb104-55"><a href="describe-explore.html#cb104-55" aria-hidden="true" tabindex="-1"></a>    <span class="at">shape =</span> <span class="dv">25</span>, <span class="at">size =</span> <span class="fl">2.5</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb104-56"><a href="describe-explore.html#cb104-56" aria-hidden="true" tabindex="-1"></a>    <span class="at">col =</span> <span class="st">&quot;white&quot;</span></span>
+<span id="cb104-57"><a href="describe-explore.html#cb104-57" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb104-58"><a href="describe-explore.html#cb104-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_rep_wrap</span>(<span class="st">&quot;Game&quot;</span>, <span class="at">scales =</span> <span class="st">&quot;fixed&quot;</span>, <span class="at">nrow =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb104-59"><a href="describe-explore.html#cb104-59" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb104-60"><a href="describe-explore.html#cb104-60" aria-hidden="true" tabindex="-1"></a>    <span class="at">strip.text =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb104-61"><a href="describe-explore.html#cb104-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">&quot;right&quot;</span>,</span>
+<span id="cb104-62"><a href="describe-explore.html#cb104-62" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.title =</span> <span class="fu">element_blank</span>()</span>
+<span id="cb104-63"><a href="describe-explore.html#cb104-63" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
 <p><img src="03-Describe_files/figure-html/playtime-summary-1.png" width="672" /></p>
 <div class="sourceCode" id="cb105"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb105-1"><a href="describe-explore.html#cb105-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-2"><a href="describe-explore.html#cb105-2" aria-hidden="true" tabindex="-1"></a>tmp</span>
-<span id="cb105-3"><a href="describe-explore.html#cb105-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 x 5</span></span>
-<span id="cb105-4"><a href="describe-explore.html#cb105-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Game  Hours_m Hours_s active_play_m active_play_s</span></span>
-<span id="cb105-5"><a href="describe-explore.html#cb105-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;fct&gt;   &lt;dbl&gt;   &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;</span></span>
-<span id="cb105-6"><a href="describe-explore.html#cb105-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 PvZ      8.35    11.4          10.1          10.7</span></span>
-<span id="cb105-7"><a href="describe-explore.html#cb105-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 AC:NH   10.6     12.7          12.8          17.0</span></span>
-<span id="cb105-8"><a href="describe-explore.html#cb105-8" aria-hidden="true" tabindex="-1"></a>dat <span class="sc">%&gt;%</span> </span>
-<span id="cb105-9"><a href="describe-explore.html#cb105-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Game) <span class="sc">%&gt;%</span> </span>
-<span id="cb105-10"><a href="describe-explore.html#cb105-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(active_play<span class="sc">:</span>Hours, <span class="sc">~</span><span class="fu">sum</span>(.x<span class="sc">&gt;</span><span class="dv">80</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)))</span>
-<span id="cb105-11"><a href="describe-explore.html#cb105-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 x 3</span></span>
-<span id="cb105-12"><a href="describe-explore.html#cb105-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Game  active_play Hours</span></span>
-<span id="cb105-13"><a href="describe-explore.html#cb105-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;fct&gt;       &lt;int&gt; &lt;int&gt;</span></span>
-<span id="cb105-14"><a href="describe-explore.html#cb105-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 PvZ             0     0</span></span>
-<span id="cb105-15"><a href="describe-explore.html#cb105-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 AC:NH          61     7</span></span></code></pre></div>
+<span id="cb105-2"><a href="describe-explore.html#cb105-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary of values truncated from graph</span></span>
+<span id="cb105-3"><a href="describe-explore.html#cb105-3" aria-hidden="true" tabindex="-1"></a>dat <span class="sc">%&gt;%</span> </span>
+<span id="cb105-4"><a href="describe-explore.html#cb105-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Game) <span class="sc">%&gt;%</span> </span>
+<span id="cb105-5"><a href="describe-explore.html#cb105-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb105-6"><a href="describe-explore.html#cb105-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">across</span>(</span>
+<span id="cb105-7"><a href="describe-explore.html#cb105-7" aria-hidden="true" tabindex="-1"></a>      active_play<span class="sc">:</span>Hours, </span>
+<span id="cb105-8"><a href="describe-explore.html#cb105-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">list</span>(</span>
+<span id="cb105-9"><a href="describe-explore.html#cb105-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">n =</span> <span class="sc">~</span><span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(.x)),</span>
+<span id="cb105-10"><a href="describe-explore.html#cb105-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> <span class="sc">~</span><span class="fu">sum</span>(.x<span class="sc">&gt;</span><span class="dv">80</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb105-11"><a href="describe-explore.html#cb105-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">p =</span> <span class="sc">~</span><span class="fu">percent</span>(<span class="fu">sum</span>(.x<span class="sc">&gt;</span><span class="dv">80</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">/</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(.x)), .<span class="dv">01</span>)</span>
+<span id="cb105-12"><a href="describe-explore.html#cb105-12" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb105-13"><a href="describe-explore.html#cb105-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb105-14"><a href="describe-explore.html#cb105-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb105-15"><a href="describe-explore.html#cb105-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 x 7</span></span>
+<span id="cb105-16"><a href="describe-explore.html#cb105-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Game  active_play_n active_play_x active_play_p Hours_n Hours_x Hours_p</span></span>
+<span id="cb105-17"><a href="describe-explore.html#cb105-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;fct&gt;         &lt;int&gt;         &lt;int&gt; &lt;chr&gt;           &lt;int&gt;   &lt;int&gt; &lt;chr&gt;  </span></span>
+<span id="cb105-18"><a href="describe-explore.html#cb105-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 PvZ             517             0 0.00%             469       0 0.00%  </span></span>
+<span id="cb105-19"><a href="describe-explore.html#cb105-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 AC:NH          5927            58 0.98%            2737       7 0.26%</span></span>
+<span id="cb105-20"><a href="describe-explore.html#cb105-20" aria-hidden="true" tabindex="-1"></a>dat <span class="sc">%&gt;%</span> </span>
+<span id="cb105-21"><a href="describe-explore.html#cb105-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Game) <span class="sc">%&gt;%</span> </span>
+<span id="cb105-22"><a href="describe-explore.html#cb105-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb105-23"><a href="describe-explore.html#cb105-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">across</span>(</span>
+<span id="cb105-24"><a href="describe-explore.html#cb105-24" aria-hidden="true" tabindex="-1"></a>      active_play<span class="sc">:</span>Hours,</span>
+<span id="cb105-25"><a href="describe-explore.html#cb105-25" aria-hidden="true" tabindex="-1"></a>      <span class="sc">~</span><span class="fu">max</span>(.x, <span class="at">na.rm =</span> T)</span>
+<span id="cb105-26"><a href="describe-explore.html#cb105-26" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb105-27"><a href="describe-explore.html#cb105-27" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb105-28"><a href="describe-explore.html#cb105-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 x 3</span></span>
+<span id="cb105-29"><a href="describe-explore.html#cb105-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Game  active_play Hours</span></span>
+<span id="cb105-30"><a href="describe-explore.html#cb105-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb105-31"><a href="describe-explore.html#cb105-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 PvZ          41.0  69.3</span></span>
+<span id="cb105-32"><a href="describe-explore.html#cb105-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 AC:NH       161.   99.8</span></span></code></pre></div>
 </div>
 <div id="correlation-matrices" class="section level2" number="4.6">
 <h2><span class="header-section-number">4.6</span> Correlation matrices</h2>
@@ -1306,36 +1348,37 @@ The plots in this section will be for both studies combined.</p>
 <span id="cb117-17"><a href="describe-explore.html#cb117-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span id="cb117-18"><a href="describe-explore.html#cb117-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb117-19"><a href="describe-explore.html#cb117-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; other attached packages:</span></span>
-<span id="cb117-20"><a href="describe-explore.html#cb117-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1] forcats_0.5.0    stringr_1.4.0    dplyr_1.0.2      purrr_0.3.4     </span></span>
-<span id="cb117-21"><a href="describe-explore.html#cb117-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5] readr_1.4.0      tidyr_1.1.2      tibble_3.0.4     tidyverse_1.3.0 </span></span>
-<span id="cb117-22"><a href="describe-explore.html#cb117-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9] lubridate_1.7.9  lemon_0.4.5      ggbeeswarm_0.6.0 ggplot2_3.3.2   </span></span>
-<span id="cb117-23"><a href="describe-explore.html#cb117-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [13] janitor_2.0.1    cowplot_1.1.0    sjPlot_2.8.6     patchwork_1.1.0 </span></span>
-<span id="cb117-24"><a href="describe-explore.html#cb117-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [17] scales_1.1.1     visdat_0.5.3     here_0.1         knitr_1.30      </span></span>
-<span id="cb117-25"><a href="describe-explore.html#cb117-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [21] pacman_0.5.1    </span></span>
+<span id="cb117-20"><a href="describe-explore.html#cb117-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1] forcats_0.5.0     stringr_1.4.0     dplyr_1.0.2       purrr_0.3.4      </span></span>
+<span id="cb117-21"><a href="describe-explore.html#cb117-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5] readr_1.4.0       tidyr_1.1.2       tibble_3.0.4      tidyverse_1.3.0  </span></span>
+<span id="cb117-22"><a href="describe-explore.html#cb117-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9] lubridate_1.7.9.2 lemon_0.4.5       ggbeeswarm_0.6.0  ggplot2_3.3.2    </span></span>
+<span id="cb117-23"><a href="describe-explore.html#cb117-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [13] janitor_2.0.1     cowplot_1.1.0     sjPlot_2.8.6      patchwork_1.1.0  </span></span>
+<span id="cb117-24"><a href="describe-explore.html#cb117-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [17] scales_1.1.1      visdat_0.5.3      here_1.0.1        knitr_1.30       </span></span>
+<span id="cb117-25"><a href="describe-explore.html#cb117-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [21] pacman_0.5.1     </span></span>
 <span id="cb117-26"><a href="describe-explore.html#cb117-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb117-27"><a href="describe-explore.html#cb117-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
-<span id="cb117-28"><a href="describe-explore.html#cb117-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1] nlme_3.1-150      fs_1.5.0          insight_0.10.0    httr_1.4.2       </span></span>
-<span id="cb117-29"><a href="describe-explore.html#cb117-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5] rprojroot_1.3-2   tools_4.0.3       backports_1.2.0   utf8_1.1.4       </span></span>
+<span id="cb117-28"><a href="describe-explore.html#cb117-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1] nlme_3.1-150      fs_1.5.0          insight_0.11.1    httr_1.4.2       </span></span>
+<span id="cb117-29"><a href="describe-explore.html#cb117-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5] rprojroot_2.0.2   tools_4.0.3       backports_1.2.1   utf8_1.1.4       </span></span>
 <span id="cb117-30"><a href="describe-explore.html#cb117-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9] R6_2.5.0          sjlabelled_1.1.7  vipor_0.4.5       DBI_1.1.0        </span></span>
-<span id="cb117-31"><a href="describe-explore.html#cb117-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [13] colorspace_1.4-1  withr_2.3.0       mnormt_2.0.2      tidyselect_1.1.0 </span></span>
-<span id="cb117-32"><a href="describe-explore.html#cb117-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [17] gridExtra_2.3     emmeans_1.5.2-1   compiler_4.0.3    performance_0.5.1</span></span>
-<span id="cb117-33"><a href="describe-explore.html#cb117-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [21] cli_2.1.0         rvest_0.3.6       xml2_1.3.2        labeling_0.4.2   </span></span>
-<span id="cb117-34"><a href="describe-explore.html#cb117-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [25] bookdown_0.21     bayestestR_0.7.5  psych_2.0.9       mvtnorm_1.1-1    </span></span>
-<span id="cb117-35"><a href="describe-explore.html#cb117-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [29] digest_0.6.27     minqa_1.2.4       rmarkdown_2.5.2   pkgconfig_2.0.3  </span></span>
-<span id="cb117-36"><a href="describe-explore.html#cb117-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [33] htmltools_0.5.0   lme4_1.1-25       highr_0.8         dbplyr_2.0.0     </span></span>
-<span id="cb117-37"><a href="describe-explore.html#cb117-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [37] Rmisc_1.5         rlang_0.4.8       readxl_1.3.1      rstudioapi_0.11  </span></span>
-<span id="cb117-38"><a href="describe-explore.html#cb117-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [41] farver_2.0.3      generics_0.1.0    jsonlite_1.7.1    magrittr_1.5     </span></span>
-<span id="cb117-39"><a href="describe-explore.html#cb117-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [45] parameters_0.9.0  Matrix_1.2-18     fansi_0.4.1       Rcpp_1.0.5       </span></span>
-<span id="cb117-40"><a href="describe-explore.html#cb117-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [49] munsell_0.5.0     lifecycle_0.2.0   stringi_1.5.3     yaml_2.2.1       </span></span>
-<span id="cb117-41"><a href="describe-explore.html#cb117-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [53] snakecase_0.11.0  MASS_7.3-53       plyr_1.8.6        grid_4.0.3       </span></span>
-<span id="cb117-42"><a href="describe-explore.html#cb117-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [57] parallel_4.0.3    sjmisc_2.8.5      crayon_1.3.4      lattice_0.20-41  </span></span>
-<span id="cb117-43"><a href="describe-explore.html#cb117-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [61] ggeffects_0.16.0  haven_2.3.1       splines_4.0.3     sjstats_0.18.0   </span></span>
-<span id="cb117-44"><a href="describe-explore.html#cb117-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [65] hms_0.5.3         tmvnsim_1.0-2     pillar_1.4.6      boot_1.3-25      </span></span>
-<span id="cb117-45"><a href="describe-explore.html#cb117-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [69] estimability_1.3  effectsize_0.4.0  reprex_0.3.0      glue_1.4.2       </span></span>
-<span id="cb117-46"><a href="describe-explore.html#cb117-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [73] evaluate_0.14     modelr_0.1.8      vctrs_0.3.4       nloptr_1.2.2.2   </span></span>
-<span id="cb117-47"><a href="describe-explore.html#cb117-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [77] cellranger_1.1.0  gtable_0.3.0      assertthat_0.2.1  xfun_0.19        </span></span>
-<span id="cb117-48"><a href="describe-explore.html#cb117-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [81] xtable_1.8-4      broom_0.7.2       coda_0.19-4       beeswarm_0.2.3   </span></span>
-<span id="cb117-49"><a href="describe-explore.html#cb117-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [85] statmod_1.4.35    ellipsis_0.3.1</span></span></code></pre></div>
+<span id="cb117-31"><a href="describe-explore.html#cb117-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [13] colorspace_2.0-0  withr_2.3.0       mnormt_2.0.2      tidyselect_1.1.0 </span></span>
+<span id="cb117-32"><a href="describe-explore.html#cb117-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [17] gridExtra_2.3     emmeans_1.5.3     compiler_4.0.3    cli_2.2.0        </span></span>
+<span id="cb117-33"><a href="describe-explore.html#cb117-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [21] performance_0.6.1 rvest_0.3.6       xml2_1.3.2        sandwich_3.0-0   </span></span>
+<span id="cb117-34"><a href="describe-explore.html#cb117-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [25] labeling_0.4.2    bookdown_0.21     bayestestR_0.8.0  psych_2.0.9      </span></span>
+<span id="cb117-35"><a href="describe-explore.html#cb117-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [29] mvtnorm_1.1-1     digest_0.6.27     minqa_1.2.4       rmarkdown_2.6    </span></span>
+<span id="cb117-36"><a href="describe-explore.html#cb117-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [33] pkgconfig_2.0.3   htmltools_0.5.0   lme4_1.1-26       highr_0.8        </span></span>
+<span id="cb117-37"><a href="describe-explore.html#cb117-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [37] dbplyr_2.0.0      Rmisc_1.5         rlang_0.4.9       readxl_1.3.1     </span></span>
+<span id="cb117-38"><a href="describe-explore.html#cb117-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [41] rstudioapi_0.13   farver_2.0.3      generics_0.1.0    zoo_1.8-8        </span></span>
+<span id="cb117-39"><a href="describe-explore.html#cb117-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [45] jsonlite_1.7.2    magrittr_2.0.1    parameters_0.10.1 Matrix_1.2-18    </span></span>
+<span id="cb117-40"><a href="describe-explore.html#cb117-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [49] fansi_0.4.1       Rcpp_1.0.5        munsell_0.5.0     lifecycle_0.2.0  </span></span>
+<span id="cb117-41"><a href="describe-explore.html#cb117-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [53] stringi_1.5.3     multcomp_1.4-15   yaml_2.2.1        snakecase_0.11.0 </span></span>
+<span id="cb117-42"><a href="describe-explore.html#cb117-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [57] MASS_7.3-53       plyr_1.8.6        grid_4.0.3        parallel_4.0.3   </span></span>
+<span id="cb117-43"><a href="describe-explore.html#cb117-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [61] sjmisc_2.8.5      crayon_1.3.4      lattice_0.20-41   ggeffects_1.0.1  </span></span>
+<span id="cb117-44"><a href="describe-explore.html#cb117-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [65] haven_2.3.1       splines_4.0.3     sjstats_0.18.0    hms_0.5.3        </span></span>
+<span id="cb117-45"><a href="describe-explore.html#cb117-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [69] tmvnsim_1.0-2     pillar_1.4.7      boot_1.3-25       estimability_1.3 </span></span>
+<span id="cb117-46"><a href="describe-explore.html#cb117-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [73] effectsize_0.4.1  codetools_0.2-18  reprex_0.3.0      glue_1.4.2       </span></span>
+<span id="cb117-47"><a href="describe-explore.html#cb117-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [77] evaluate_0.14     modelr_0.1.8      vctrs_0.3.5       nloptr_1.2.2.2   </span></span>
+<span id="cb117-48"><a href="describe-explore.html#cb117-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [81] cellranger_1.1.0  gtable_0.3.0      assertthat_0.2.1  xfun_0.19        </span></span>
+<span id="cb117-49"><a href="describe-explore.html#cb117-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [85] xtable_1.8-4      broom_0.7.2       coda_0.19-4       survival_3.2-7   </span></span>
+<span id="cb117-50"><a href="describe-explore.html#cb117-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [89] beeswarm_0.2.3    statmod_1.4.35    TH.data_1.0-10    ellipsis_0.3.1</span></span></code></pre></div>
 
 </div>
 </div>

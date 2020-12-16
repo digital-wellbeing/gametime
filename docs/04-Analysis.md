@@ -26,7 +26,7 @@ theme_set(
       legend.position = "right"
     )
 )
-colors <- c("#155b97", "#88c9a1")
+colors <- c("navyblue", "#E60012")
 ```
 
 
@@ -71,6 +71,26 @@ dat$active_play10 <- dat$active_play / 10
 ## RQ1: Time and well-being
 
 ### Objective vs subjective game time
+
+Describe subjective and objective time difference. These numbers are a bit confusing because the means include everyone, but difference only those who had both values (so cannot compute differences from means)
+
+
+```r
+dat %>% 
+  group_by(Game) %>%
+  mutate(difference = active_play-Hours) %>% 
+  summarise(
+    across(
+      c(Hours, active_play, difference), 
+      list(m = ~mean(.x, na.rm = T), s = ~sd(.x, na.rm = T))
+      )
+    )
+#> # A tibble: 2 x 7
+#>   Game  Hours_m Hours_s active_play_m active_play_s difference_m difference_s
+#>   <fct>   <dbl>   <dbl>         <dbl>         <dbl>        <dbl>        <dbl>
+#> 1 PvZ      8.35    11.4          9.77          9.96        1.59          11.8
+#> 2 AC:NH   10.6     12.7          8.94         15.0         0.459         15.8
+```
 
 
 ```r
@@ -118,10 +138,10 @@ dat %>%
 
 |Game  |term        | estimate|  SE| p.value| conf.low| conf.high|   r2|  r2a| nobs|
 |:-----|:-----------|--------:|---:|-------:|--------:|---------:|----:|----:|----:|
-|PvZ   |(Intercept) |     7.56| 0.7|       0|     6.14|      8.99| 0.13| 0.13|  275|
-|PvZ   |Hours       |     0.31| 0.0|       0|     0.22|      0.41| 0.13| 0.13|  275|
-|AC:NH |(Intercept) |     7.36| 0.4|       0|     6.53|      8.19| 0.15| 0.15| 2304|
-|AC:NH |Hours       |     0.51| 0.0|       0|     0.46|      0.56| 0.15| 0.15| 2304|
+|PvZ   |(Intercept) |     7.09| 0.5|       0|     6.06|      8.12| 0.15| 0.15|  469|
+|PvZ   |Hours       |     0.34| 0.0|       0|     0.27|      0.41| 0.15| 0.15|  469|
+|AC:NH |(Intercept) |     5.84| 0.4|       0|     5.13|      6.55| 0.16| 0.16| 2714|
+|AC:NH |Hours       |     0.49| 0.0|       0|     0.45|      0.54| 0.16| 0.16| 2714|
 
 ### Objective time and SWB
 
@@ -199,10 +219,10 @@ dat %>%
 
 |Game  |term          | estimate|  SE| p.value| conf.low| conf.high|   r2|  r2a| nobs|
 |:-----|:-------------|--------:|---:|-------:|--------:|---------:|----:|----:|----:|
-|PvZ   |(Intercept)   |    -0.03| 0.1|   0.697|    -0.19|      0.12| 0.00| 0.00|  309|
-|PvZ   |active_play10 |     0.06| 0.1|   0.285|    -0.05|      0.16| 0.00| 0.00|  309|
-|AC:NH |(Intercept)   |    -0.02| 0.0|   0.381|    -0.05|      0.02| 0.01| 0.01| 4171|
-|AC:NH |active_play10 |     0.05| 0.0|   0.000|     0.03|      0.07| 0.01| 0.01| 4171|
+|PvZ   |(Intercept)   |    -0.05| 0.1|   0.433|    -0.17|      0.07| 0.00| 0.00|  516|
+|PvZ   |active_play10 |     0.05| 0.0|   0.264|    -0.04|      0.14| 0.00| 0.00|  516|
+|AC:NH |(Intercept)   |    -0.07| 0.0|   0.000|    -0.10|     -0.04| 0.01| 0.01| 5487|
+|AC:NH |active_play10 |     0.07| 0.0|   0.000|     0.05|      0.08| 0.01| 0.01| 5487|
 
 ### Figure
 
@@ -344,7 +364,7 @@ p1 %+%
   facet_wrap("Game")
 ```
 
-<img src="04-Analysis_files/figure-html/unnamed-chunk-15-1.png" width="672" />
+<img src="04-Analysis_files/figure-html/rq2-figure-2-1.png" width="672" />
 
 ## Nonlinear models
 
@@ -387,9 +407,9 @@ dat %>%
 |Game  |Variable      |  linear|  smooth| Difference|
 |:-----|:-------------|-------:|-------:|----------:|
 |PvZ   |Hours10       |  1337.7|  1337.7|        0.0|
-|PvZ   |Active_play10 |   883.1|   882.2|        0.9|
+|PvZ   |Active_play10 |  1468.1|  1464.4|        3.7|
 |AC:NH |Hours10       |  7218.9|  7218.2|        0.8|
-|AC:NH |Active_play10 | 11791.8| 11791.8|        0.0|
+|AC:NH |Active_play10 | 15512.7| 15506.6|        6.1|
 
 ## System information
 
@@ -418,21 +438,21 @@ sessionInfo()
 #>  [5] dplyr_1.0.2     purrr_0.3.4     readr_1.4.0     tidyr_1.1.2    
 #>  [9] tibble_3.0.4    ggplot2_3.3.2   tidyverse_1.3.0 ggstance_0.3.4 
 #> [13] broom_0.7.2     scales_1.1.1    patchwork_1.1.0 knitr_1.30     
-#> [17] here_0.1        pacman_0.5.1   
+#> [17] here_1.0.1      pacman_0.5.1   
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] Rcpp_1.0.5       lubridate_1.7.9  lattice_0.20-41  assertthat_0.2.1
-#>  [5] rprojroot_1.3-2  digest_0.6.27    utf8_1.1.4       R6_2.5.0        
-#>  [9] cellranger_1.1.0 backports_1.2.0  reprex_0.3.0     evaluate_0.14   
-#> [13] httr_1.4.2       highr_0.8        pillar_1.4.6     rlang_0.4.8     
-#> [17] readxl_1.3.1     rstudioapi_0.11  Matrix_1.2-18    rmarkdown_2.5.2 
-#> [21] labeling_0.4.2   splines_4.0.3    munsell_0.5.0    compiler_4.0.3  
-#> [25] modelr_0.1.8     xfun_0.19        pkgconfig_2.0.3  htmltools_0.5.0 
-#> [29] tidyselect_1.1.0 bookdown_0.21    fansi_0.4.1      crayon_1.3.4    
-#> [33] dbplyr_2.0.0     withr_2.3.0      grid_4.0.3       jsonlite_1.7.1  
-#> [37] gtable_0.3.0     lifecycle_0.2.0  DBI_1.1.0        magrittr_1.5    
-#> [41] cli_2.1.0        stringi_1.5.3    farver_2.0.3     fs_1.5.0        
-#> [45] xml2_1.3.2       ellipsis_0.3.1   generics_0.1.0   vctrs_0.3.4     
-#> [49] tools_4.0.3      glue_1.4.2       hms_0.5.3        parallel_4.0.3  
-#> [53] yaml_2.2.1       colorspace_1.4-1 rvest_0.3.6      haven_2.3.1
+#>  [1] Rcpp_1.0.5        lubridate_1.7.9.2 lattice_0.20-41   assertthat_0.2.1 
+#>  [5] rprojroot_2.0.2   digest_0.6.27     utf8_1.1.4        R6_2.5.0         
+#>  [9] cellranger_1.1.0  backports_1.2.1   reprex_0.3.0      evaluate_0.14    
+#> [13] httr_1.4.2        highr_0.8         pillar_1.4.7      rlang_0.4.9      
+#> [17] readxl_1.3.1      rstudioapi_0.13   Matrix_1.2-18     rmarkdown_2.6    
+#> [21] labeling_0.4.2    splines_4.0.3     munsell_0.5.0     compiler_4.0.3   
+#> [25] modelr_0.1.8      xfun_0.19         pkgconfig_2.0.3   htmltools_0.5.0  
+#> [29] tidyselect_1.1.0  bookdown_0.21     fansi_0.4.1       crayon_1.3.4     
+#> [33] dbplyr_2.0.0      withr_2.3.0       grid_4.0.3        jsonlite_1.7.2   
+#> [37] gtable_0.3.0      lifecycle_0.2.0   DBI_1.1.0         magrittr_2.0.1   
+#> [41] cli_2.2.0         stringi_1.5.3     farver_2.0.3      fs_1.5.0         
+#> [45] xml2_1.3.2        ellipsis_0.3.1    generics_0.1.0    vctrs_0.3.5      
+#> [49] tools_4.0.3       glue_1.4.2        hms_0.5.3         parallel_4.0.3   
+#> [53] yaml_2.2.1        colorspace_2.0-0  rvest_0.3.6       haven_2.3.1
 ```

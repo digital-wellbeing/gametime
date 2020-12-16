@@ -280,66 +280,110 @@ filter(tmp, Game == "PvZ") %>%
 
 <img src="03-Describe_files/figure-html/univariate-scales-1.png" width="672" />
 
-And then a summary figure of the times, subjective and objective.
+And then a summary figure of the times, subjective and objective. Means indicate means over participants who had both measures.
 
 
 ```r
+# Histograms show all participants
 tmp <- dat %>% 
-  group_by(Game) %>% 
-  summarise(
-    across(
-      c(Hours, active_play), 
-      list(m = ~mean(., na.rm = TRUE), s = ~sd(., na.rm = TRUE))
-    )
-  )
-dat %>%  
-  ggplot(aes(col = Game, fill = Game)) +
-  coord_cartesian(ylim = c(-1, 1), xlim = c(0, 80)) +
-  scale_color_manual(values = colors, aesthetics = c("color", "fill")) +
+  select(Game, Hours, active_play) %>% 
+  pivot_longer(-Game) %>% 
+  mutate(name = ifelse(name=="Hours", "Hours", "Estimated")) %>% 
+  mutate(Game2 = str_glue("{Game} ({name})"))
+
+# Summaries over people who had both metrics
+tmp2 <- dat %>% 
+  select(Game, Hours, active_play) %>% 
+  drop_na(active_play, Hours) %>% 
+  pivot_longer(-Game) %>% 
+  mutate(name = ifelse(name=="Hours", "Hours", "Estimated")) %>% 
+  mutate(Game2 = str_glue("{Game} ({name})")) %>% 
+  group_by(Game, Game2, name) %>% 
+  summarise(m = mean(value, na.rm = TRUE), n = n())
+# This is really complicated because of the legend
+tmp %>% 
+  ggplot(aes(fill = Game2, alpha = Game2)) +
+  # Use two variables to control facets and colors/alpha
+  # Such that legend is constructed appropriately
+  scale_fill_manual(
+    values = rep(rev(colors), each = 2),
+    guide = guide_legend(reverse = TRUE)
+  ) +
+  scale_alpha_manual(
+    values = c(.4, 1, .4, 1), 
+    guide = guide_legend(reverse = TRUE)
+  ) +
   scale_y_continuous(
     breaks = c(-1, -.5, 0, .5, 1), labels = c(1, .5, 0, .5, 1),
     expand = expansion(.015)
   ) +
   scale_x_continuous(breaks = pretty_breaks(7)) +
+  coord_cartesian(ylim = c(-1, 1), xlim = c(0, 80)) +
+  labs(x = "Hours", y = "Normalized count") +
+  # Use different geoms to pick appropriate variables
   geom_histogram(
-    aes(x = Hours, y = stat(ncount)), 
+    data = filter(tmp, name=="Hours"),
+    aes(x = value, y = stat(ncount)),
     bins = 80, col = "white"
-    ) +
+  ) +
   geom_histogram(
-    aes(x = active_play, y = stat(ncount)*-1), 
-    bins = 80, alpha = 0.5, col = "white"
+    data = filter(tmp, name=="Estimated"),
+    aes(x = value, y = stat(ncount) * -1),
+    bins = 80, col = "white"
   ) +
   geom_point(
-    data = tmp, aes(x = Hours_m, y = -0.97),
-    shape = 25, size = 2.5
+    data = filter(tmp2, name=="Hours"), aes(x = m, y = -0.97),
+    shape = 25, size = 2.5, show.legend = FALSE,
+    col = "white"
   ) +
   geom_point(
-    data = tmp, aes(x = active_play_m, y = -0.97),
-    shape = 25, size = 2.5, alpha = 0.5
+    data = filter(tmp2, name=="Estimated"), aes(x = m, y = -0.97),
+    shape = 25, size = 2.5, alpha = 0.5, show.legend = FALSE,
+    col = "white"
   ) +
-  labs(y = "Normalized count") +
   facet_rep_wrap("Game", scales = "fixed", nrow = 2) +
-  theme(strip.text = element_blank(), legend.position = "right")
+  theme(
+    strip.text = element_blank(), 
+    legend.position = "right",
+    legend.title = element_blank()
+  )
 ```
 
 <img src="03-Describe_files/figure-html/playtime-summary-1.png" width="672" />
 
 ```r
 
-tmp
-#> # A tibble: 2 x 5
-#>   Game  Hours_m Hours_s active_play_m active_play_s
-#>   <fct>   <dbl>   <dbl>         <dbl>         <dbl>
-#> 1 PvZ      8.35    11.4          10.1          10.7
-#> 2 AC:NH   10.6     12.7          12.8          17.0
+# Summary of values truncated from graph
 dat %>% 
   group_by(Game) %>% 
-  summarise(across(active_play:Hours, ~sum(.x>80, na.rm = TRUE)))
+  summarise(
+    across(
+      active_play:Hours, 
+      list(
+        n = ~sum(!is.na(.x)),
+        x = ~sum(.x>80, na.rm = TRUE),
+        p = ~percent(sum(.x>80, na.rm = TRUE) / sum(!is.na(.x)), .01)
+      )
+    )
+  )
+#> # A tibble: 2 x 7
+#>   Game  active_play_n active_play_x active_play_p Hours_n Hours_x Hours_p
+#>   <fct>         <int>         <int> <chr>           <int>   <int> <chr>  
+#> 1 PvZ             517             0 0.00%             469       0 0.00%  
+#> 2 AC:NH          5927            58 0.98%            2737       7 0.26%
+dat %>% 
+  group_by(Game) %>% 
+  summarise(
+    across(
+      active_play:Hours,
+      ~max(.x, na.rm = T)
+    )
+  )
 #> # A tibble: 2 x 3
 #>   Game  active_play Hours
-#>   <fct>       <int> <int>
-#> 1 PvZ             0     0
-#> 2 AC:NH          61     7
+#>   <fct>       <dbl> <dbl>
+#> 1 PvZ          41.0  69.3
+#> 2 AC:NH       161.   99.8
 ```
 
 ## Correlation matrices
@@ -1050,35 +1094,36 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#>  [1] forcats_0.5.0    stringr_1.4.0    dplyr_1.0.2      purrr_0.3.4     
-#>  [5] readr_1.4.0      tidyr_1.1.2      tibble_3.0.4     tidyverse_1.3.0 
-#>  [9] lubridate_1.7.9  lemon_0.4.5      ggbeeswarm_0.6.0 ggplot2_3.3.2   
-#> [13] janitor_2.0.1    cowplot_1.1.0    sjPlot_2.8.6     patchwork_1.1.0 
-#> [17] scales_1.1.1     visdat_0.5.3     here_0.1         knitr_1.30      
-#> [21] pacman_0.5.1    
+#>  [1] forcats_0.5.0     stringr_1.4.0     dplyr_1.0.2       purrr_0.3.4      
+#>  [5] readr_1.4.0       tidyr_1.1.2       tibble_3.0.4      tidyverse_1.3.0  
+#>  [9] lubridate_1.7.9.2 lemon_0.4.5       ggbeeswarm_0.6.0  ggplot2_3.3.2    
+#> [13] janitor_2.0.1     cowplot_1.1.0     sjPlot_2.8.6      patchwork_1.1.0  
+#> [17] scales_1.1.1      visdat_0.5.3      here_1.0.1        knitr_1.30       
+#> [21] pacman_0.5.1     
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] nlme_3.1-150      fs_1.5.0          insight_0.10.0    httr_1.4.2       
-#>  [5] rprojroot_1.3-2   tools_4.0.3       backports_1.2.0   utf8_1.1.4       
+#>  [1] nlme_3.1-150      fs_1.5.0          insight_0.11.1    httr_1.4.2       
+#>  [5] rprojroot_2.0.2   tools_4.0.3       backports_1.2.1   utf8_1.1.4       
 #>  [9] R6_2.5.0          sjlabelled_1.1.7  vipor_0.4.5       DBI_1.1.0        
-#> [13] colorspace_1.4-1  withr_2.3.0       mnormt_2.0.2      tidyselect_1.1.0 
-#> [17] gridExtra_2.3     emmeans_1.5.2-1   compiler_4.0.3    performance_0.5.1
-#> [21] cli_2.1.0         rvest_0.3.6       xml2_1.3.2        labeling_0.4.2   
-#> [25] bookdown_0.21     bayestestR_0.7.5  psych_2.0.9       mvtnorm_1.1-1    
-#> [29] digest_0.6.27     minqa_1.2.4       rmarkdown_2.5.2   pkgconfig_2.0.3  
-#> [33] htmltools_0.5.0   lme4_1.1-25       highr_0.8         dbplyr_2.0.0     
-#> [37] Rmisc_1.5         rlang_0.4.8       readxl_1.3.1      rstudioapi_0.11  
-#> [41] farver_2.0.3      generics_0.1.0    jsonlite_1.7.1    magrittr_1.5     
-#> [45] parameters_0.9.0  Matrix_1.2-18     fansi_0.4.1       Rcpp_1.0.5       
-#> [49] munsell_0.5.0     lifecycle_0.2.0   stringi_1.5.3     yaml_2.2.1       
-#> [53] snakecase_0.11.0  MASS_7.3-53       plyr_1.8.6        grid_4.0.3       
-#> [57] parallel_4.0.3    sjmisc_2.8.5      crayon_1.3.4      lattice_0.20-41  
-#> [61] ggeffects_0.16.0  haven_2.3.1       splines_4.0.3     sjstats_0.18.0   
-#> [65] hms_0.5.3         tmvnsim_1.0-2     pillar_1.4.6      boot_1.3-25      
-#> [69] estimability_1.3  effectsize_0.4.0  reprex_0.3.0      glue_1.4.2       
-#> [73] evaluate_0.14     modelr_0.1.8      vctrs_0.3.4       nloptr_1.2.2.2   
-#> [77] cellranger_1.1.0  gtable_0.3.0      assertthat_0.2.1  xfun_0.19        
-#> [81] xtable_1.8-4      broom_0.7.2       coda_0.19-4       beeswarm_0.2.3   
-#> [85] statmod_1.4.35    ellipsis_0.3.1
+#> [13] colorspace_2.0-0  withr_2.3.0       mnormt_2.0.2      tidyselect_1.1.0 
+#> [17] gridExtra_2.3     emmeans_1.5.3     compiler_4.0.3    cli_2.2.0        
+#> [21] performance_0.6.1 rvest_0.3.6       xml2_1.3.2        sandwich_3.0-0   
+#> [25] labeling_0.4.2    bookdown_0.21     bayestestR_0.8.0  psych_2.0.9      
+#> [29] mvtnorm_1.1-1     digest_0.6.27     minqa_1.2.4       rmarkdown_2.6    
+#> [33] pkgconfig_2.0.3   htmltools_0.5.0   lme4_1.1-26       highr_0.8        
+#> [37] dbplyr_2.0.0      Rmisc_1.5         rlang_0.4.9       readxl_1.3.1     
+#> [41] rstudioapi_0.13   farver_2.0.3      generics_0.1.0    zoo_1.8-8        
+#> [45] jsonlite_1.7.2    magrittr_2.0.1    parameters_0.10.1 Matrix_1.2-18    
+#> [49] fansi_0.4.1       Rcpp_1.0.5        munsell_0.5.0     lifecycle_0.2.0  
+#> [53] stringi_1.5.3     multcomp_1.4-15   yaml_2.2.1        snakecase_0.11.0 
+#> [57] MASS_7.3-53       plyr_1.8.6        grid_4.0.3        parallel_4.0.3   
+#> [61] sjmisc_2.8.5      crayon_1.3.4      lattice_0.20-41   ggeffects_1.0.1  
+#> [65] haven_2.3.1       splines_4.0.3     sjstats_0.18.0    hms_0.5.3        
+#> [69] tmvnsim_1.0-2     pillar_1.4.7      boot_1.3-25       estimability_1.3 
+#> [73] effectsize_0.4.1  codetools_0.2-18  reprex_0.3.0      glue_1.4.2       
+#> [77] evaluate_0.14     modelr_0.1.8      vctrs_0.3.5       nloptr_1.2.2.2   
+#> [81] cellranger_1.1.0  gtable_0.3.0      assertthat_0.2.1  xfun_0.19        
+#> [85] xtable_1.8-4      broom_0.7.2       coda_0.19-4       survival_3.2-7   
+#> [89] beeswarm_0.2.3    statmod_1.4.35    TH.data_1.0-10    ellipsis_0.3.1
 ```
 
