@@ -1076,24 +1076,24 @@ p2 / p1
 
 ```r
 sessionInfo()
-#> R version 4.0.2 (2020-06-22)
-#> Platform: x86_64-w64-mingw32/x64 (64-bit)
-#> Running under: Windows 10 x64 (build 18363)
+#> R version 4.0.3 (2020-10-10)
+#> Platform: x86_64-pc-linux-gnu (64-bit)
+#> Running under: Ubuntu 20.04.1 LTS
 #> 
 #> Matrix products: default
+#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/liblapack.so.3
 #> 
 #> locale:
-#> [1] LC_COLLATE=English_United States.1252 
-#> [2] LC_CTYPE=English_United States.1252   
-#> [3] LC_MONETARY=English_United States.1252
-#> [4] LC_NUMERIC=C                          
-#> [5] LC_TIME=English_United States.1252    
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
 #> 
 #> attached base packages:
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-<<<<<<< HEAD
 #>  [1] forcats_0.5.0     stringr_1.4.0     dplyr_1.0.2       purrr_0.3.4      
 #>  [5] readr_1.4.0       tidyr_1.1.2       tibble_3.0.4      tidyverse_1.3.0  
 #>  [9] lubridate_1.7.9.2 lemon_0.4.5       ggbeeswarm_0.6.0  ggplot2_3.3.2    
@@ -1125,37 +1125,5 @@ sessionInfo()
 #> [81] cellranger_1.1.0  gtable_0.3.0      assertthat_0.2.1  xfun_0.19        
 #> [85] xtable_1.8-4      broom_0.7.2       coda_0.19-4       survival_3.2-7   
 #> [89] beeswarm_0.2.3    statmod_1.4.35    TH.data_1.0-10    ellipsis_0.3.1
-=======
-#>  [1] forcats_0.5.0    stringr_1.4.0    dplyr_1.0.0      purrr_0.3.4     
-#>  [5] readr_1.3.1      tidyr_1.1.0      tibble_3.0.3     tidyverse_1.3.0 
-#>  [9] lubridate_1.7.9  lemon_0.4.5      ggbeeswarm_0.6.0 ggplot2_3.3.2   
-#> [13] janitor_2.0.1    cowplot_1.0.0    sjPlot_2.8.4     patchwork_1.0.1 
-#> [17] scales_1.1.1     visdat_0.5.3     here_0.1         knitr_1.29      
-#> [21] pacman_0.5.1    
-#> 
-#> loaded via a namespace (and not attached):
-#>  [1] nlme_3.1-148      fs_1.4.2          insight_0.9.0     httr_1.4.1       
-#>  [5] rprojroot_1.3-2   tools_4.0.2       backports_1.1.8   utf8_1.1.4       
-#>  [9] R6_2.4.1          sjlabelled_1.1.6  vipor_0.4.5       DBI_1.1.0        
-#> [13] colorspace_1.4-1  withr_2.2.0       mnormt_2.0.1      tidyselect_1.1.0 
-#> [17] gridExtra_2.3     emmeans_1.4.8     compiler_4.0.2    cli_2.0.2        
-#> [21] performance_0.4.8 rvest_0.3.5       xml2_1.3.2        labeling_0.3     
-#> [25] bookdown_0.20     bayestestR_0.7.2  psych_2.0.7       mvtnorm_1.1-1    
-#> [29] digest_0.6.25     minqa_1.2.4       rmarkdown_2.5     pkgconfig_2.0.3  
-#> [33] htmltools_0.5.0   lme4_1.1-23       highr_0.8         dbplyr_1.4.4     
-#> [37] Rmisc_1.5         rlang_0.4.7       readxl_1.3.1      rstudioapi_0.11  
-#> [41] farver_2.0.3      generics_0.0.2    jsonlite_1.7.0    magrittr_1.5     
-#> [45] parameters_0.8.2  Matrix_1.2-18     fansi_0.4.1       Rcpp_1.0.5       
-#> [49] munsell_0.5.0     lifecycle_0.2.0   stringi_1.4.6     yaml_2.2.1       
-#> [53] snakecase_0.11.0  MASS_7.3-51.6     plyr_1.8.6        grid_4.0.2       
-#> [57] blob_1.2.1        parallel_4.0.2    sjmisc_2.8.5      crayon_1.3.4     
-#> [61] lattice_0.20-41   ggeffects_0.15.1  haven_2.3.1       splines_4.0.2    
-#> [65] sjstats_0.18.0    hms_0.5.3         tmvnsim_1.0-2     pillar_1.4.6     
-#> [69] boot_1.3-25       estimability_1.3  effectsize_0.3.2  reprex_0.3.0     
-#> [73] glue_1.4.1        evaluate_0.14     modelr_0.1.8      vctrs_0.3.2      
-#> [77] nloptr_1.2.2.2    cellranger_1.1.0  gtable_0.3.0      assertthat_0.2.1 
-#> [81] xfun_0.15         xtable_1.8-4      broom_0.7.0.9001  coda_0.19-3      
-#> [85] beeswarm_0.2.3    statmod_1.4.34    ellipsis_0.3.1
->>>>>>> f449c935d496bcb159c5533847257a56a9918a85
 ```
 

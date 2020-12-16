@@ -331,8 +331,8 @@ map(xs$x, res)
 #>  6 Extrinsic       -0.174   0.0431  6.27e-5  -0.259    -0.0896 0.291 0.272   404
 #>  7 Hours            0.0474  0.0416  2.55e-1  -0.0344    0.129  0.291 0.272   404
 #>  8 Autonomy:Hours   0.0361  0.0685  5.98e-1  -0.0985    0.171  0.291 0.272   404
-#>  9 Competence:Hou~ -0.0667  0.0667  3.18e-1  -0.198     0.0644 0.291 0.272   404
-#> 10 Relatedness:Ho~ -0.0154  0.0456  7.36e-1  -0.105     0.0743 0.291 0.272   404
+#>  9 Competence:Hou… -0.0667  0.0667  3.18e-1  -0.198     0.0644 0.291 0.272   404
+#> 10 Relatedness:Ho… -0.0154  0.0456  7.36e-1  -0.105     0.0743 0.291 0.272   404
 #> 11 Intrinsic:Hours  0.0396  0.0681  5.62e-1  -0.0944    0.174  0.291 0.272   404
 #> 12 Extrinsic:Hours  0.00121 0.0375  9.74e-1  -0.0724    0.0749 0.291 0.272   404
 #> 
@@ -348,8 +348,8 @@ map(xs$x, res)
 #>  6 Extrinsic        -0.316  0.0264 1.56e-31  -0.368    -0.264  0.145 0.138  1430
 #>  7 Hours             0.0283 0.0199 1.55e- 1  -0.0107    0.0672 0.145 0.138  1430
 #>  8 Autonomy:Hours    0.0287 0.0300 3.38e- 1  -0.0301    0.0876 0.145 0.138  1430
-#>  9 Competence:Hou~  -0.0217 0.0275 4.31e- 1  -0.0757    0.0323 0.145 0.138  1430
-#> 10 Relatedness:Ho~  -0.0142 0.0220 5.18e- 1  -0.0574    0.0289 0.145 0.138  1430
+#>  9 Competence:Hou…  -0.0217 0.0275 4.31e- 1  -0.0757    0.0323 0.145 0.138  1430
+#> 10 Relatedness:Ho…  -0.0142 0.0220 5.18e- 1  -0.0574    0.0289 0.145 0.138  1430
 #> 11 Intrinsic:Hours  -0.0107 0.0275 6.97e- 1  -0.0647    0.0433 0.145 0.138  1430
 #> 12 Extrinsic:Hours  -0.0129 0.0182 4.76e- 1  -0.0486    0.0227 0.145 0.138  1430
 ```
@@ -416,24 +416,24 @@ dat %>%
 
 ```r
 sessionInfo()
-#> R version 4.0.2 (2020-06-22)
-#> Platform: x86_64-w64-mingw32/x64 (64-bit)
-#> Running under: Windows 10 x64 (build 18363)
+#> R version 4.0.3 (2020-10-10)
+#> Platform: x86_64-pc-linux-gnu (64-bit)
+#> Running under: Ubuntu 20.04.1 LTS
 #> 
 #> Matrix products: default
+#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/liblapack.so.3
 #> 
 #> locale:
-#> [1] LC_COLLATE=English_United States.1252 
-#> [2] LC_CTYPE=English_United States.1252   
-#> [3] LC_MONETARY=English_United States.1252
-#> [4] LC_NUMERIC=C                          
-#> [5] LC_TIME=English_United States.1252    
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
 #> 
 #> attached base packages:
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-<<<<<<< HEAD
 #>  [1] mgcv_1.8-33     nlme_3.1-150    forcats_0.5.0   stringr_1.4.0  
 #>  [5] dplyr_1.0.2     purrr_0.3.4     readr_1.4.0     tidyr_1.1.2    
 #>  [9] tibble_3.0.4    ggplot2_3.3.2   tidyverse_1.3.0 ggstance_0.3.4 
@@ -455,27 +455,4 @@ sessionInfo()
 #> [45] xml2_1.3.2        ellipsis_0.3.1    generics_0.1.0    vctrs_0.3.5      
 #> [49] tools_4.0.3       glue_1.4.2        hms_0.5.3         parallel_4.0.3   
 #> [53] yaml_2.2.1        colorspace_2.0-0  rvest_0.3.6       haven_2.3.1
-=======
-#>  [1] mgcv_1.8-31      nlme_3.1-148     forcats_0.5.0    stringr_1.4.0   
-#>  [5] dplyr_1.0.0      purrr_0.3.4      readr_1.3.1      tidyr_1.1.0     
-#>  [9] tibble_3.0.3     ggplot2_3.3.2    tidyverse_1.3.0  ggstance_0.3.4  
-#> [13] broom_0.7.0.9001 scales_1.1.1     patchwork_1.0.1  knitr_1.29      
-#> [17] here_0.1         pacman_0.5.1    
-#> 
-#> loaded via a namespace (and not attached):
-#>  [1] Rcpp_1.0.5       lubridate_1.7.9  lattice_0.20-41  assertthat_0.2.1
-#>  [5] rprojroot_1.3-2  digest_0.6.25    utf8_1.1.4       R6_2.4.1        
-#>  [9] cellranger_1.1.0 backports_1.1.8  reprex_0.3.0     evaluate_0.14   
-#> [13] httr_1.4.1       highr_0.8        pillar_1.4.6     rlang_0.4.7     
-#> [17] readxl_1.3.1     rstudioapi_0.11  blob_1.2.1       Matrix_1.2-18   
-#> [21] rmarkdown_2.5    labeling_0.3     splines_4.0.2    munsell_0.5.0   
-#> [25] compiler_4.0.2   modelr_0.1.8     xfun_0.15        pkgconfig_2.0.3 
-#> [29] htmltools_0.5.0  tidyselect_1.1.0 bookdown_0.20    fansi_0.4.1     
-#> [33] crayon_1.3.4     dbplyr_1.4.4     withr_2.2.0      grid_4.0.2      
-#> [37] jsonlite_1.7.0   gtable_0.3.0     lifecycle_0.2.0  DBI_1.1.0       
-#> [41] magrittr_1.5     cli_2.0.2        stringi_1.4.6    farver_2.0.3    
-#> [45] fs_1.4.2         xml2_1.3.2       ellipsis_0.3.1   generics_0.0.2  
-#> [49] vctrs_0.3.2      tools_4.0.2      glue_1.4.1       hms_0.5.3       
-#> [53] yaml_2.2.1       colorspace_1.4-1 rvest_0.3.5      haven_2.3.1
->>>>>>> f449c935d496bcb159c5533847257a56a9918a85
 ```

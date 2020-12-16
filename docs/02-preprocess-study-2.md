@@ -274,7 +274,7 @@ count(ac, player_id, sort = T)
 ##  8 "7092634f86aa0992"     2
 ##  9 "842b41d5e20f2922"     2
 ## 10 "8bd8d7292b3a05b5"     2
-## # ... with 5,977 more rows
+## # … with 5,977 more rows
 ```
 
 There are two kinds of problems:
@@ -353,10 +353,10 @@ glimpse(gt)
 ```
 ## Rows: 191,498
 ## Columns: 4
-## $ player_id     <chr> "be080cb5754884b3", "35a6c680bcf65615", "35a6c680bcf6...
-## $ session_start <dttm> 2020-10-15 22:39:00, 2020-09-09 03:38:00, 2020-10-03...
-## $ session_end   <dttm> 2020-10-15 22:39:00, 2020-09-09 03:38:00, 2020-10-03...
-## $ Hours         <dbl> 0.67583333, 0.19111111, 0.67111111, 1.77750000, 1.760...
+## $ player_id     <chr> "be080cb5754884b3", "35a6c680bcf65615", "35a6c680bcf656…
+## $ session_start <dttm> 2020-10-15 22:39:00, 2020-09-09 03:38:00, 2020-10-03 1…
+## $ session_end   <dttm> 2020-10-15 22:39:00, 2020-09-09 03:38:00, 2020-10-03 1…
+## $ Hours         <dbl> 0.67583333, 0.19111111, 0.67111111, 1.77750000, 1.76000…
 ```
 
 ### Clean
@@ -476,8 +476,8 @@ ac %>%
 ## # A tibble: 3 x 4
 ##   played                                        Players Missing_Hours Mean_Hours
 ##   <fct>                                           <int>         <int>      <dbl>
-## 1 I have played Animal Crossing: New Horizons ~    4602          2017      11.7 
-## 2 I have **NOT** played Animal Crossing: New H~    1233          1114       2.09
+## 1 I have played Animal Crossing: New Horizons …    4602          2017      11.7 
+## 2 I have **NOT** played Animal Crossing: New H…    1233          1114       2.09
 ## 3 <NA>                                              140            88       6.75
 ```
 
@@ -609,24 +609,24 @@ sessionInfo()
 ```
 
 ```
-## R version 4.0.2 (2020-06-22)
-## Platform: x86_64-w64-mingw32/x64 (64-bit)
-## Running under: Windows 10 x64 (build 18363)
+## R version 4.0.3 (2020-10-10)
+## Platform: x86_64-pc-linux-gnu (64-bit)
+## Running under: Ubuntu 20.04.1 LTS
 ## 
 ## Matrix products: default
+## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
+## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/liblapack.so.3
 ## 
 ## locale:
-## [1] LC_COLLATE=English_United States.1252 
-## [2] LC_CTYPE=English_United States.1252   
-## [3] LC_MONETARY=English_United States.1252
-## [4] LC_NUMERIC=C                          
-## [5] LC_TIME=English_United States.1252    
+##  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+##  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+##  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+## [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
 ## 
 ## attached base packages:
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-<<<<<<< HEAD
 ##  [1] forcats_0.5.0     stringr_1.4.0     dplyr_1.0.2       purrr_0.3.4      
 ##  [5] readr_1.4.0       tidyr_1.1.2       tibble_3.0.4      ggplot2_3.3.2    
 ##  [9] tidyverse_1.3.0   janitor_2.0.1     scales_1.1.1      lubridate_1.7.9.2
@@ -646,26 +646,5 @@ sessionInfo()
 ## [41] pkgconfig_2.0.3  ellipsis_0.3.1   xml2_1.3.2       reprex_0.3.0    
 ## [45] assertthat_0.2.1 rmarkdown_2.6    httr_1.4.2       rstudioapi_0.13 
 ## [49] R6_2.5.0         compiler_4.0.3
-=======
-##  [1] forcats_0.5.0   stringr_1.4.0   dplyr_1.0.0     purrr_0.3.4    
-##  [5] readr_1.3.1     tidyr_1.1.0     tibble_3.0.3    ggplot2_3.3.2  
-##  [9] tidyverse_1.3.0 janitor_2.0.1   scales_1.1.1    lubridate_1.7.9
-## [13] here_0.1        knitr_1.29      readxl_1.3.1    pacman_0.5.1   
-## 
-## loaded via a namespace (and not attached):
-##  [1] tidyselect_1.1.0 xfun_0.15        haven_2.3.1      snakecase_0.11.0
-##  [5] colorspace_1.4-1 vctrs_0.3.2      generics_0.0.2   htmltools_0.5.0 
-##  [9] yaml_2.2.1       utf8_1.1.4       blob_1.2.1       rlang_0.4.7     
-## [13] pillar_1.4.6     withr_2.2.0      glue_1.4.1       DBI_1.1.0       
-## [17] dbplyr_1.4.4     modelr_0.1.8     lifecycle_0.2.0  munsell_0.5.0   
-## [21] gtable_0.3.0     cellranger_1.1.0 rvest_0.3.5      evaluate_0.14   
-## [25] fansi_0.4.1      broom_0.7.0.9001 Rcpp_1.0.5       backports_1.1.8 
-## [29] jsonlite_1.7.0   fs_1.4.2         hms_0.5.3        digest_0.6.25   
-## [33] stringi_1.4.6    bookdown_0.20    rprojroot_1.3-2  grid_4.0.2      
-## [37] cli_2.0.2        tools_4.0.2      magrittr_1.5     crayon_1.3.4    
-## [41] pkgconfig_2.0.3  ellipsis_0.3.1   xml2_1.3.2       reprex_0.3.0    
-## [45] assertthat_0.2.1 rmarkdown_2.5    httr_1.4.1       rstudioapi_0.11 
-## [49] R6_2.4.1         compiler_4.0.2
->>>>>>> f449c935d496bcb159c5533847257a56a9918a85
 ```
 
