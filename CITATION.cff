@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: Code and data supplement to "Video game play is positively correlated with well-being"
+version: 1.0.1
+license: MIT
+type: software
+abstract: Code to reproduce the manuscript.
+message: "If you use this code, please cite it as indicated."
+authors:
+  - family-names: Johannes
+    given-names: Niklas
+    orcid: https://orcid.org/0000-0001-6612-2842
+  - family-names: Vuorre
+    given-names: Matti
+    orcid: https://orcid.org/0000-0001-5052-066X
+    affiliation: Tilburg University
+  - family-names: Przybylski
+    given-names: Andrew
+    orcid: https://orcid.org/0000-0001-5547-2185
+    affiliation: University of Oxford
+keywords:
+  - psychology
